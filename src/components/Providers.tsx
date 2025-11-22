@@ -28,12 +28,16 @@ const theme: Partial<any> = {
   "font-family-interactive": "var(--cdp-web-font-family-mono)"
 }
 
+if (!process.env.NEXT_PUBLIC_CDP_PROJECT_ID) {
+  throw new Error("NEXT_PUBLIC_CDP_PROJECT_ID is not set");
+}
+
 export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <CDPReactProvider
       config={{
-        projectId: process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "your-project-id",
+        projectId: process.env.NEXT_PUBLIC_CDP_PROJECT_ID,
         ethereum: {
           createOnLogin: "smart",
         },
