@@ -38,7 +38,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       config={{
         projectId: process.env.NEXT_PUBLIC_CDP_PROJECT_ID || "your-project-id",
         ethereum: {
-          createOnLogin: "eoa",
+          createOnLogin: "smart",
         },
         authMethods: ["email", "sms", "oauth:google", "oauth:apple", "oauth:x"],
         appName: "TollRoad Music",
