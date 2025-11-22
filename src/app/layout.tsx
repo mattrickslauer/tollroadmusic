@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Jomhuria } from "next/font/google";
 import Image from "next/image";
 import "./globals.css";
 import { BACKGROUND } from "../lib/colors";
 import Providers from "@/components/Providers";
+import Header from "@/components/Header";
 
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jomhuria = Jomhuria({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-jomhuria",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,10 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable}`}
+        className={`${jomhuria.className} ${jomhuria.variable}`}
         style={{ backgroundColor: BACKGROUND, color: "#000" }}
       >
         <Providers>
+          <Header />
           {children}
           <footer
             role="contentinfo"
@@ -116,7 +115,7 @@ export default function RootLayout({
               <div>
                 <strong>Links</strong>:{" "}
                 <a
-                  href="https://x.com/deck"
+                  href="https://www.tollroadmusic.xyz/deck"
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "inherit", textDecoration: "underline" }}
