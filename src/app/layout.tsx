@@ -6,6 +6,8 @@ import "./globals.css";
 import { BACKGROUND } from "../lib/colors";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
+import PlayerProvider from "@/contexts/PlayerContext";
+import PlaybackBar from "@/components/PlaybackBar";
 
 
 const jomhuria = Jomhuria({
@@ -33,9 +35,10 @@ export default function RootLayout({
       >
         <Suspense>
           <Providers>
-            <Header />
-            {children}
-            <footer
+            <PlayerProvider>
+              <Header />
+              {children}
+              <footer
               role="contentinfo"
               style={{
                 borderTop: "1px solid rgba(0,0,0,0.1)",
@@ -126,7 +129,9 @@ export default function RootLayout({
                   </a>
                 </div>
               </div>
-            </footer>
+              </footer>
+              <PlaybackBar />
+            </PlayerProvider>
           </Providers>
         </Suspense>
       </body>
