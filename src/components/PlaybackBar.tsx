@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo } from "react";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { BACKGROUND } from "@/lib/colors";
 
 export default function PlaybackBar() {
   const player = usePlayer();
@@ -51,7 +52,7 @@ export default function PlaybackBar() {
         left: 0,
         right: 0,
         bottom: 0,
-        background: "#fff",
+        background: BACKGROUND,
         color: "#000",
         borderTop: "1px dashed #000",
         padding: "8px 12px",

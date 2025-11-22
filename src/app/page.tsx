@@ -1,12 +1,32 @@
 'use client'
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { FOREGROUND, ACCENT } from "../lib/colors";
+import { FOREGROUND, ACCENT, BACKGROUND } from "../lib/colors";
 
 export default function Home() {
+  const [hoverListen, setHoverListen] = useState(false);
+  const [hoverArtist, setHoverArtist] = useState(false);
+
+  function onEnterListen() {
+    setHoverListen(true);
+  }
+
+  function onLeaveListen() {
+    setHoverListen(false);
+  }
+
+  function onEnterArtist() {
+    setHoverArtist(true);
+  }
+
+  function onLeaveArtist() {
+    setHoverArtist(false);
+  }
+
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", color: FOREGROUND, position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", color: FOREGROUND, position: "relative", overflow: "hidden", backgroundColor: ACCENT }}>
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
         <div style={{ position: "absolute", top: -140, left: -80, width: 420, height: 420, background: `radial-gradient(closest-side, ${ACCENT}, transparent)`, opacity: 0.15, filter: "blur(40px)" }} />
         <div style={{ position: "absolute", bottom: -180, right: -100, width: 520, height: 520, background: `radial-gradient(closest-side, ${ACCENT}, transparent)`, opacity: 0.12, filter: "blur(54px)" }} />
@@ -22,15 +42,18 @@ export default function Home() {
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
               href="/listener"
+              onMouseEnter={onEnterListen}
+              onMouseLeave={onLeaveListen}
               style={{
-                backgroundColor: ACCENT,
-                color: "#ffffff",
+                backgroundColor: BACKGROUND,
+                color: "#000000",
                 padding: "14px 20px",
                 borderRadius: 12,
                 fontWeight: 800,
                 textDecoration: "none",
                 fontSize: 34,
-                boxShadow: "0 12px 28px rgba(0,0,0,0.14)",
+                boxShadow: hoverListen ? "0 16px 36px rgba(0,0,0,0.16)" : "0 12px 28px rgba(0,0,0,0.14)",
+                transform: hoverListen ? "translateY(-2px)" : "none",
                 transition: "transform 200ms ease, box-shadow 200ms ease",
               }}
             >
@@ -38,16 +61,19 @@ export default function Home() {
             </Link>
             <Link
               href="/artist"
+              onMouseEnter={onEnterArtist}
+              onMouseLeave={onLeaveArtist}
               style={{
                 border: `2px solid ${FOREGROUND}`,
-                color: FOREGROUND,
+                color: "#000000",
                 padding: "12px 18px",
                 borderRadius: 12,
                 fontWeight: 800,
                 textDecoration: "none",
                 fontSize: 34,
-                backgroundColor: "transparent",
-                boxShadow: "0 10px 24px rgba(0,0,0,0.08)",
+                backgroundColor: BACKGROUND,
+                boxShadow: hoverArtist ? "0 14px 30px rgba(0,0,0,0.12)" : "0 10px 24px rgba(0,0,0,0.08)",
+                transform: hoverArtist ? "translateY(-2px)" : "none",
                 transition: "transform 200ms ease, box-shadow 200ms ease",
               }}
             >
@@ -57,7 +83,7 @@ export default function Home() {
         </section>
 
         <section style={{ width: "100%", maxWidth: 1100, display: "flex", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 320px", border: `2px solid ${FOREGROUND}`, borderRadius: 14, padding: 22, backgroundColor: "rgba(0,0,0,0.02)", boxShadow: "0 10px 24px rgba(0,0,0,0.06)", position: "relative", overflow: "hidden" }}>
+          <div style={{ flex: "1 1 320px", border: `2px solid ${FOREGROUND}`, borderRadius: 14, padding: 22, backgroundColor: BACKGROUND, boxShadow: "0 10px 24px rgba(0,0,0,0.06)", position: "relative", overflow: "hidden" }}>
             <h2 style={{ marginTop: 0, marginBottom: 8, fontSize: 48 }}>
               Artist
             </h2>
@@ -88,7 +114,7 @@ export default function Home() {
               <Image src="/images/l.png" alt="Artist" fill style={{ objectFit: "contain", objectPosition: "right bottom" }} />
             </div>
           </div>
-          <div style={{ flex: "1 1 320px", border: `2px solid ${FOREGROUND}`, borderRadius: 14, padding: 22, backgroundColor: "rgba(0,0,0,0.02)", boxShadow: "0 10px 24px rgba(0,0,0,0.06)", position: "relative", overflow: "hidden" }}>
+          <div style={{ flex: "1 1 320px", border: `2px solid ${FOREGROUND}`, borderRadius: 14, padding: 22, backgroundColor: BACKGROUND, boxShadow: "0 10px 24px rgba(0,0,0,0.06)", position: "relative", overflow: "hidden" }}>
             <h2 style={{ marginTop: 0, marginBottom: 8, fontSize: 48 }}>
               Listener
             </h2>

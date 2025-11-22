@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useIsSignedIn } from "@coinbase/cdp-hooks";
-import { FOREGROUND, ACCENT } from "@/lib/colors";
+import { FOREGROUND, ACCENT, BACKGROUND } from "@/lib/colors";
 import WalletView from "@/components/WalletView";
 import { AuthButton } from "@coinbase/cdp-react/components/AuthButton";
 
@@ -22,7 +22,7 @@ export default function Header() {
 
   return (
     <>
-      <header style={{ padding: 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, position: "relative", zIndex: 1, backgroundColor: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+      <header style={{ padding: 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, position: "relative", zIndex: 1, backgroundColor: BACKGROUND, backdropFilter: "blur(8px)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", color: "inherit" }}>
           <Image src="/logo.png" alt="TollRoad Music Logo" width={56} height={56} />
           <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: -0.2 }}>TollRoad Music</div>

@@ -3,7 +3,7 @@ import { Jomhuria } from "next/font/google";
 import Image from "next/image";
 import { Suspense } from "react";
 import "./globals.css";
-import { BACKGROUND } from "../lib/colors";
+import { ACCENT } from "../lib/colors";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
 import PlayerProvider from "@/contexts/PlayerContext";
@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${jomhuria.className} ${jomhuria.variable}`}
-        style={{ backgroundColor: BACKGROUND, color: "#000" }}
+        style={{ backgroundColor: "rgba(255,255,255,0.7)", color: "#000" }}
       >
         <Suspense>
           <Providers>
@@ -44,6 +44,7 @@ export default function RootLayout({
                 borderTop: "1px solid rgba(0,0,0,0.1)",
                 marginTop: "2rem",
                 padding: "1.25rem 1rem",
+                backgroundColor: ACCENT,
                 color: "#000",
               }}
             >
