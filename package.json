@@ -10,9 +10,12 @@
     "format": "biome format --write"
   },
   "dependencies": {
+    "@coinbase/cdp-core": "^0.0.67",
+    "@coinbase/cdp-hooks": "^0.0.67",
+    "@coinbase/cdp-react": "^0.0.67",
     "next": "16.0.3",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",

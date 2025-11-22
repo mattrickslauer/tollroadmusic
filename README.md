@@ -17,3 +17,13 @@ Go to www.tollroadmusic.xyz and sign up for an account as either
     1. Sign Up using Coinbase embeded wallet flow
     2. fund your account with usd
     3. find and stream music
+
+
+
+### Key Facts
+- The average spotfify user listens to 3,278 songs a year.
+at 3 minutes average thats roughly 9800 minutes per year or 8$ / month which is cheaper than the 11.99$ / month spotify individual plan.
+
+- this tech opens up onchain labels where artists could simply have a flat rate per minute streamed even for enterprise customers like spotify.
+
+- its decentralized, automated, and direct to consumer.
