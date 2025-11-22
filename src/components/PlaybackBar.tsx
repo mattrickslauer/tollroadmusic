@@ -7,7 +7,8 @@ import { usePlayer } from "@/contexts/PlayerContext";
 export default function PlaybackBar() {
   const player = usePlayer();
   if (!player) return null;
-  const { currentTrack, isPlaying, currentTime, duration, volume } = player;
+  const p = player;
+  const { currentTrack, isPlaying, currentTime, duration, volume } = p;
 
   function formatTime(s: number) {
     const t = Math.floor(s || 0);
@@ -18,25 +19,25 @@ export default function PlaybackBar() {
   }
 
   function onToggle() {
-    player.togglePlay();
+    p.togglePlay();
   }
 
   function onNext() {
-    player.next();
+    p.next();
   }
 
   function onPrev() {
-    player.prev();
+    p.prev();
   }
 
   function onSeek(e: React.ChangeEvent<HTMLInputElement>) {
     const v = Number(e.currentTarget.value);
-    player.seekTo(v);
+    p.seekTo(v);
   }
 
   function onVolume(e: React.ChangeEvent<HTMLInputElement>) {
     const v = Number(e.currentTarget.value);
-    player.setVolume(v);
+    p.setVolume(v);
   }
 
   const progressMax = useMemo(function computeMax() {

@@ -13,9 +13,10 @@ export default function AlbumCarousel(props: Props) {
   const { title, albums } = props;
   const player = usePlayer();
   if (!player) return null;
+  const p = player;
 
   function onPlayAlbum(album: Album) {
-    player.setQueue(album.tracks, 0);
+    p.setQueue(album.tracks, 0);
   }
 
   return (

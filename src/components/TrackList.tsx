@@ -12,9 +12,10 @@ export default function TrackList(props: Props) {
   const { title, tracks } = props;
   const player = usePlayer();
   if (!player) return null;
+  const p = player;
 
   function onPlay(track: Track) {
-    player.playTrack(track, tracks);
+    p.playTrack(track, tracks);
   }
 
   return (
