@@ -128,8 +128,8 @@ export default function ArtistPage() {
             >
               Edit Profile
             </Link>
-            <button
-              type="button"
+            <Link
+              href="/artist/upload"
               style={{
                 padding: "8px 12px",
                 border: "1px dashed #000",
@@ -140,34 +140,16 @@ export default function ArtistPage() {
                 fontFamily: "var(--font-jomhuria)",
                 fontSize: 32,
                 transition: "background 0.15s cubic-bezier(.5,1.8,.75,.8)",
+                display: "inline-block",
+                textDecoration: "none",
+                textAlign: "center",
               }}
               aria-label="Upload new song"
-              onClick={() => {}}
               onMouseEnter={e => (e.currentTarget.style.background = "#fff")}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               Upload
-            </button>
-            <button
-              type="button"
-              style={{
-                padding: "8px 12px",
-                border: "1px dashed #000",
-                borderRadius: 8,
-                background: "transparent",
-                cursor: "pointer",
-                color: "#000",
-                fontFamily: "var(--font-jomhuria)",
-                fontSize: 32,
-                transition: "background 0.15s cubic-bezier(.5,1.8,.75,.8)",
-              }}
-              aria-label="Create new album"
-              onClick={() => {}}
-              onMouseEnter={e => (e.currentTarget.style.background = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
-              New Album
-            </button>
+            </Link>
           </div>
         </div>
 

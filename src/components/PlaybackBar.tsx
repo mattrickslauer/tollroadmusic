@@ -47,6 +47,7 @@ export default function PlaybackBar() {
 
   return (
     <div
+      className="playback-bar"
       style={{
         position: "fixed",
         left: 0,
@@ -64,7 +65,7 @@ export default function PlaybackBar() {
       role="region"
       aria-label="Global playback"
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+      <div className="pb-info" style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
         <div
           aria-hidden
           style={{
@@ -101,7 +102,7 @@ export default function PlaybackBar() {
           <div style={{ opacity: 0.6 }}>{currentTrack ? currentTrack.artistName : ""}</div>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="pb-controls" style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
           type="button"
           onClick={onPrev}
@@ -131,7 +132,7 @@ export default function PlaybackBar() {
           <Image src="/icons/next.svg" alt="Next" width={20} height={20} />
         </button>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+      <div className="pb-progress" style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
         <div style={{ width: 44, textAlign: "right", opacity: 0.7 }}>{formatTime(currentTime)}</div>
         <input
           type="range"
@@ -145,7 +146,7 @@ export default function PlaybackBar() {
         />
         <div style={{ width: 44, opacity: 0.7 }}>{formatTime(duration)}</div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div className="pb-vol" style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <div style={{ opacity: 0.7 }}>Vol</div>
         <input
           type="range"
@@ -157,6 +158,30 @@ export default function PlaybackBar() {
           aria-label="Volume"
         />
       </div>
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .playback-bar {
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .pb-info {
+            min-width: 0;
+            flex: 1 1 60%;
+          }
+          .pb-controls {
+            flex: 0 0 auto;
+          }
+          .pb-progress {
+            flex: 1 1 100%;
+          }
+          .pb-progress input[type='range'] {
+            width: 100%;
+          }
+          .pb-vol {
+            flex: 0 0 auto;
+          }
+        }
+      `}</style>
     </div>
   );
 }
