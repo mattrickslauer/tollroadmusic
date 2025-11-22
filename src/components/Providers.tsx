@@ -1,9 +1,6 @@
 'use client'
 
 import { CDPReactProvider, type Theme } from "@coinbase/cdp-react";
-import { useIsSignedIn } from "@coinbase/cdp-hooks";
-import { useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const theme: Partial<any> = {
   "colors-bg-default": "#0a0b0d",
@@ -45,37 +42,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       }}
         theme={theme}
     >
-      <AuthNavigator>
-        {children}
-      </AuthNavigator>
+      {children}
     </CDPReactProvider>
   );
 }
-
-function AuthNavigator({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, isLoading } = useIsSignedIn();
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  useEffect(function navigateByAuth() {
-    if (!pathname || isLoading) return;
-    if (!isSignedIn && (pathname.startsWith("/listener") || pathname.startsWith("/artist"))) {
-      router.replace(`/auth?redirect=${encodeURIComponent(pathname)}`);
-      return;
-    }
-    if (isSignedIn && pathname === "/auth") {
-      const dest = searchParams?.get("redirect") || "";
-      if (dest.startsWith("/artist") || dest.startsWith("/listener")) {
-        router.replace(dest);
-      } else {
-        router.replace("/listener");
-      }
-      return;
-    }
-  }, [isSignedIn, isLoading, pathname, router, searchParams]);
-
-  return <>{children}</>;
-}
-
-

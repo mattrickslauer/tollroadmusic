@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useCurrentUser, useIsSignedIn, useEvmAddress } from "@coinbase/cdp-hooks";
 import Link from "next/link";
 import { getBaseUsdcBalanceUsd, normalizeAddressInput } from "@/lib/funds";
+import RequireSignIn from "@/components/RequireSignIn";
 
 export default function ArtistPage() {
   const { currentUser } = useCurrentUser();
@@ -61,25 +62,16 @@ export default function ArtistPage() {
   }, [isSignedIn, addressString]);
 
   return (
-    <div
-      style={{
-        flex: 1,
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-        padding: "24px 16px",
-        color: "#000",
-      }}
-    >
+    <RequireSignIn>
       <div
         style={{
-          maxWidth: 1080,
-          margin: "0 auto",
+          flex: 1,
           width: "100%",
           display: "flex",
           flexDirection: "column",
           gap: 16,
+          padding: "24px 16px",
+          color: "#000",
         }}
       >
         {/* Header: Profile + quick actions */}
@@ -301,7 +293,7 @@ export default function ArtistPage() {
           </div>
         </div>
       </div>
-    </div>
+    </RequireSignIn>
   );
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { AuthButton } from "@coinbase/cdp-react/components/AuthButton";
 import { useIsSignedIn, useEvmAddress } from "@coinbase/cdp-hooks";
 import { FOREGROUND, ACCENT } from "@/lib/colors";
@@ -19,6 +20,8 @@ export default function WalletView(props: WalletViewProps) {
   const [addressString, setAddressString] = useState("");
   const [usdcBase, setUsdcBase] = useState("");
   const [fundsLoading, setFundsLoading] = useState(false);
+  const [onrampLoading, setOnrampLoading] = useState(false);
+  const [onrampError, setOnrampError] = useState("");
 
   useEffect(function onMount() {
     console.log("[WalletView] mount");
@@ -70,7 +73,9 @@ export default function WalletView(props: WalletViewProps) {
     addressString,
     copied,
     usdcBase,
-    fundsLoading
+    fundsLoading,
+    onrampLoading,
+    onrampError
   });
 
   function fetchBaseUsdcBalance() {
@@ -120,10 +125,22 @@ export default function WalletView(props: WalletViewProps) {
   }
 
   async function openOnramp() {
-    const token = await requestOnrampSessionToken();
-    if (!token) return;
-    const url = buildSandboxOnrampUrl(token);
-    window.open(url, "_blank", "noopener");
+    if (onrampLoading) return;
+    setOnrampError("");
+    setOnrampLoading(true);
+    try {
+      const token = await requestOnrampSessionToken();
+      if (!token) {
+        setOnrampError("Unable to start onramp. Try again.");
+        return;
+      }
+      const url = buildSandboxOnrampUrl(token);
+      window.open(url, "_blank", "noopener");
+    } catch (e) {
+      setOnrampError("Unable to start onramp. Try again.");
+    } finally {
+      setOnrampLoading(false);
+    }
   }
 
   useEffect(function syncBaseUsdc() {
@@ -204,8 +221,14 @@ export default function WalletView(props: WalletViewProps) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ fontSize: 24, opacity: 0.7 }}>Address</div>
-              <div style={{ fontSize: 32, fontWeight: 800 }}>
-                {formatAddress(addressString) || "—"}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ fontSize: 32, fontWeight: 800 }}>
+                  {formatAddress(addressString) || "—"}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", borderRadius: 10, border: `2px solid ${FOREGROUND}` }}>
+                  <Image src="/images/base-logo.png" alt="Base" width={20} height={20} />
+                  <div style={{ fontSize: 14, fontWeight: 800, opacity: 0.8 }}>Base network wallet</div>
+                </div>
               </div>
             </div>
             <button
@@ -250,6 +273,7 @@ export default function WalletView(props: WalletViewProps) {
             <button
               type="button"
               onClick={openOnramp}
+              disabled={onrampLoading}
               style={{
                 backgroundColor: ACCENT,
                 color: "#ffffff",
@@ -259,13 +283,17 @@ export default function WalletView(props: WalletViewProps) {
                 textDecoration: "none",
                 boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
                 transition: "transform 200ms ease, box-shadow 200ms ease",
-                cursor: "pointer",
+                cursor: onrampLoading ? "wait" : "pointer",
+                opacity: onrampLoading ? 0.8 : 1,
               }}
               aria-label="Onramp funds via Coinbase Pay sandbox"
               title="Opens Coinbase Pay sandbox in a new tab"
             >
-              Add Funds (Sandbox)
+              {onrampLoading ? "Opening…" : "Add Funds (Sandbox)"}
             </button>
+          </div>
+          <div style={{ fontSize: 14, color: "#d00", fontWeight: 700, textAlign: "right", minHeight: 18 }}>
+            {onrampError || ""}
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>

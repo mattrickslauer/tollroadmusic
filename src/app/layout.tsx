@@ -7,7 +7,7 @@ import { BACKGROUND } from "../lib/colors";
 import Providers from "@/components/Providers";
 import Header from "@/components/Header";
 import PlayerProvider from "@/contexts/PlayerContext";
-import PlaybackBar from "@/components/PlaybackBar";
+import SignedInPlaybackBar from "@/components/SignedInPlaybackBar";
 
 
 const jomhuria = Jomhuria({
@@ -130,7 +130,7 @@ export default function RootLayout({
                 </div>
               </div>
               </footer>
-              <PlaybackBar />
+              <SignedInPlaybackBar />
             </PlayerProvider>
           </Providers>
         </Suspense>

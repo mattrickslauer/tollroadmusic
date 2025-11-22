@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useIsSignedIn } from "@coinbase/cdp-hooks";
 import { FOREGROUND, ACCENT } from "@/lib/colors";
 import WalletView from "@/components/WalletView";
+import { AuthButton } from "@coinbase/cdp-react/components/AuthButton";
 
 export default function Header() {
   const { isSignedIn } = useIsSignedIn();
@@ -80,37 +81,18 @@ export default function Header() {
           </div>
         ) : (
           <div style={{ display: "flex", gap: 12 }}>
-            <Link
-              href="/listener"
-              style={{
-                backgroundColor: ACCENT,
-                color: "#ffffff",
-                padding: "12px 18px",
-                borderRadius: 10,
-                fontWeight: 800,
-                textDecoration: "none",
-                boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
-                transition: "transform 200ms ease, box-shadow 200ms ease",
-              }}
-            >
-              Start Listening
-            </Link>
-            <Link
-              href="/artist"
-              style={{
-                border: `2px solid ${FOREGROUND}`,
-                color: FOREGROUND,
-                padding: "10px 16px",
-                borderRadius: 10,
-                fontWeight: 800,
-                textDecoration: "none",
-                backgroundColor: "transparent",
-                boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
-                transition: "transform 200ms ease, box-shadow 200ms ease",
-              }}
-            >
-              For Artists
-            </Link>
+            <div style={{ width: 220, maxWidth: "90%" }}>
+              <AuthButton
+                style={{
+                  width: "100%",
+                  fontSize: "1rem",
+                  fontWeight: 800,
+                  padding: "12px 16px",
+                  borderRadius: "1rem",
+                  boxShadow: "0 4px 24px #fee51466"
+                }}
+              />
+            </div>
           </div>
         )}
       </header>
