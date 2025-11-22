@@ -39,6 +39,10 @@ export default function WalletView(props: WalletViewProps) {
     console.log("[WalletView] evmAddress change (raw)", evmAddress);
   }, [evmAddress]);
 
+  function getAddressString(value: unknown) {
+    return normalizeAddressInput(value);
+  }
+
   function formatAddress(a?: string) {
     if (!a || a.length < 10) return a || "";
     return `${a.slice(0, 6)}...${a.slice(-4)}`;
@@ -56,7 +60,7 @@ export default function WalletView(props: WalletViewProps) {
   }
   
   useEffect(function deriveAddress() {
-    setAddressString(normalizeAddressInput(evmAddress));
+    setAddressString(getAddressString(evmAddress));
   }, [evmAddress]);
   console.log("[WalletView] computed render state", {
     open,
@@ -69,7 +73,7 @@ export default function WalletView(props: WalletViewProps) {
     fundsLoading
   });
 
-  function fetchFunds() {
+  function fetchBaseUsdcBalance() {
     const addr = addressString;
     if (!addr) {
       setUsdcBase("");
@@ -82,12 +86,52 @@ export default function WalletView(props: WalletViewProps) {
       .finally(function onFinally() { setFundsLoading(false); });
   }
 
+  async function requestOnrampSessionToken() {
+    const addr = addressString;
+    if (!addr) return "";
+    try {
+      const res = await fetch("/api/onramp-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: addr,
+          blockchains: ["base"],
+          assets: ["USDC"],
+        }),
+      });
+      if (!res.ok) return "";
+      const json = await res.json();
+      const token = json?.token;
+      if (typeof token === "string" && token.length > 0) return token;
+      return "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function buildSandboxOnrampUrl(token: string) {
+    const base = "https://pay-sandbox.coinbase.com/buy/select-asset";
+    const params = new URLSearchParams();
+    params.set("sessionToken", token);
+    params.set("defaultNetwork", "base");
+    params.set("defaultAsset", "USDC");
+    params.set("presetFiatAmount", "10");
+    return `${base}?${params.toString()}`;
+  }
+
+  async function openOnramp() {
+    const token = await requestOnrampSessionToken();
+    if (!token) return;
+    const url = buildSandboxOnrampUrl(token);
+    window.open(url, "_blank", "noopener");
+  }
+
   useEffect(function syncBaseUsdc() {
     if (!open || !isSignedIn || !addressString) {
       setUsdcBase("");
       return;
     }
-    fetchFunds();
+    fetchBaseUsdcBalance();
   }, [open, isSignedIn, addressString]);
 
   function handleOverlayClick() {
@@ -200,6 +244,28 @@ export default function WalletView(props: WalletViewProps) {
             <div style={{ fontSize: 48, fontWeight: 900 }}>
               {usdcBase ? `$${usdcBase}` : "$—.—"}
             </div>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={openOnramp}
+              style={{
+                backgroundColor: ACCENT,
+                color: "#ffffff",
+                padding: "12px 18px",
+                borderRadius: 10,
+                fontWeight: 800,
+                textDecoration: "none",
+                boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
+                transition: "transform 200ms ease, box-shadow 200ms ease",
+                cursor: "pointer",
+              }}
+              aria-label="Onramp funds via Coinbase Pay sandbox"
+              title="Opens Coinbase Pay sandbox in a new tab"
+            >
+              Add Funds (Sandbox)
+            </button>
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>

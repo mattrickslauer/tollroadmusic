@@ -1,29 +1,10 @@
- 'use client'
- 
+'use client'
+
 import Image from "next/image";
 import Link from "next/link";
 import { FOREGROUND, ACCENT } from "../lib/colors";
-import { useEffect, useState } from "react";
-import { useEvmAddress, useIsSignedIn } from "@coinbase/cdp-hooks";
-import { getBaseUsdcBalanceUsd, normalizeAddressInput } from "@/lib/funds";
 
 export default function Home() {
-  const { isSignedIn, isLoading } = useIsSignedIn();
-  const evmAddress = useEvmAddress();
-  const [addressString, setAddressString] = useState("");
-  const [usdcBase, setUsdcBase] = useState("");
-
-  useEffect(function deriveAddress() {
-    setAddressString(normalizeAddressInput(evmAddress));
-  }, [evmAddress]);
-
-  useEffect(function syncFunds() {
-    if (!isSignedIn || !addressString) {
-      setUsdcBase("");
-      return;
-    }
-    getBaseUsdcBalanceUsd(addressString).then(function onOk(v) { setUsdcBase(v); }).catch(function onErr() { setUsdcBase(""); });
-  }, [isSignedIn, addressString]);
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", color: FOREGROUND, position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
@@ -73,11 +54,6 @@ export default function Home() {
               I’m an Artist
             </Link>
           </div>
-          {isSignedIn && !isLoading ? (
-            <div style={{ marginTop: 8, border: `2px solid ${FOREGROUND}`, borderRadius: 12, padding: 12, fontWeight: 800, fontSize: 32 }}>
-              Total Wallet Funds: {usdcBase ? `$${usdcBase}` : "$—.—"}
-            </div>
-          ) : null}
         </section>
 
         <section style={{ width: "100%", maxWidth: 1100, display: "flex", gap: 16, flexWrap: "wrap" }}>

@@ -1,10 +1,64 @@
 'use client'
 
-import { useCurrentUser } from "@coinbase/cdp-hooks";
+import { useEffect, useState } from "react";
+import { useCurrentUser, useIsSignedIn, useEvmAddress } from "@coinbase/cdp-hooks";
 import Link from "next/link";
+import { getBaseUsdcBalanceUsd, normalizeAddressInput } from "@/lib/funds";
 
 export default function ArtistPage() {
   const { currentUser } = useCurrentUser();
+  const { isSignedIn } = useIsSignedIn();
+  const evmAddress = useEvmAddress();
+  const [addressString, setAddressString] = useState("");
+  const [funds, setFunds] = useState("");
+  const [fundsLoading, setFundsLoading] = useState(false);
+
+  useEffect(function onMount() {
+    console.log("[Artist] mount");
+    return function onUnmount() {
+      console.log("[Artist] unmount");
+    };
+  }, []);
+
+  useEffect(function onAuthChange() {
+    console.log("[Artist] auth change", { isSignedIn });
+  }, [isSignedIn]);
+
+  useEffect(function onAddressChange() {
+    console.log("[Artist] evmAddress change (raw)", evmAddress);
+  }, [evmAddress]);
+
+  useEffect(function deriveAddress() {
+    setAddressString(normalizeAddressInput(evmAddress));
+  }, [evmAddress]);
+
+  useEffect(function fetchFunds() {
+    const validAddr = typeof addressString === "string" && addressString.startsWith("0x") && addressString.length === 42;
+    if (!isSignedIn || !validAddr) {
+      if (!validAddr) {
+        console.log("[Artist] skip fetch: invalid address", { addressString });
+      } else {
+        console.log("[Artist] skip fetch: not signed in");
+      }
+      setFunds("");
+      return;
+    }
+    console.log("[Artist] fetch funds start", { addressString });
+    setFundsLoading(true);
+    getBaseUsdcBalanceUsd(addressString)
+      .then(function onOk(v) {
+        console.log("[Artist] fetch funds ok", { v });
+        setFunds(v);
+      })
+      .catch(function onErr(err) {
+        console.log("[Artist] fetch funds error", err);
+        setFunds("");
+      })
+      .finally(function onFinally() {
+        console.log("[Artist] fetch funds end");
+        setFundsLoading(false);
+      });
+  }, [isSignedIn, addressString]);
 
   return (
     <div
@@ -133,7 +187,7 @@ export default function ArtistPage() {
             gap: 12,
           }}
         >
-          <StatCard label="Total Wallet Funds" value="$—.—" />
+          <StatCard label="Total Wallet Funds" value={funds ? `$${funds}` : "$—.—"} />
           <StatCard label="Minutes Sold (This Month)" value="—" />
           <StatCard label="Unique Payers" value="—" />
         </div>

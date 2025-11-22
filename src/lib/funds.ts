@@ -1,5 +1,3 @@
-'use client'
-
 export function normalizeAddressInput(value: unknown) {
   if (typeof value === "string") return value;
   if (value && typeof value === "object" && "address" in (value as any) && typeof (value as any).address === "string") {
@@ -11,17 +9,17 @@ export function normalizeAddressInput(value: unknown) {
   return "";
 }
 
-function zeroPad64(hex: string) {
+export function zeroPad64(hex: string) {
   const s = hex.replace(/^0x/, "");
   return s.padStart(64, "0");
 }
 
-function toLower(addr: string) {
+export function toChecksumLower(addr: string) {
   if (!addr) return "";
   return addr.toLowerCase();
 }
 
-function formatUsdcFromHex(hex: string) {
+export function formatUsdcFromHex(hex: string) {
   let v = BigInt(0);
   try {
     v = BigInt(hex);
@@ -35,9 +33,9 @@ function formatUsdcFromHex(hex: string) {
 
 export async function getBaseUsdcBalanceUsd(address: string) {
   if (!address) return "";
-  const usdc = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+  const usdc = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
   const selector = "0x70a08231";
-  const data = selector + zeroPad64(toLower(address).replace(/^0x/, ""));
+  const data = selector + zeroPad64(toChecksumLower(address).replace(/^0x/, ""));
   const body = {
     jsonrpc: "2.0",
     id: 1,
@@ -47,18 +45,14 @@ export async function getBaseUsdcBalanceUsd(address: string) {
       "latest"
     ]
   };
-  try {
-    const r = await fetch("https://mainnet.base.org", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    const j = await r.json();
-    const hex = j && j.result ? j.result : "0x0";
-    return formatUsdcFromHex(hex);
-  } catch {
-    return "";
-  }
+  const r = await fetch("https://sepolia.base.org", {
+    method: "POST",
+    headers: { "content-type": "a pplication/json" },
+    body: JSON.stringify(body)
+  });
+  const j = await r.json();
+  const hex = j && j.result ? j.result : "0x0";
+  return formatUsdcFromHex(hex);
 }
 
 
