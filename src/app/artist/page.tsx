@@ -5,6 +5,7 @@ import { useCurrentUser, useIsSignedIn, useEvmAddress } from "@coinbase/cdp-hook
 import Link from "next/link";
 import { getBaseUsdcBalanceUsd, normalizeAddressInput } from "@/lib/funds";
 import RequireSignIn from "@/components/RequireSignIn";
+import { FOREGROUND, ACCENT } from "@/lib/colors";
 
 export default function ArtistPage() {
   const { currentUser } = useCurrentUser();
@@ -74,7 +75,6 @@ export default function ArtistPage() {
           color: "#000",
         }}
       >
-        {/* Header: Profile + quick actions */}
         <div
           style={{
             display: "flex",
@@ -88,72 +88,73 @@ export default function ArtistPage() {
             <div
               aria-hidden
               style={{
-                width: 56,
-                height: 56,
+                width: 96,
+                height: 96,
                 borderRadius: "50%",
-                background:
-                  "repeating-linear-gradient(135deg, #eaeaea, #eaeaea 8px, #dcdcdc 8px, #dcdcdc 16px)",
+                border: `2px solid ${FOREGROUND}`,
+                background: "#ffffff",
+                boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
                 display: "grid",
                 placeItems: "center",
                 fontWeight: 600,
+                fontSize: 36,
               }}
               title="Profile photo"
             >
               {(currentUser?.username || "AR")[0].toUpperCase()}
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ fontSize: 36, fontWeight: 700 }}>
+              <div style={{ fontSize: 72, fontWeight: 900 }}>
                 {currentUser?.username || "Your Artist Name"}
               </div>
-              <div style={{ opacity: 0.7, fontSize: 24 }}>
+              <div style={{ opacity: 0.7, fontSize: 32 }}>
                 {currentUser?.userId
                   ? `Signed in as ${currentUser.userId}`
                   : "Connect wallet to personalize"}
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link
               href="/artist/settings"
               style={{
-                padding: "8px 12px",
-                border: "1px dashed #000",
-                borderRadius: 8,
+                padding: "12px 18px",
+                border: `2px solid ${FOREGROUND}`,
+                borderRadius: 10,
                 textDecoration: "none",
-                transition: "background 0.15s cubic-bezier(.5,1.8,.75,.8)",
-                background: "transparent",
+                transition: "transform 200ms ease, box-shadow 200ms ease",
+                background: "#ffffff",
+                color: "#000",
+                fontWeight: 800,
+                fontSize: 24,
+                boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               Edit Profile
             </Link>
             <Link
               href="/artist/upload"
               style={{
-                padding: "8px 12px",
-                border: "1px dashed #000",
-                borderRadius: 8,
-                background: "transparent",
+                padding: "12px 18px",
+                borderRadius: 10,
+                backgroundColor: ACCENT,
+                color: "#ffffff",
                 cursor: "pointer",
-                color: "#000",
-                fontFamily: "var(--font-jomhuria)",
-                fontSize: 32,
-                transition: "background 0.15s cubic-bezier(.5,1.8,.75,.8)",
+                fontWeight: 800,
+                fontSize: 24,
+                transition: "transform 200ms ease, box-shadow 200ms ease",
                 display: "inline-block",
                 textDecoration: "none",
                 textAlign: "center",
+                boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
               }}
               aria-label="Upload new song"
-              onMouseEnter={e => (e.currentTarget.style.background = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               Upload
             </Link>
           </div>
         </div>
 
-        {/* KPI cards */}
         <div
           style={{
             display: "grid",
@@ -166,7 +167,6 @@ export default function ArtistPage() {
           <StatCard label="Unique Payers" value="—" />
         </div>
 
-        {/* IP list */}
         <div
           style={{
             display: "flex",
@@ -175,8 +175,8 @@ export default function ArtistPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ fontWeight: 700 }}>Your IP</div>
-            <div style={{ opacity: 0.6, fontSize: 12 }}>
+            <div style={{ fontWeight: 900, fontSize: 32 }}>Your IP</div>
+            <div style={{ opacity: 0.6, fontSize: 20 }}>
               Songs and albums you manage
             </div>
           </div>
@@ -187,11 +187,13 @@ export default function ArtistPage() {
               role="table"
               aria-label="Artist IP table"
               style={{
-                border: "1px dashed #000",
-                borderRadius: 10,
+                border: `2px solid ${FOREGROUND}`,
+                borderRadius: 12,
                 overflow: "hidden",
                 minWidth: 480,
                 maxWidth: "100%",
+                background: "#ffffff",
+                boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
               }}
             >
               <div
@@ -200,10 +202,11 @@ export default function ArtistPage() {
                   display: "grid",
                   gridTemplateColumns: "1fr 96px 96px 96px",
                   gap: 8,
-                  padding: 12,
+                  padding: 16,
                   background:
                     "repeating-linear-gradient(135deg, #f1f1f1, #f1f1f1 8px, #e9e9e9 8px, #e9e9e9 16px)",
-                  fontWeight: 600,
+                  fontWeight: 800,
+                  fontSize: 20,
                 }}
               >
                 <div>Title</div>
@@ -220,8 +223,8 @@ export default function ArtistPage() {
                     display: "grid",
                     gridTemplateColumns: "1fr 96px 96px 96px",
                     gap: 8,
-                    padding: 12,
-                    borderTop: "1px dashed #000",
+                    padding: 16,
+                    borderTop: `2px solid ${FOREGROUND}`,
                   }}
                 >
                   <div
@@ -235,11 +238,12 @@ export default function ArtistPage() {
                     <div
                       aria-hidden
                       style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 6,
-                        background:
-                          "repeating-linear-gradient(135deg, #eaeaea, #eaeaea 8px, #dcdcdc 8px, #dcdcdc 16px)",
+                        width: 56,
+                        height: 56,
+                        borderRadius: 8,
+                        border: `2px solid ${FOREGROUND}`,
+                        background: "#ffffff",
+                        boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
                         flex: "0 0 auto",
                       }}
                       title="Cover art"
@@ -257,11 +261,13 @@ export default function ArtistPage() {
                           textOverflow: "ellipsis",
                           overflow: "hidden",
                           maxWidth: "100%",
+                          fontWeight: 800,
+                          fontSize: 20,
                         }}
                       >
                         Untitled Track {idx + 1}
                       </div>
-                      <div style={{ fontSize: 24, opacity: 0.6 }}>
+                      <div style={{ fontSize: 20, opacity: 0.6 }}>
                         0:00 sold this month
                       </div>
                     </div>
@@ -284,18 +290,20 @@ function StatCard(props: { label: string; value: string }) {
   return (
     <div
       style={{
-        border: "1px dashed #000",
+        border: `2px solid ${FOREGROUND}`,
         borderRadius: 12,
-        padding: 16,
-        minHeight: 88,
+        padding: 20,
+        minHeight: 120,
+        background: "#ffffff",
+        boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         gap: 8,
       }}
     >
-      <div style={{ opacity: 0.7, fontSize: 24 }}>{label}</div>
-      <div style={{ fontSize: 48, fontWeight: 800 }}>{value}</div>
+      <div style={{ opacity: 0.7, fontSize: 28 }}>{label}</div>
+      <div style={{ fontSize: 56, fontWeight: 900 }}>{value}</div>
     </div>
   );
 }

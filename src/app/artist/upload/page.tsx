@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useEvmAddress } from '@coinbase/cdp-hooks'
+import { FOREGROUND, ACCENT } from '@/lib/colors'
 
 type TrackInput = {
   id: string
@@ -161,137 +162,186 @@ export default function Page() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 960, margin: '0 auto' }}>
-      <h1>Artist Upload</h1>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #222' }}>
+    <div style={{ padding: 24, maxWidth: 1000, margin: '0 auto', color: '#000' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+        <h1 style={{ margin: 0, fontSize: 72, fontWeight: 900 }}>Artist Upload</h1>
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
         <button
           type="button"
           onClick={function () { setMode('single') }}
-          style={{ padding: '8px 12px', borderBottom: mode === 'single' ? '2px solid #fff' : '2px solid transparent' }}
+          style={{
+            padding: '12px 18px',
+            border: `2px solid ${FOREGROUND}`,
+            borderRadius: 10,
+            fontWeight: 800,
+            fontSize: 24,
+            backgroundColor: mode === 'single' ? ACCENT : '#fff',
+            color: mode === 'single' ? '#fff' : '#000',
+            boxShadow: '0 8px 22px rgba(0,0,0,0.12)',
+            cursor: 'pointer'
+          }}
         >
           Single
         </button>
         <button
           type="button"
           onClick={function () { setMode('album') }}
-          style={{ padding: '8px 12px', borderBottom: mode === 'album' ? '2px solid #fff' : '2px solid transparent' }}
+          style={{
+            padding: '12px 18px',
+            border: `2px solid ${FOREGROUND}`,
+            borderRadius: 10,
+            fontWeight: 800,
+            fontSize: 24,
+            backgroundColor: mode === 'album' ? ACCENT : '#fff',
+            color: mode === 'album' ? '#fff' : '#000',
+            boxShadow: '0 8px 22px rgba(0,0,0,0.12)',
+            cursor: 'pointer'
+          }}
         >
           Album
         </button>
       </div>
-      <form onSubmit={onSubmit}>
-        <fieldset style={{ marginBottom: 24 }}>
-          <legend>Release</legend>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ border: `2px solid ${FOREGROUND}`, borderRadius: 12, background: '#fff', boxShadow: '0 8px 22px rgba(0,0,0,0.12)', padding: 20 }}>
+        <form onSubmit={onSubmit}>
+          <fieldset style={{ marginBottom: 24, border: `2px solid ${FOREGROUND}`, borderRadius: 12, padding: 16 }}>
+            <legend style={{ fontSize: 48, fontWeight: 900, padding: '0 8px' }}>Release</legend>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {mode === 'album' ? (
               <div>
-                <label>Title</label>
-                <input value={albumTitle} onChange={function (e) { setAlbumTitle(e.target.value) }} required />
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Title</label>
+                <input value={albumTitle} onChange={function (e) { setAlbumTitle(e.target.value) }} required
+                  style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
               </div>
             ) : null}
             <div>
-              <label>Artist</label>
-              <input value={artist} onChange={function (e) { setArtist(e.target.value) }} required />
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Artist</label>
+              <input value={artist} onChange={function (e) { setArtist(e.target.value) }} required
+                style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
             </div>
             <div>
-              <label>Release Date</label>
-              <input type="date" value={releaseDate} onChange={function (e) { setReleaseDate(e.target.value) }} />
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Release Date</label>
+              <input type="date" value={releaseDate} onChange={function (e) { setReleaseDate(e.target.value) }}
+                style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
             </div>
             <div>
-              <label>Genre</label>
-              <input value={genre} onChange={function (e) { setGenre(e.target.value) }} />
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Genre</label>
+              <input value={genre} onChange={function (e) { setGenre(e.target.value) }}
+                style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
             </div>
             <div>
-              <label>Label</label>
-              <input value={label} onChange={function (e) { setLabel(e.target.value) }} />
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Label</label>
+              <input value={label} onChange={function (e) { setLabel(e.target.value) }}
+                style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
             </div>
             <div>
-              <label>Explicit</label>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Explicit</label>
               <input type="checkbox" checked={explicit} onChange={function (e) { setExplicit(e.target.checked) }} />
             </div>
             <div>
-              <label>Cover</label>
-              <input accept="image/*" type="file" onChange={function (e) { setCover(e.target.files?.[0]) }} />
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Cover</label>
+              <input accept="image/*" type="file" onChange={function (e) { setCover(e.target.files?.[0]) }}
+                style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label>Description</label>
-              <textarea value={description} onChange={function (e) { setDescription(e.target.value) }} rows={4} />
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Description</label>
+              <textarea value={description} onChange={function (e) { setDescription(e.target.value) }} rows={4}
+                style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
             </div>
-          </div>
-        </fieldset>
-
-        {mode === 'single' ? (
-          <fieldset style={{ marginBottom: 24 }}>
-            <legend>Track</legend>
-            <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label>Title</label>
-                  <input value={tracks[0]?.title || ''} onChange={function (e) { updateTrackTitle(tracks[0].id, e.target.value) }} required />
-                </div>
-                <div>
-                  <label>Audio</label>
-                  <input accept="audio/*" type="file" onChange={function (e) { updateTrackFile(tracks[0].id, e.target.files?.[0]) }} required />
-                </div>
-                <div>
-                  <label>Lyrics</label>
-                  <input accept=".lrc,.txt,text/plain" type="file" onChange={function (e) { updateTrackLyrics(tracks[0].id, e.target.files?.[0]) }} />
-                </div>
-              </div>
             </div>
           </fieldset>
-        ) : (
-          <fieldset style={{ marginBottom: 24 }}>
-            <legend>Tracks</legend>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {mode === 'single' ? (
+            <fieldset style={{ marginBottom: 24, border: `2px solid ${FOREGROUND}`, borderRadius: 12, padding: 16 }}>
+              <legend style={{ fontSize: 48, fontWeight: 900, padding: '0 8px' }}>Track</legend>
+              <div style={{ border: `2px solid ${FOREGROUND}`, borderRadius: 12, padding: 12, background: '#fff' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Title</label>
+                  <input value={tracks[0]?.title || ''} onChange={function (e) { updateTrackTitle(tracks[0].id, e.target.value) }} required
+                    style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Audio</label>
+                  <input accept="audio/*" type="file" onChange={function (e) { updateTrackFile(tracks[0].id, e.target.files?.[0]) }} required
+                    style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Lyrics</label>
+                  <input accept=".lrc,.txt,text/plain" type="file" onChange={function (e) { updateTrackLyrics(tracks[0].id, e.target.files?.[0]) }}
+                    style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
+                </div>
+              </div>
+              </div>
+            </fieldset>
+          ) : (
+            <fieldset style={{ marginBottom: 24, border: `2px solid ${FOREGROUND}`, borderRadius: 12, padding: 16 }}>
+              <legend style={{ fontSize: 48, fontWeight: 900, padding: '0 8px' }}>Tracks</legend>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {tracks.map(function renderTrack(t, index) {
                 return (
-                  <div key={t.id} style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
+                  <div key={t.id} style={{ border: `2px solid ${FOREGROUND}`, borderRadius: 12, padding: 12, background: '#fff' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                       <div>
-                        <label>Title</label>
-                        <input value={t.title} onChange={function (e) { updateTrackTitle(t.id, e.target.value) }} required />
+                        <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Title</label>
+                        <input value={t.title} onChange={function (e) { updateTrackTitle(t.id, e.target.value) }} required
+                          style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
                       </div>
                       <div>
-                        <label>Audio</label>
-                        <input accept="audio/*" type="file" onChange={function (e) { updateTrackFile(t.id, e.target.files?.[0]) }} required />
+                        <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Audio</label>
+                        <input accept="audio/*" type="file" onChange={function (e) { updateTrackFile(t.id, e.target.files?.[0]) }} required
+                          style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
                       </div>
                       <div>
-                        <label>Lyrics</label>
-                        <input accept=".lrc,.txt,text/plain" type="file" onChange={function (e) { updateTrackLyrics(t.id, e.target.files?.[0]) }} />
+                        <label style={{ display: 'block', marginBottom: 6, fontWeight: 800, fontSize: 20 }}>Lyrics</label>
+                        <input accept=".lrc,.txt,text/plain" type="file" onChange={function (e) { updateTrackLyrics(t.id, e.target.files?.[0]) }}
+                          style={{ width: '100%', border: `2px solid ${FOREGROUND}`, borderRadius: 10, padding: '8px 12px', fontSize: 18 }} />
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                      <button type="button" onClick={function () { moveTrackUp(index) }}>Up</button>
-                      <button type="button" onClick={function () { moveTrackDown(index) }}>Down</button>
-                      <button type="button" onClick={function () { removeTrack(t.id) }} disabled={tracks.length <= 1}>Remove</button>
+                      <button type="button" onClick={function () { moveTrackUp(index) }}
+                        style={{ padding: '10px 16px', border: `2px solid ${FOREGROUND}`, borderRadius: 10, fontWeight: 800, fontSize: 18, background: '#fff', cursor: 'pointer' }}
+                      >Up</button>
+                      <button type="button" onClick={function () { moveTrackDown(index) }}
+                        style={{ padding: '10px 16px', border: `2px solid ${FOREGROUND}`, borderRadius: 10, fontWeight: 800, fontSize: 18, background: '#fff', cursor: 'pointer' }}
+                      >Down</button>
+                      <button type="button" onClick={function () { removeTrack(t.id) }} disabled={tracks.length <= 1}
+                        style={{ padding: '10px 16px', border: `2px solid ${FOREGROUND}`, borderRadius: 10, fontWeight: 800, fontSize: 18, background: '#fff', cursor: tracks.length <= 1 ? 'not-allowed' : 'pointer', opacity: tracks.length <= 1 ? 0.5 : 1 }}
+                      >Remove</button>
                     </div>
                   </div>
                 )
               })}
               <div>
-                <button type="button" onClick={addTrack}>Add Track</button>
+                <button type="button" onClick={addTrack}
+                  style={{ padding: '12px 18px', backgroundColor: ACCENT, color: '#fff', borderRadius: 10, fontWeight: 800, fontSize: 20, boxShadow: '0 8px 22px rgba(0,0,0,0.12)', cursor: 'pointer' }}
+                >Add Track</button>
               </div>
-            </div>
-          </fieldset>
-        )}
+              </div>
+            </fieldset>
+          )}
 
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button type="submit">Preview Manifest</button>
-          <button type="button" onClick={uploadRelease} disabled={isUploading}>{isUploading ? 'Uploading...' : 'Upload'}</button>
-        </div>
-      </form>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button type="submit"
+              style={{ padding: '12px 18px', border: `2px solid ${FOREGROUND}`, background: '#fff', color: '#000', borderRadius: 10, fontWeight: 800, fontSize: 24, cursor: 'pointer', boxShadow: '0 8px 22px rgba(0,0,0,0.12)' }}
+            >Preview Manifest</button>
+            <button type="button" onClick={uploadRelease} disabled={isUploading}
+              style={{ padding: '12px 18px', backgroundColor: ACCENT, color: '#fff', borderRadius: 10, fontWeight: 800, fontSize: 24, cursor: isUploading ? 'wait' : 'pointer', opacity: isUploading ? 0.7 : 1, boxShadow: '0 8px 22px rgba(0,0,0,0.12)' }}
+            >{isUploading ? 'Uploading...' : 'Upload'}</button>
+          </div>
+        </form>
+      </div>
 
       {manifestPreview ? (
         <div style={{ marginTop: 24 }}>
-          <h2>manifest.json</h2>
-          <pre style={{ background: '#111', color: '#0f0', padding: 16, borderRadius: 8, overflowX: 'auto' }}>{manifestPreview}</pre>
+          <h2 style={{ fontSize: 48, fontWeight: 900, margin: '0 0 8px' }}>manifest.json</h2>
+          <pre style={{ background: '#111', color: '#0f0', padding: 16, borderRadius: 12, overflowX: 'auto', border: `2px solid ${FOREGROUND}` }}>{manifestPreview}</pre>
         </div>
       ) : null}
       {uploadResult ? (
         <div style={{ marginTop: 24 }}>
-          <h2>Upload Result</h2>
-          <pre style={{ background: '#111', color: uploadResult.ok ? '#0f0' : '#f33', padding: 16, borderRadius: 8, overflowX: 'auto' }}>{JSON.stringify(uploadResult.data, null, 2)}</pre>
+          <h2 style={{ fontSize: 48, fontWeight: 900, margin: '0 0 8px' }}>Upload Result</h2>
+          <pre style={{ background: '#111', color: uploadResult.ok ? '#0f0' : '#f33', padding: 16, borderRadius: 12, overflowX: 'auto', border: `2px solid ${FOREGROUND}` }}>{JSON.stringify(uploadResult.data, null, 2)}</pre>
         </div>
       ) : null}
     </div>
