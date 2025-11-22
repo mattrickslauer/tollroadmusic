@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     const apiKeyId = process.env.CDP_SECRET_KEY_ID || process.env.KEY_NAME;
     const apiKeySecret = process.env.CDP_SECRET_KEY || process.env.KEY_SECRET;
     if (!apiKeyId || !apiKeySecret) {
+      console.error("onramp missing_keys");
       return NextResponse.json({ error: "missing_keys" }, { status: 500 });
     }
 
@@ -53,19 +54,16 @@ export async function POST(request: Request) {
     const assets = Array.isArray(body?.assets) ? body.assets : ["USDC"];
     const blockchains = Array.isArray(body?.blockchains) ? body.blockchains : ["base"];
     if (!address || typeof address !== "string") {
+      console.error("onramp invalid address", body);
       return NextResponse.json({ error: "invalid address" }, { status: 400 });
     }
 
-    const preferredClientIp = typeof body?.clientIp === "string" ? body.clientIp : undefined;
-    const clientIp = getClientIp(request, preferredClientIp);
-    if (!clientIp) {
-      return NextResponse.json({ error: "invalid_client_ip" }, { status: 400 });
-    }
     const payload = {
       addresses: [{ address, blockchains }],
       assets,
-      clientIp,
+      clientIp: getClientIp(request),
     };
+    console.log("onramp payload", payload);
 
     const bearer = await generateJwt({
       apiKeyId,
@@ -86,19 +84,29 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
 
+    const text = await res.text().catch(function swallow() { return ""; });
+    console.log("onramp response", { status: res.status, ok: res.ok, body: text });
+
     if (!res.ok) {
-      const text = await res.text().catch(function swallow() { return ""; });
       return NextResponse.json({ error: "token_failed", detail: text }, { status: 502 });
     }
 
-    const json = await res.json();
-    const token = json?.data?.token;
+    let parsed;
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch (parseErr) {
+      console.error("onramp parse error", parseErr);
+      return NextResponse.json({ error: "parse_error", detail: text }, { status: 502 });
+    }
+
+    const token = parsed?.data?.token || parsed?.token;
     if (!token || typeof token !== "string") {
-      return NextResponse.json({ error: "no_token" }, { status: 502 });
+      return NextResponse.json({ error: "no_token", detail: text }, { status: 502 });
     }
 
     return NextResponse.json({ token });
   } catch (e) {
+    console.error("onramp server_error", e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useEvmAddress } from '@coinbase/cdp-hooks'
 
 type TrackInput = {
   id: string
@@ -12,6 +13,7 @@ type TrackInput = {
 export default function Page() {
   const [albumTitle, setAlbumTitle] = useState('')
   const [artist, setArtist] = useState('')
+  const [artistWallet, setArtistWallet] = useState('')
   const [mode, setMode] = useState<'album' | 'single'>('album')
   const [releaseDate, setReleaseDate] = useState('')
   const [genre, setGenre] = useState('')
@@ -21,6 +23,13 @@ export default function Page() {
   const [cover, setCover] = useState<File | undefined>(undefined)
   const [tracks, setTracks] = useState<TrackInput[]>([{ id: crypto.randomUUID(), title: '' }])
   const [manifestPreview, setManifestPreview] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadResult, setUploadResult] = useState<any>(null)
+  const evmAddress = useEvmAddress()
+
+  useEffect(function syncArtistWalletFromCoinbase() {
+    setArtistWallet((evmAddress as any) || '')
+  }, [evmAddress])
 
   function addTrack() {
     setTracks(function next(prev) {
@@ -117,6 +126,38 @@ export default function Page() {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     buildManifestPreview()
+  }
+
+  async function uploadRelease() {
+    if (isUploading) return
+    const visibleTracks = mode === 'single' ? tracks.slice(0, 1) : tracks
+    const fd = new FormData()
+    fd.append('mode', mode)
+    fd.append('albumTitle', albumTitle)
+    fd.append('artist', artist)
+    fd.append('artistWallet', artistWallet)
+    fd.append('releaseDate', releaseDate)
+    fd.append('genre', genre)
+    fd.append('label', label)
+    fd.append('explicit', String(explicit))
+    fd.append('description', description)
+    if (cover) fd.append('cover', cover)
+    visibleTracks.forEach(function (t, i) {
+      fd.append('tracks[' + i + '][title]', t.title)
+      if (t.file) fd.append('tracks[' + i + '][audio]', t.file)
+      if (t.lyrics) fd.append('tracks[' + i + '][lyrics]', t.lyrics)
+    })
+    setIsUploading(true)
+    setUploadResult(null)
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+      setUploadResult({ ok: res.ok, data: json })
+    } catch (err) {
+      setUploadResult({ ok: false, data: { error: 'network error' } })
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
@@ -237,6 +278,7 @@ export default function Page() {
 
         <div style={{ display: 'flex', gap: 12 }}>
           <button type="submit">Preview Manifest</button>
+          <button type="button" onClick={uploadRelease} disabled={isUploading}>{isUploading ? 'Uploading...' : 'Upload'}</button>
         </div>
       </form>
 
@@ -244,6 +286,12 @@ export default function Page() {
         <div style={{ marginTop: 24 }}>
           <h2>manifest.json</h2>
           <pre style={{ background: '#111', color: '#0f0', padding: 16, borderRadius: 8, overflowX: 'auto' }}>{manifestPreview}</pre>
+        </div>
+      ) : null}
+      {uploadResult ? (
+        <div style={{ marginTop: 24 }}>
+          <h2>Upload Result</h2>
+          <pre style={{ background: '#111', color: uploadResult.ok ? '#0f0' : '#f33', padding: 16, borderRadius: 8, overflowX: 'auto' }}>{JSON.stringify(uploadResult.data, null, 2)}</pre>
         </div>
       ) : null}
     </div>
