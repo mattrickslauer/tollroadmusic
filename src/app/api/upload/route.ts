@@ -138,69 +138,26 @@ export async function POST(req: Request) {
       trackId?: string
     }> = []
 
-    for (let i = 0; i < tracks.length; i++) {
-      const t = tracks[i]
-      console.log('upload:track:start', { index: i, title: t.title, hasAudio: !!t.audio, hasLyrics: !!t.lyrics })
-      let audioCid = ''
-      let lyricsCid = ''
-      let ivHex = ''
-      let tagHex = ''
-      let durationSeconds = 0
-      let pricePerMinuteCents = PRICE_PER_MINUTE_CENTS
-      if (typeof t.durationSeconds === 'number' && t.durationSeconds > 0) {
-        durationSeconds = Math.floor(t.durationSeconds)
+    try {
+      const parallelItems = await Promise.all(
+        tracks.map(function (t, i) {
+          return processTrack(t, i, synapse)
+        })
+      )
+      for (let i = 0; i < parallelItems.length; i++) {
+        items.push(parallelItems[i])
       }
-      if (t.audio) {
-        const audioBuf = await fileToBuffer(t.audio)
-        if (!audioBuf || audioBuf.length === 0) {
-          return NextResponse.json({ error: 'empty audio at index ' + i }, { status: 400 })
-        }
-        console.log('upload:track:audio:size', { index: i, bytes: audioBuf.length })
-        const enc = encryptAes256Gcm(audioBuf)
-        ivHex = enc.iv.toString('hex')
-        tagHex = enc.tag.toString('hex')
-        const payload = Buffer.concat([enc.iv, enc.tag, enc.ciphertext])
-        console.log('upload:track:audio:encrypted:size', { index: i, bytes: payload.length })
-        try {
-          const up = await (synapse as any).storage.upload(new Uint8Array(payload))
-          audioCid = up.pieceCid || ''
-          console.log('upload:track:audio:cid', { index: i, audioCid })
-        } catch (e: any) {
-          console.error('upload:track:audio:error', { index: i, message: e?.message || '' })
-          throw e
-        }
+    } catch (e: any) {
+      if (e && typeof e.message === 'string' && e.message.startsWith('empty audio at index ')) {
+        return NextResponse.json({ error: e.message }, { status: 400 })
       }
-      if (t.lyrics) {
-        const lb = await fileToBuffer(t.lyrics)
-        if (lb && lb.length > 0) {
-          console.log('upload:track:lyrics:size', { index: i, bytes: lb.length })
-          try {
-            const up = await (synapse as any).storage.upload(new Uint8Array(lb))
-            lyricsCid = up.pieceCid || ''
-            console.log('upload:track:lyrics:cid', { index: i, lyricsCid })
-          } catch (e: any) {
-            console.error('upload:track:lyrics:error', { index: i, message: e?.message || '' })
-            throw e
-          }
-        }
-      }
-      items.push({
-        order: i + 1,
-        title: t.title || ('Track ' + (i + 1)),
-        audioCid,
-        lyricsCid,
-        ivHex,
-        tagHex,
-        durationSeconds,
-        pricePerMinuteCents
-      })
-      console.log('upload:track:done', { index: i, audioCid, lyricsCid })
+      throw e
     }
 
     let manifestCid = ''
     try {
       const manUp = await (synapse as any).storage.upload(new Uint8Array(manifestBuf))
-      manifestCid = manUp.pieceCid || ''
+      manifestCid = manUp && (manUp as any).pieceCid != null ? String((manUp as any).pieceCid) : ''
       console.log('upload:manifest:cid', manifestCid)
     } catch (e: any) {
       console.error('upload:manifest:error', e?.message || '')
@@ -210,8 +167,9 @@ export async function POST(req: Request) {
     const db = getDb()
     const artistId = upsertArtist(artist, artistWallet)
     console.log('db:artist:upserted', { artist, artistWallet, artistId })
-    const uploadId = insertUpload(artistId, albumTitle, mode, manifestCid, coverUp ? (coverUp.pieceCid || '') : '', '')
-    console.log('db:upload:inserted', { uploadId, artistId, albumTitle, mode, manifestCid, coverCid: coverUp ? (coverUp.pieceCid || '') : '' })
+    const coverCid = coverUp && (coverUp as any).pieceCid != null ? String((coverUp as any).pieceCid) : ''
+    const uploadId = insertUpload(artistId, albumTitle, mode, manifestCid, coverCid, '')
+    console.log('db:upload:inserted', { uploadId, artistId, albumTitle, mode, manifestCid, coverCid })
     for (let i = 0; i < items.length; i++) {
       const it = items[i]
       const trackId = 'u' + uploadId + '-t' + it.order
@@ -237,7 +195,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       datasetId: null,
       manifestCid,
-      coverCid: coverUp ? (coverUp.pieceCid || '') : null,
+      coverCid,
       items
     })
   } catch (e: any) {
@@ -248,6 +206,68 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ error: e?.message || 'upload failed' }, { status: 500 })
   }
+}
+
+async function processTrack(t: TrackInput, i: number, synapse: any) {
+  console.log('upload:track:start', { index: i, title: t.title, hasAudio: !!t.audio, hasLyrics: !!t.lyrics })
+  let audioCid = ''
+  let lyricsCid = ''
+  let ivHex = ''
+  let tagHex = ''
+  let durationSeconds = 0
+  let pricePerMinuteCents = PRICE_PER_MINUTE_CENTS
+  if (typeof t.durationSeconds === 'number' && t.durationSeconds > 0) {
+    durationSeconds = Math.floor(t.durationSeconds)
+  }
+  async function handleAudio() {
+    if (!t.audio) return
+    const audioBuf = await fileToBuffer(t.audio)
+    if (!audioBuf || audioBuf.length === 0) {
+      throw new Error('empty audio at index ' + i)
+    }
+    console.log('upload:track:audio:size', { index: i, bytes: audioBuf.length })
+    const enc = encryptAes256Gcm(audioBuf)
+    ivHex = enc.iv.toString('hex')
+    tagHex = enc.tag.toString('hex')
+    const payload = Buffer.concat([enc.iv, enc.tag, enc.ciphertext])
+    console.log('upload:track:audio:encrypted:size', { index: i, bytes: payload.length })
+    try {
+      const up = await (synapse as any).storage.upload(new Uint8Array(payload))
+      audioCid = up && (up as any).pieceCid != null ? String((up as any).pieceCid) : ''
+      console.log('upload:track:audio:cid', { index: i, audioCid })
+    } catch (e: any) {
+      console.error('upload:track:audio:error', { index: i, message: e?.message || '' })
+      throw e
+    }
+  }
+  async function handleLyrics() {
+    if (!t.lyrics) return
+    const lb = await fileToBuffer(t.lyrics)
+    if (lb && lb.length > 0) {
+      console.log('upload:track:lyrics:size', { index: i, bytes: lb.length })
+      try {
+        const up = await (synapse as any).storage.upload(new Uint8Array(lb))
+        lyricsCid = up && (up as any).pieceCid != null ? String((up as any).pieceCid) : ''
+        console.log('upload:track:lyrics:cid', { index: i, lyricsCid })
+      } catch (e: any) {
+        console.error('upload:track:lyrics:error', { index: i, message: e?.message || '' })
+        throw e
+      }
+    }
+  }
+  await Promise.all([handleAudio(), handleLyrics()])
+  const item = {
+    order: i + 1,
+    title: t.title || ('Track ' + (i + 1)),
+    audioCid,
+    lyricsCid,
+    ivHex,
+    tagHex,
+    durationSeconds,
+    pricePerMinuteCents
+  }
+  console.log('upload:track:done', { index: i, audioCid, lyricsCid })
+  return item
 }
 
 

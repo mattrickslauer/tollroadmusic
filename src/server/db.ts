@@ -106,4 +106,63 @@ export function getTrackByTrackId(trackId: string) {
   return row
 }
 
+export function getCatalogFromDb() {
+  const d = getDb()
+  const sel = d.prepare(`
+    SELECT
+      t.id AS track_row_id,
+      t.track_id AS track_id,
+      t.title AS track_title,
+      t.duration_seconds AS duration_seconds,
+      t.upload_id AS upload_id,
+      u.album_title AS album_title,
+      u.mode AS mode,
+      u.cover_cid AS cover_cid,
+      u.created_at AS created_at,
+      a.name AS artist_name
+    FROM tracks t
+    JOIN uploads u ON t.upload_id = u.id
+    JOIN artists a ON u.artist_id = a.id
+    ORDER BY u.created_at DESC, t.order_index ASC
+  `)
+  const rows = sel.all() as any[]
+  const albumsByUploadId = new Map<number, { id: string, title: string, artistName: string, coverPath: string, tracks: Array<{ id: string, title: string, durationSeconds: number, audioPath: string, albumId: string, artistName: string, coverPath: string }> }>()
+  const allTracks: Array<{ id: string, title: string, durationSeconds: number, audioPath: string, albumId: string, artistName: string, coverPath: string }> = []
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i]
+    const uploadId = Number(r.upload_id)
+    if (!r.track_id) {
+      continue
+    }
+    const albumId = String(uploadId)
+    const artistName = r.artist_name || ''
+    const coverPath = r.cover_cid ? '/api/cover/' + String(r.cover_cid) : '/logo.png'
+    const durationSeconds = typeof r.duration_seconds === 'number' && Number.isFinite(r.duration_seconds) && r.duration_seconds > 0 ? Math.floor(r.duration_seconds) : 0
+    const track = {
+      id: String(r.track_id),
+      title: r.track_title || '',
+      durationSeconds,
+      audioPath: '/api/stream/' + String(r.track_id),
+      albumId,
+      artistName,
+      coverPath
+    }
+    let album = albumsByUploadId.get(uploadId)
+    if (!album) {
+      album = {
+        id: albumId,
+        title: r.album_title || track.title || 'Untitled',
+        artistName,
+        coverPath,
+        tracks: []
+      }
+      albumsByUploadId.set(uploadId, album)
+    }
+    album.tracks.push(track)
+    allTracks.push(track)
+  }
+  const albums = Array.from(albumsByUploadId.values())
+  return { albums, tracks: allTracks }
+}
+
 

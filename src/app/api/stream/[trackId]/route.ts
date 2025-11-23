@@ -5,9 +5,9 @@ import { getTrackByTrackId } from '@/server/db'
 
 export const runtime = 'nodejs'
 
-export async function GET(_req: Request, context: { params: { trackId: string } }) {
+export async function GET(_req: Request, context: { params: Promise<{ trackId: string }> }) {
   try {
-    const trackId = context.params.trackId
+    const { trackId } = await context.params
     if (!trackId) {
       return NextResponse.json({ error: 'missing trackId' }, { status: 400 })
     }

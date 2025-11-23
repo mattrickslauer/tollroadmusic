@@ -1,17 +1,43 @@
 'use client'
 
 import { useCurrentUser } from "@coinbase/cdp-hooks";
-import { useMemo } from "react";
-import { catalog } from "@/lib/catalog";
+import { useEffect, useMemo, useState } from "react";
+import type { Album, Track } from "@/types/music";
 import AlbumCarousel from "@/components/AlbumCarousel";
 import TrackList from "@/components/TrackList";
 import RequireSignIn from "@/components/RequireSignIn";
 
 export default function ListenerPage() {
   const { currentUser } = useCurrentUser();
-  const featuredAlbums = useMemo(function getA() { return catalog.albums.slice(0, 4); }, []);
-  const newReleases = useMemo(function getB() { return catalog.albums.slice(0, 4).reverse(); }, []);
-  const trendingTracks = useMemo(function getC() { return catalog.tracks.slice(0, 8); }, []);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
+
+  useEffect(function loadCatalog() {
+    let cancelled = false;
+    async function run() {
+      try {
+        const res = await fetch("/api/catalog");
+        if (!res.ok) {
+          return;
+        }
+        const json = await res.json();
+        if (cancelled) {
+          return;
+        }
+        setAlbums(Array.isArray(json.albums) ? json.albums : []);
+        setTracks(Array.isArray(json.tracks) ? json.tracks : []);
+      } catch (_e) {
+      }
+    }
+    run();
+    return function cleanup() {
+      cancelled = true;
+    };
+  }, []);
+
+  const featuredAlbums = useMemo(function getA() { return albums.slice(0, 4); }, [albums]);
+  const newReleases = useMemo(function getB() { return albums.slice(0, 4).reverse(); }, [albums]);
+  const trendingTracks = useMemo(function getC() { return tracks.slice(0, 8); }, [tracks]);
 
   return (
     <RequireSignIn>

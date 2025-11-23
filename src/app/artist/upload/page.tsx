@@ -29,7 +29,7 @@ export default function Page() {
   const evmAddress = useEvmAddress()
 
   useEffect(function syncArtistWalletFromCoinbase() {
-    setArtistWallet((evmAddress as any) || '')
+    setArtistWallet(evmAddress ? String((evmAddress as any)) : '')
   }, [evmAddress])
 
   function addTrack() {
