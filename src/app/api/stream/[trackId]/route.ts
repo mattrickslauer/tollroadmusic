@@ -18,6 +18,13 @@ function buildPaymentRequirements(req: Request, trackId: string, artistWallet: s
   const network = 'base-sepolia' as const
   const asset = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
   const upfrontCents = pricePerMinuteCents > 0 ? pricePerMinuteCents : 1
+  // The `extra` fields must match what the client uses when signing the EIP‑3009 permit.
+  // If they differ (e.g. undefined vs "USDC"/"2"), the facilitator will report
+  // `invalid_exact_evm_payload_signature`.
+  const extra = {
+    name: 'USDC',
+    version: '2',
+  }
   return {
     scheme: 'exact' as const,
     network,
@@ -28,6 +35,7 @@ function buildPaymentRequirements(req: Request, trackId: string, artistWallet: s
     payTo: artistWallet,
     maxTimeoutSeconds: 600,
     asset,
+    extra,
   }
 }
 
