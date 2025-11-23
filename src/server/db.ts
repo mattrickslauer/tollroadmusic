@@ -114,6 +114,7 @@ export function getCatalogFromDb() {
       t.track_id AS track_id,
       t.title AS track_title,
       t.duration_seconds AS duration_seconds,
+      t.price_per_minute_cents AS price_per_minute_cents,
       t.upload_id AS upload_id,
       u.album_title AS album_title,
       u.mode AS mode,
@@ -126,8 +127,8 @@ export function getCatalogFromDb() {
     ORDER BY u.created_at DESC, t.order_index ASC
   `)
   const rows = sel.all() as any[]
-  const albumsByUploadId = new Map<number, { id: string, title: string, artistName: string, coverPath: string, tracks: Array<{ id: string, title: string, durationSeconds: number, audioPath: string, albumId: string, artistName: string, coverPath: string }> }>()
-  const allTracks: Array<{ id: string, title: string, durationSeconds: number, audioPath: string, albumId: string, artistName: string, coverPath: string }> = []
+  const albumsByUploadId = new Map<number, { id: string, title: string, artistName: string, coverPath: string, tracks: Array<{ id: string, title: string, durationSeconds: number, audioPath: string, albumId: string, artistName: string, coverPath: string, pricePerMinuteCents: number }> }>()
+  const allTracks: Array<{ id: string, title: string, durationSeconds: number, audioPath: string, albumId: string, artistName: string, coverPath: string, pricePerMinuteCents: number }> = []
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i]
     const uploadId = Number(r.upload_id)
@@ -138,6 +139,7 @@ export function getCatalogFromDb() {
     const artistName = r.artist_name || ''
     const coverPath = r.cover_cid ? '/api/cover/' + String(r.cover_cid) : '/logo.png'
     const durationSeconds = typeof r.duration_seconds === 'number' && Number.isFinite(r.duration_seconds) && r.duration_seconds > 0 ? Math.floor(r.duration_seconds) : 0
+    const pricePerMinuteCents = typeof r.price_per_minute_cents === 'number' && Number.isFinite(r.price_per_minute_cents) && r.price_per_minute_cents > 0 ? Math.floor(r.price_per_minute_cents) : 1
     const track = {
       id: String(r.track_id),
       title: r.track_title || '',
@@ -145,7 +147,8 @@ export function getCatalogFromDb() {
       audioPath: '/api/stream/' + String(r.track_id),
       albumId,
       artistName,
-      coverPath
+      coverPath,
+      pricePerMinuteCents
     }
     let album = albumsByUploadId.get(uploadId)
     if (!album) {

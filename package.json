@@ -19,6 +19,7 @@
     "@coinbase/cdp-hooks": "^0.0.67",
     "@coinbase/cdp-react": "^0.0.67",
     "@coinbase/cdp-sdk": "^1.38.6",
+    "@coinbase/x402": "^0.7.3",
     "@filoz/synapse-sdk": "^0.36.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/context-async-hooks": "^2.2.0",
@@ -32,7 +33,9 @@
     "next": "16.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "require-in-the-middle": "^8.0.1"
+    "require-in-the-middle": "^8.0.1",
+    "x402-fetch": "^0.7.3",
+    "x402-next": "^0.7.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",

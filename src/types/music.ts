@@ -8,6 +8,7 @@ export type Track = {
   albumId: string;
   artistName: string;
   coverPath: string;
+  pricePerMinuteCents: number;
 };
 
 export type Album = {

@@ -9,7 +9,15 @@ export default function PlaybackBar() {
   const player = usePlayer();
   if (!player) return null;
   const p = player;
-  const { currentTrack, isPlaying, currentTime, duration, volume } = p;
+  const { currentTrack, isPlaying, currentTime, duration, volume, spentCents } = p;
+  console.log("[PlaybackBar] render", {
+    hasPlayer: !!player,
+    currentTrack,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+  });
 
   function formatTime(s: number) {
     const t = Math.floor(s || 0);
@@ -20,30 +28,66 @@ export default function PlaybackBar() {
   }
 
   function onToggle() {
+    console.log("[PlaybackBar] onToggle");
     p.togglePlay();
   }
 
   function onNext() {
+    console.log("[PlaybackBar] onNext");
     p.next();
   }
 
   function onPrev() {
+    console.log("[PlaybackBar] onPrev");
     p.prev();
   }
 
   function onSeek(e: React.ChangeEvent<HTMLInputElement>) {
     const v = Number(e.currentTarget.value);
+    console.log("[PlaybackBar] onSeek", { value: v });
     p.seekTo(v);
   }
 
   function onVolume(e: React.ChangeEvent<HTMLInputElement>) {
     const v = Number(e.currentTarget.value);
+    console.log("[PlaybackBar] onVolume", { value: v });
     p.setVolume(v);
   }
 
   const progressMax = useMemo(function computeMax() {
     return isFinite(duration) && duration > 0 ? duration : 0;
   }, [duration]);
+
+  function getPriceLabel() {
+    if (!currentTrack) {
+      return "";
+    }
+    const cents = currentTrack.pricePerMinuteCents;
+    if (!Number.isFinite(cents) || cents <= 0) {
+      return "";
+    }
+    if (cents === 1) {
+      return "1¢/min";
+    }
+    return String(cents) + "¢/min";
+  }
+
+  function getSpentLabel() {
+    if (!currentTrack) {
+      return "";
+    }
+    const cents = spentCents || 0;
+    if (!Number.isFinite(cents) || cents < 0) {
+      return "";
+    }
+    if (cents === 0) {
+      return "0¢ spent";
+    }
+    if (cents === 1) {
+      return "1¢ spent";
+    }
+    return String(cents) + "¢ spent";
+  }
 
   return (
     <div
@@ -100,6 +144,12 @@ export default function PlaybackBar() {
             {currentTrack ? currentTrack.title : "Nothing playing"}
           </div>
           <div style={{ opacity: 0.6 }}>{currentTrack ? currentTrack.artistName : ""}</div>
+          {currentTrack && (
+            <div style={{ opacity: 0.7, fontSize: 12 }}>
+              {getPriceLabel()}
+              {getSpentLabel() ? " • " + getSpentLabel() : ""}
+            </div>
+          )}
         </div>
       </div>
       <div className="pb-controls" style={{ display: "flex", alignItems: "center", gap: 8 }}>

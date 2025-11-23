@@ -1,16 +1,20 @@
 'use client'
 
-import { useCurrentUser } from "@coinbase/cdp-hooks";
+import { useCurrentUser, useEvmAddress } from "@coinbase/cdp-hooks";
 import { useEffect, useMemo, useState } from "react";
 import type { Album, Track } from "@/types/music";
 import AlbumCarousel from "@/components/AlbumCarousel";
 import TrackList from "@/components/TrackList";
 import RequireSignIn from "@/components/RequireSignIn";
+import { getBaseUsdcBalanceUsd, normalizeAddressInput } from "@/lib/funds";
 
 export default function ListenerPage() {
   const { currentUser } = useCurrentUser();
+  const evmAddress = useEvmAddress();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [balanceUsd, setBalanceUsd] = useState("");
+  const [balanceLoading, setBalanceLoading] = useState(false);
 
   useEffect(function loadCatalog() {
     let cancelled = false;
@@ -34,6 +38,33 @@ export default function ListenerPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(function syncBalance() {
+    const addr = normalizeAddressInput(evmAddress);
+    if (!addr) {
+      setBalanceUsd("");
+      return;
+    }
+    setBalanceLoading(true);
+    getBaseUsdcBalanceUsd(addr)
+      .then(function onOk(v) {
+        setBalanceUsd(v);
+      })
+      .catch(function onErr() {
+        setBalanceUsd("");
+      })
+      .finally(function onFinally() {
+        setBalanceLoading(false);
+      });
+  }, [evmAddress]);
+
+  function getHasFunds() {
+    const v = parseFloat(balanceUsd || "0");
+    if (!Number.isFinite(v)) {
+      return false;
+    }
+    return v >= 0.01;
+  }
 
   const featuredAlbums = useMemo(function getA() { return albums.slice(0, 4); }, [albums]);
   const newReleases = useMemo(function getB() { return albums.slice(0, 4).reverse(); }, [albums]);
@@ -76,6 +107,23 @@ export default function ListenerPage() {
               </div>
             </div>
           </div>
+
+          {!balanceLoading && !getHasFunds() && (
+            <div
+              style={{
+                marginTop: 8,
+                padding: 12,
+                borderRadius: 10,
+                border: "2px solid #ff4b4b",
+                backgroundColor: "#ffecec",
+                color: "#600000",
+                fontSize: 20,
+                fontWeight: 700,
+              }}
+            >
+              You have no funds available. Streaming costs $0.01 per minute. Open your wallet to add funds.
+            </div>
+          )}
 
           <AlbumCarousel title="Featured Albums" albums={featuredAlbums} />
           <AlbumCarousel title="New Releases" albums={newReleases} />

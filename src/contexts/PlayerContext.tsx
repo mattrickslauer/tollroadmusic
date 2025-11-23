@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useX402 } from "@coinbase/cdp-hooks";
 import { Track } from "@/types/music";
 
 type PlayerContextValue = {
@@ -11,6 +12,7 @@ type PlayerContextValue = {
   currentTime: number;
   duration: number;
   volume: number;
+  spentCents: number;
   playTrack: (track: Track, queue?: Track[]) => void;
   togglePlay: () => void;
   next: () => void;
@@ -35,6 +37,8 @@ export default function PlayerProvider(props: { children: React.ReactNode }) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [volume, setVolumeState] = useState<number>(0.9);
+  const [currentObjectUrl, setCurrentObjectUrl] = useState<string | null>(null);
+  const { fetchWithPayment } = useX402();
 
   useEffect(function ensureAudio() {
     if (!audioRef.current) {
@@ -69,14 +73,55 @@ export default function PlayerProvider(props: { children: React.ReactNode }) {
   }, [currentIndex, queue]);
 
   function loadAndPlay(track: Track) {
+    console.log("[Player] loadAndPlay", { trackId: track.id, src: track.audioPath });
     if (!audioRef.current) return;
-    audioRef.current.src = track.audioPath;
-    audioRef.current.currentTime = 0;
-    audioRef.current.play().then(function onOK() {
-      setIsPlaying(true);
-    }).catch(function onErr() {
+    const a = audioRef.current;
+    const src = track.audioPath;
+    if (!src) {
+      console.log("[Player] no src for track", { trackId: track.id });
+      return;
+    }
+    if (currentObjectUrl) {
+      console.log("[Player] revoke previous object url");
+      URL.revokeObjectURL(currentObjectUrl);
+    }
+    console.log("[Player] fetchWithPayment start", { src });
+    try {
+      fetchWithPayment(src, {
+        method: "GET",
+      })
+        .then(function onRes(res: any) {
+          console.log("[Player] fetchWithPayment response", { ok: (res as any)?.ok, status: (res as any)?.status });
+          if (!(res as any)?.ok) {
+            throw new Error("stream failed " + String((res as any)?.status || ""));
+          }
+          const headers = (res as any)?.headers;
+          const ct = headers && typeof headers.get === "function" ? headers.get("Content-Type") : null;
+          if (!ct || typeof ct !== "string" || ct.indexOf("audio/") !== 0) {
+            throw new Error("invalid content-type " + String(ct || ""));
+          }
+          return (res as any).blob();
+        })
+        .then(function onBlob(blob: any) {
+          console.log("[Player] blob created", { size: blob.size });
+          const url = URL.createObjectURL(blob);
+          setCurrentObjectUrl(url);
+          a.src = url;
+          a.currentTime = 0;
+          return a.play();
+        })
+        .then(function onOK() {
+          console.log("[Player] play started");
+          setIsPlaying(true);
+        })
+        .catch(function onErrAsync(e: any) {
+          console.error("[Player] loadAndPlay error (x402-async)", e);
+          setIsPlaying(false);
+        });
+    } catch (e: any) {
+      console.error("[Player] loadAndPlay error (x402-sync)", e);
       setIsPlaying(false);
-    });
+    }
   }
 
   function playTrack(track: Track, newQueue?: Track[]) {
@@ -149,6 +194,19 @@ export default function PlayerProvider(props: { children: React.ReactNode }) {
     return queue[currentIndex] || null;
   }, [queue, currentIndex]);
 
+  const spentCents = useMemo(function computeSpentCents() {
+    if (!currentTrack) return 0;
+    const price = currentTrack.pricePerMinuteCents;
+    if (!Number.isFinite(price) || price <= 0) return 0;
+    const t = currentTime || 0;
+    if (!Number.isFinite(t) || t <= 0) return 0;
+    const minutes = Math.floor(t / 60);
+    if (minutes <= 0) return 0;
+    const total = minutes * price;
+    if (!Number.isFinite(total) || total < 0) return 0;
+    return total;
+  }, [currentTrack, currentTime]);
+
   const value: PlayerContextValue = {
     currentTrack,
     isPlaying,
@@ -157,6 +215,7 @@ export default function PlayerProvider(props: { children: React.ReactNode }) {
     currentTime,
     duration,
     volume,
+    spentCents,
     playTrack,
     togglePlay,
     next: handleNext,

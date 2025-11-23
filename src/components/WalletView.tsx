@@ -158,6 +158,21 @@ export default function WalletView(props: WalletViewProps) {
     return `https://basescan.org/address/${addr}`;
   }
 
+  function getAvailableMinutes() {
+    if (!usdcBase) {
+      return 0;
+    }
+    const v = parseFloat(usdcBase);
+    if (!Number.isFinite(v) || v <= 0) {
+      return 0;
+    }
+    const cents = Math.floor(v * 100);
+    if (cents <= 0) {
+      return 0;
+    }
+    return cents;
+  }
+
   function clampAmount(n: number) {
     const min = 1;
     const max = 500;
@@ -204,32 +219,38 @@ export default function WalletView(props: WalletViewProps) {
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        display: "grid",
-        placeItems: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
         background: "rgba(0,0,0,0.4)",
+        overflowY: "auto",
       }}
       onClick={handleOverlayClick}
     >
       <div
         style={{
           width: "min(520px, 92vw)",
+          maxHeight: "min(720px, 100vh - 40px)",
           borderRadius: 16,
           border: `2px solid ${FOREGROUND}`,
           background: "#ffffff",
           boxShadow: "0 16px 36px rgba(0,0,0,0.2)",
           color: "#000",
           padding: 20,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
         }}
         onClick={stop}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 72, fontWeight: 900 }}>Wallet</div>
+            <div style={{ fontSize: "clamp(32px, 10vw, 72px)", fontWeight: 900 }}>Wallet</div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 9999, border: `2px solid ${FOREGROUND}`, backgroundColor: "#f8f8f8" }}>
               <span style={{ position: "relative", width: 64, height: 64, display: "inline-block" }}>
                 <Image src="/images/base-logo.png" alt="Base" fill style={{ objectFit: "contain" }} />
               </span>
-              <div style={{ fontSize: 24, fontWeight: 800, opacity: 0.8 }}>Base Network</div>
+              <div style={{ fontSize: "clamp(16px, 4vw, 24px)", fontWeight: 800, opacity: 0.8 }}>Base Network</div>
             </div>
           </div>
           <button
@@ -241,7 +262,7 @@ export default function WalletView(props: WalletViewProps) {
               padding: "8px 12px",
               borderRadius: 10,
               fontWeight: 800,
-              fontSize: 24,
+              fontSize: "clamp(16px, 4vw, 24px)",
               backgroundColor: "transparent",
               cursor: "pointer",
             }}
@@ -253,7 +274,7 @@ export default function WalletView(props: WalletViewProps) {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ fontSize: 48, opacity: 0.7 }}>Address</div>
+            <div style={{ fontSize: "clamp(20px, 7vw, 48px)", opacity: 0.7 }}>Address</div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 12, border: `2px solid ${FOREGROUND}`, backgroundColor: "#fafafa", maxWidth: "100%", flex: "1 1 auto", minWidth: 0 }}>
                 <div style={{ fontFamily: "monospace", fontSize: "clamp(12px, 4vw, 36px)", fontWeight: 700, letterSpacing: 0.5, flex: 1, minWidth: 0, wordBreak: "break-all", lineHeight: 1.1 }}>
@@ -269,7 +290,7 @@ export default function WalletView(props: WalletViewProps) {
                     padding: "8px 12px",
                     borderRadius: 10,
                     fontWeight: 800,
-                    fontSize: 24,
+                    fontSize: "clamp(16px, 4vw, 24px)",
                     backgroundColor: "white",
                     cursor: addressString ? "pointer" : "not-allowed",
                     opacity: addressString ? 1 : 0.5,
@@ -283,7 +304,7 @@ export default function WalletView(props: WalletViewProps) {
                 <span style={{ position: "relative", width: 80, height: 80, display: "inline-block" }}>
                   <Image src="/images/base-logo.png" alt="Base" fill style={{ objectFit: "contain" }} />
                 </span>
-                <div style={{ fontSize: 28, fontWeight: 800, opacity: 0.8 }}>Base network wallet</div>
+                <div style={{ fontSize: "clamp(18px, 4vw, 28px)", fontWeight: 800, opacity: 0.8 }}>Base network wallet</div>
               </div>
               <a
                 href={getBasescanUrl() || undefined}
@@ -295,7 +316,7 @@ export default function WalletView(props: WalletViewProps) {
                   padding: "8px 12px",
                   borderRadius: 10,
                   fontWeight: 800,
-                  fontSize: 24,
+                  fontSize: "clamp(16px, 4vw, 24px)",
                   textDecoration: "none",
                   pointerEvents: addressString ? "auto" : "none",
                   opacity: addressString ? 1 : 0.5,
@@ -318,7 +339,7 @@ export default function WalletView(props: WalletViewProps) {
               background: "#fff",
             }}
           >
-            <div style={{ fontSize: 48, opacity: 0.7 }}>Purchase Amount (USD)</div>
+            <div style={{ fontSize: "clamp(20px, 7vw, 48px)", opacity: 0.7 }}>Purchase Amount (USD)</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 12 }}>
               <input
                 type="range"
@@ -331,7 +352,7 @@ export default function WalletView(props: WalletViewProps) {
                 aria-label="Purchase amount slider"
               />
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ fontSize: 28, fontWeight: 800 }}>$</div>
+                <div style={{ fontSize: "clamp(18px, 4vw, 28px)", fontWeight: 800 }}>$</div>
                 <input
                   type="number"
                   min={1}
@@ -340,11 +361,11 @@ export default function WalletView(props: WalletViewProps) {
                   value={purchaseAmount}
                   onChange={handleAmountInputChange}
                   style={{
-                    width: 160,
+                    width: "min(160px, 40vw)",
                     border: `2px solid ${FOREGROUND}`,
                     borderRadius: 10,
                     padding: "8px 12px",
-                    fontSize: 24,
+                    fontSize: "clamp(16px, 4vw, 24px)",
                     fontWeight: 800,
                   }}
                   aria-label="Purchase amount input"
@@ -396,6 +417,9 @@ export default function WalletView(props: WalletViewProps) {
             <div style={{ fontSize: 96, fontWeight: 900 }}>
               {usdcBase ? `$${usdcBase}` : fundsLoading ? "…" : "$—.—"}
             </div>
+            <div style={{ fontSize: 24, fontWeight: 700, opacity: 0.8 }}>
+              {usdcBase ? `≈ ${getAvailableMinutes()} minutes at $0.01/min` : ""}
+            </div>
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -409,7 +433,7 @@ export default function WalletView(props: WalletViewProps) {
                 padding: "12px 18px",
                 borderRadius: 10,
                 fontWeight: 800,
-                fontSize: 24,
+                fontSize: "clamp(16px, 4vw, 24px)",
                 textDecoration: "none",
                 boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
                 transition: "transform 200ms ease, box-shadow 200ms ease",
@@ -435,7 +459,7 @@ export default function WalletView(props: WalletViewProps) {
                   padding: "12px 18px",
                   borderRadius: 10,
                   fontWeight: 800,
-                  fontSize: 24,
+                  fontSize: "clamp(16px, 4vw, 24px)",
                   textDecoration: "none",
                   boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
                   transition: "transform 200ms ease, box-shadow 200ms ease",
@@ -449,7 +473,7 @@ export default function WalletView(props: WalletViewProps) {
                   padding: "12px 18px",
                   borderRadius: 10,
                   fontWeight: 800,
-                  fontSize: 24,
+                  fontSize: "clamp(16px, 4vw, 24px)",
                   backgroundColor: "transparent",
                 }}
               >

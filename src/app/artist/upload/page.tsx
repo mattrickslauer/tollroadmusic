@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useEvmAddress } from '@coinbase/cdp-hooks'
 import { FOREGROUND, ACCENT } from '@/lib/colors'
+import { normalizeAddressInput } from '@/lib/funds'
 
 type TrackInput = {
   id: string
@@ -29,7 +30,8 @@ export default function Page() {
   const evmAddress = useEvmAddress()
 
   useEffect(function syncArtistWalletFromCoinbase() {
-    setArtistWallet(evmAddress ? String((evmAddress as any)) : '')
+    const addr = normalizeAddressInput(evmAddress as any)
+    setArtistWallet(addr)
   }, [evmAddress])
 
   function addTrack() {

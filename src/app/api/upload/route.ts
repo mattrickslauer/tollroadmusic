@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSynapse } from '@/server/synapse'
 import { encryptAes256Gcm } from '@/server/crypto'
 import { getDb, upsertArtist, insertUpload, insertTrack } from '@/server/db'
+import { normalizeAddressInput } from '@/lib/funds'
 
 export const runtime = 'nodejs'
 
@@ -66,7 +67,8 @@ export async function POST(req: Request) {
     const mode = getText(fd, 'mode') || 'album'
     const albumTitle = getText(fd, 'albumTitle')
     const artist = getText(fd, 'artist')
-    const artistWallet = getText(fd, 'artistWallet')
+    const artistWalletRaw = getText(fd, 'artistWallet')
+    const artistWallet = normalizeAddressInput(artistWalletRaw)
     const releaseDate = getText(fd, 'releaseDate')
     const genre = getText(fd, 'genre')
     const label = getText(fd, 'label')
