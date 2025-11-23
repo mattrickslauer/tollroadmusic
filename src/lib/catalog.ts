@@ -11,6 +11,7 @@ function makeTrack(id: string, title: string, albumId: string, artistName: strin
     albumId,
     artistName,
     coverPath,
+    pricePerMinuteCents: 100,
   };
 }
 
