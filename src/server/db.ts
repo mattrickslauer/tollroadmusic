@@ -42,6 +42,10 @@ function init() {
       lyrics_cid TEXT,
       iv_hex TEXT,
       tag_hex TEXT,
+      track_id TEXT,
+      duration_seconds INTEGER,
+      price_per_minute_cents INTEGER,
+      artist_wallet TEXT,
       FOREIGN KEY (upload_id) REFERENCES uploads(id)
     );
   `)
@@ -74,10 +78,32 @@ export function insertUpload(artistId: number, albumTitle: string, mode: string,
   return Number(r.lastInsertRowid)
 }
 
-export function insertTrack(uploadId: number, orderIndex: number, title: string, audioCid: string, lyricsCid: string, ivHex: string, tagHex: string) {
+export function insertTrack(uploadId: number, orderIndex: number, title: string, audioCid: string, lyricsCid: string, ivHex: string, tagHex: string, trackId?: string, durationSeconds?: number, pricePerMinuteCents?: number, artistWallet?: string) {
   const d = getDb()
-  const ins = d.prepare('INSERT INTO tracks (upload_id, order_index, title, audio_cid, lyrics_cid, iv_hex, tag_hex) VALUES (?, ?, ?, ?, ?, ?, ?)')
-  ins.run(uploadId, orderIndex, title || null, audioCid || null, lyricsCid || null, ivHex || null, tagHex || null)
+  const ins = d.prepare('INSERT INTO tracks (upload_id, order_index, title, audio_cid, lyrics_cid, iv_hex, tag_hex, track_id, duration_seconds, price_per_minute_cents, artist_wallet) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+  ins.run(
+    uploadId,
+    orderIndex,
+    title || null,
+    audioCid || null,
+    lyricsCid || null,
+    ivHex || null,
+    tagHex || null,
+    trackId || null,
+    typeof durationSeconds === 'number' ? durationSeconds : null,
+    typeof pricePerMinuteCents === 'number' ? pricePerMinuteCents : null,
+    artistWallet || null
+  )
+}
+
+export function getTrackByTrackId(trackId: string) {
+  const d = getDb()
+  const sel = d.prepare('SELECT * FROM tracks WHERE track_id = ?')
+  const row = sel.get(trackId) as any
+  if (!row) {
+    return null
+  }
+  return row
 }
 
 

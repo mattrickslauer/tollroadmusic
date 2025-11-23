@@ -1,5 +1,4 @@
 import { Synapse, RPC_URLS } from '@filoz/synapse-sdk'
-import { MaxUint256 } from 'ethers'
 
 let synapsePromise: Promise<ReturnType<typeof Synapse.create>> | null = null
 
@@ -19,18 +18,3 @@ export function getSynapse() {
   }
   return synapsePromise
 }
-
-export function getDatasetId() {
-  return process.env.FOC_DATASET_ID || ''
-}
-
-export async function depositUsdfc(amountWei: bigint, operator: string) {
-  if (!operator || operator.length === 0) {
-    throw new Error('operator missing')
-  }
-  const s = await getSynapse()
-  const tx = await s.payments.depositWithPermitAndApproveOperator(amountWei, operator, MaxUint256, MaxUint256, 0n)
-  return tx
-}
-
-

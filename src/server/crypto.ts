@@ -17,4 +17,18 @@ export function encryptAes256Gcm(data: Buffer) {
   return { ciphertext: enc, iv, tag }
 }
 
+export function decryptAes256GcmFromPayload(payload: Buffer) {
+  const key = requireHexKey('ENC_KEY')
+  if (!payload || payload.length <= 28) {
+    throw new Error('invalid payload')
+  }
+  const iv = payload.subarray(0, 12)
+  const tag = payload.subarray(12, 28)
+  const ciphertext = payload.subarray(28)
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
+  decipher.setAuthTag(tag)
+  const dec = Buffer.concat([decipher.update(ciphertext), decipher.final()])
+  return dec
+}
+
 
