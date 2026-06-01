@@ -44,3 +44,29 @@ a {
     color-scheme: dark;
   }
 }
+
+/*
+ * Coinbase CDP sign-in modal fix.
+ * The SDK's default overlay/background tokens are generated with CSS
+ * relative-color syntax — color(from var(--…) srgb r g b / α) — which some
+ * mobile browsers don't support. On those browsers the value is invalid and
+ * `background: var(--cdp-web-colors-bg-overlay)` falls back to transparent,
+ * leaving the sign-in modal and its backdrop see-through. Force opaque,
+ * broadly supported values on the CDP modal elements. The CSS-module class
+ * names are `Name-module__local___hash`; the readable prefix is stable across
+ * patch bumps, so we match it with a substring selector.
+ */
+:root {
+  --cdp-web-colors-bg-overlay: rgba(10, 11, 13, 0.6);
+}
+
+[class*="Modal-module__overlay___"] {
+  --cdp-web-colors-bg-overlay: rgba(10, 11, 13, 0.6);
+  background: rgba(10, 11, 13, 0.6) !important;
+}
+
+[class*="Modal-module__modal___"],
+[class*="SignIn-module__sign-in___"] {
+  --cdp-web-colors-page-bg-default: #0a0b0d;
+  background-color: #0a0b0d !important;
+}
