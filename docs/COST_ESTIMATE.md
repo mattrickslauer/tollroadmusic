@@ -1,70 +1,119 @@
-# TollRoad — Workload Cost Estimate
+# TollRoad — Unit Economics (All-In AWS Cost to Stream)
 
-All resources in **us-east-1**, on-demand pricing (verified June 2026). Two
-scales matter and they tell different stories:
-
-- **Demo / judging scale** — what actually runs during H0. Effectively **$0/mo**: everything fits inside perpetual free tiers and **Aurora DSQL + Lambda scale to zero when idle**. This is the literal "Hack the Zero Stack" answer.
-- **Early-traction scale — 10,000 MAU.** Realistic startup unit economics. Here a single line — **CloudFront audio egress — is ~96% of the bill**, and it's a clean per-minute pass-through cost the per-minute price more than covers.
-
----
-
-## Workload anchor (10K MAU)
-
-| Assumption | Value |
-|---|---|
-| Monthly active listeners | 10,000 |
-| Minutes played / listener / mo | ~817 (9,800/yr ÷ 12) |
-| **Total billed minutes / mo** | **8.17 M** |
-| Audio bitrate (HLS) | 160 kbps → **1.2 MB/min** |
-| Meter writes / billed minute | 2 (conditional balance decrement + metered event) |
-| Price to listener | ~**$0.01 / min** (≈ $8.17/listener/mo, beats the $11.99 flat plan) |
+What does it actually cost to stream one minute of music on TollRoad? This is a
+bottom-up marginal cost across **every AWS service in the path**, expressed per
+**minute**, per **song**, and per **user**. All rates are us-east-1 on-demand,
+verified June 2026. Marginal = the incremental cost of one more minute (free
+tiers are a fixed subsidy, excluded from the per-unit rate; treated separately
+at the end).
 
 ---
 
-## Per-service cost @ 10K MAU
+## The canonical streamed minute
 
-| Service | Driver & math | $/mo |
-|---|---|---:|
-| **CloudFront** (egress) | 8.17M min × 1.2 MB = **9.8 TB**; minus 1 TB always-free = 8.8 TB × $0.085/GB | **~750** |
-| **DynamoDB** (on-demand) | writes 16.3M WRU × $0.625/M = $10.2 · streams 8.17M ÷ 100K × $0.02 = $1.6 · reads ~$0.3 · storage <25 GB = **free** | ~12 |
-| **Bedrock** (Claude Haiku) | "explain my statement" — ~3K calls (~4.5M in × $1/M + ~1.2M out × $5/M) | ~10 |
-| **Aurora DSQL** | rollup writes + catalog/dashboard reads; **modeled** ~600K DPU (−100K free) × $8/M + <1 GB storage. **Scales to zero idle.** | ~5 |
-| **KMS** | 1 CMK × $1 + minimal requests (S3 Bucket Keys cut KMS calls ~99%) | ~1 |
-| **S3** (Standard) | ~25 GB catalog × $0.023 + origin-miss GETs (CloudFront absorbs the rest) | ~1 |
-| **Lambda** | rollup only (~82K invocations, ~8K GB-s) — **inside the 1M req / 400K GB-s free tier** | ~0 |
-| **Total** | | **~$779/mo** |
+One minute of playback consumes a fixed, known basket of AWS resources:
 
-> `/api/renew` (the hot path) runs as a **Next.js route on Vercel**, so it isn't on the AWS bill — the AWS Lambda line is the Streams rollup alone.
-
-### The bill is 96% CDN — and that's fine
-
-Audio streaming is bandwidth-bound; **CloudFront egress is the only line that scales with usage**, and it's a pure pass-through COGS:
-
-- **CDN cost per minute** ≈ $750 ÷ 8.17M = **~$0.000092/min** (≈ 0.0092¢).
-- At a **$0.01/min** price that's **~0.9% of revenue**. Gross billed ≈ $81.7K/mo; total infra $779 ≈ **0.95% of gross billed**.
-- A platform take of just **1% of billed minutes (~$817/mo)** already covers the entire infrastructure bill. Margin is structurally high because everything except bytes-on-the-wire is near-free and serverless.
+| Dimension | Value | Why |
+|---|---|---|
+| Audio bitrate | **160 kbps** → **1.2 MB/min** | Music-quality HLS; bitrate is the dominant lever (see below) |
+| CloudFront requests | **~10 / min** | HLS segments at ~6s each + manifest |
+| DynamoDB writes | **2 / min** | conditional balance decrement + 1 metered event |
+| DynamoDB stream records | **1 / min** | the metered event → rollup |
+| Aurora DSQL ops | **1 ledger insert + 1 summary upsert** | append-only royalty credit |
+| Lambda | **0.01 invocation/min** | rollup batches 100 events/invocation |
+| KMS | **~0 calls/min** | SSE-KMS + S3 Bucket Keys + CloudFront cache → no per-play decrypt |
 
 ---
 
-## Scaling levers (in priority order)
+## Cost per minute streamed — every AWS service
 
-1. **Audio bitrate — the dominant lever.** Egress scales linearly with it. 160 → 128 kbps cuts the CDN line ~20%; 96 kbps (still fine for casual listening) ~40%. Offer quality tiers; default mobile to a lower bitrate.
-2. **Cache-hit ratio.** Popular catalog served from CloudFront edge → S3 origin GETs and KMS calls stay negligible. Long TTLs on immutable audio segments.
-3. **S3 Bucket Keys** on the SSE-KMS bucket — collapses per-object KMS requests ~99%, keeping KMS at ~$1 (the key) regardless of traffic.
-4. **DSQL scale-to-zero** — no idle compute between billing runs; the 100K-DPU/mo free allowance covers low traffic outright. (This is why DSQL over Aurora Serverless v2 — the latter bills idle ACUs.)
-5. **Per-minute (not per-second) metering** — the billing unit is one write/minute, not 60. Keeps DynamoDB writes and the ledger 60× smaller for no billing loss.
+Shown as **$ per 1,000 minutes** (the per-minute figures are fractions of a
+cent, so 1,000 min is the readable anchor).
 
-## Demo / judging scale ≈ $0/mo
+| AWS service | Unit math | $ / 1,000 min | % of total |
+|---|---|---:|---:|
+| **CloudFront — egress** | 1.2 GB × $0.085/GB | **0.10200** | **89.2%** |
+| **CloudFront — requests** | 10,000 req × $0.01/10k | **0.01000** | **8.7%** |
+| DynamoDB — writes | 2,000 WRU × $0.625/M | 0.00125 | 1.09% |
+| DynamoDB — streams | 1,000 rec × $0.02/100k | 0.00020 | 0.17% |
+| DynamoDB — storage (event TTL) | 0.3 KB/event, ~30-day resident | 0.00008 | 0.07% |
+| DynamoDB — reads (live meter) | 0.5 RRU × $0.125/M | 0.00006 | 0.05% |
+| Aurora DSQL — compute (DPU) | ~0.073 DPU/min × $8/M *(modeled)* | 0.00058 | 0.51% |
+| Aurora DSQL — storage (ledger) | 100 B/min × $0.33/GB-mo | 0.00003 | 0.03% |
+| KMS — key (amortized) | $1/mo ÷ 8.17M min | 0.00012 | 0.11% |
+| S3 — origin GET + storage (amortized) | cache-miss reads only | 0.00010 | 0.09% |
+| Lambda — rollup | ~0.01 req + GB-s (in free band) | 0.00000 | ~0% |
+| **TOTAL** | | **0.11444** | **100%** |
 
-At the handful-of-listeners scale the submission actually runs:
-- CloudFront egress well under **1 TB free**; DynamoDB under **25 GB free** + pennies of requests; DSQL under **100K DPU free**; Lambda under free tier; Bedrock a few cents.
-- The only standing charge is the **~$1/mo KMS key**. **Idle cost is effectively zero** — nothing is provisioned-always-on; DSQL and Lambda are dormant until hit.
+**All-in marginal cost ≈ $0.0001144 per minute ≈ 0.0114¢ / minute.**
+
+### Where the money actually goes
+
+- **CloudFront (egress + requests) = ~98%** of the marginal cost. TollRoad is, economically, a **bandwidth business** wearing a database's clothes.
+- **The entire data + compute plane — DynamoDB, Aurora DSQL, Lambda, KMS, S3 — is ~2%** combined (~$0.00242 per 1,000 min). Per stream, **the databases are effectively free**; serverless + scale-to-zero means you pay for work done, and the work per minute is tiny.
 
 ---
 
-## Caveats (stated honestly — judges are AWS DB PMs)
+## Rolled up: per song, per user
 
-- **Aurora DSQL DPU consumption is modeled, not measured.** DPU-per-operation is workload-specific; the ~600K DPU/mo figure is a conservative estimate. Validate against the AWS Pricing Calculator / actual CloudWatch DPU metrics once the rollup is live. Rate used: **$8.00 per million DPUs**, $0.33/GB-mo, first 100K DPU + 1 GB free (Aurora DSQL pricing page).
-- **Bedrock Haiku 4.5 token price ($1 in / $5 out per 1M)** is corroborated against Anthropic list pricing but the live AWS Bedrock pricing page returned a stale snapshot at capture time — confirm in-console before quoting.
-- **CloudFront always-free tier (1 TB egress + 10M requests/mo, perpetual) is confirmed**, but the AWS Pricing Calculator does **not** model it — the calculator will read ~$830 (list) where the real bill is ~$750. Treat the calculator as a conservative ceiling on the CDN line.
-- All other rates (DynamoDB, Lambda, S3, KMS) pulled directly from official AWS pricing pages, us-east-1.
+| Unit | Minutes | All-in AWS cost |
+|---|---:|---:|
+| **Per minute** | 1 | **$0.0001144** (0.0114¢) |
+| **Per song** | 3.0 | **$0.000343** (0.034¢) |
+| **Per user / month** | 817 | **$0.0935** (9.3¢) |
+| **Per user / year** | 9,800 | **$1.121** |
+
+So a fully-active listener — someone who streams as much as the average Spotify
+user — costs TollRoad about **$1.12/year, all-in, across the entire AWS stack.**
+
+---
+
+## Fixed / amortized AWS lines (not per-minute)
+
+These don't scale with minutes; they amortize to ~$0 per stream but are listed
+for completeness:
+
+| Item | Cost | Per-stream impact |
+|---|---|---|
+| **S3 audio storage** | a 3-min song @ 160 kbps ≈ 3.6 MB × $0.023/GB-mo = **$0.00008 / song / mo** | divided across every stream of that song → negligible |
+| **KMS CMK** | **$1 / mo** flat (one key, all catalog) | $0.00000012/min amortized (already in the table) |
+| **Aurora DSQL / Lambda idle** | **$0** — both scale to zero | no standing charge |
+| **Bedrock "explain my statement"** | ~1.5k in + 0.4k out tokens = **$0.0035 / call** | only when a user asks; ~+4% to a user's monthly cost if used once |
+
+---
+
+## Margin
+
+At an illustrative listener price of **$0.01/min**:
+
+| | Per minute | Per user / mo (817 min) |
+|---|---:|---:|
+| Listener pays | $0.01000 | $8.170 |
+| All-in AWS cost | $0.0001144 | $0.0935 |
+| **AWS as % of price** | **1.14%** | **1.14%** |
+
+The infrastructure consumes ~1% of gross billed revenue. The remaining ~99% is
+split between the **artist royalty** (the bulk — that's the product) and
+**TollRoad's platform take**. Even on a thin platform take of, say, 10% of
+billed minutes (~$0.001/min), AWS cost is **~11% of the take** → ~89% gross
+margin on the platform layer, dominated by a single controllable line (egress).
+
+---
+
+## Cost levers (in order of impact)
+
+1. **Bitrate** — egress is 89% of cost and scales linearly. 160 → 128 kbps ≈ −20% all-in; 96 kbps ≈ −40%. Quality tiers; default mobile lower.
+2. **HLS segment length** — CloudFront requests are 9% of cost and scale with segment count. 6s → 10s segments ≈ −40% on the request line.
+3. **Edge cache-hit ratio** — long TTLs on immutable audio keep S3 origin GETs and KMS calls near zero; popular catalog is served entirely from the edge.
+4. **S3 Bucket Keys** — collapse per-object KMS requests ~99%, pinning KMS at the $1/mo key.
+5. **Per-minute (not per-second) metering** — one DynamoDB write + one ledger row per minute, not 60. Keeps the entire data plane at ~2% instead of being a real line.
+
+---
+
+## Assumptions & caveats
+
+- **Bitrate 160 kbps / 1.2 MB per minute** and **3.0 min average song** (consistent with 9,800 min/yr ÷ 3,278 songs ≈ 3 min). Both are direct linear scalars — adjust and every figure moves proportionally.
+- **CloudFront, DynamoDB, Lambda, S3, KMS rates** pulled from official AWS pricing pages, us-east-1 on-demand.
+- **Aurora DSQL DPU-per-minute is modeled, not measured** (~0.073 DPU/min). DPU consumption is workload-specific; validate against actual CloudWatch DPU metrics once the rollup runs. Even at 5× the assumed DPU, DSQL stays under 3% of all-in cost — the conclusion (databases ≈ free per stream) is robust.
+- **Bedrock Haiku token rate ($1 in / $5 out per 1M)** is corroborated against published model pricing; confirm in-console before locking.
+- Figures are **marginal** (cost of one more minute). Perpetual free tiers (1 TB CloudFront egress, 25 GB DynamoDB, 100K DSQL DPU, 1M Lambda req, etc.) make the **first slice of traffic effectively free** — at low volume the real bill rounds to the **$1/mo KMS key**.
