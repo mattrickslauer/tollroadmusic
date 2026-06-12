@@ -32,68 +32,76 @@ Usage-based billing won every other software category (cloud, APIs, AI tokens). 
 ## Architecture
 
 ```
-                  ┌────────────────────────────┐
-                  │    Vercel / v0 (Next.js)    │  player + live per-minute meter
-                  │                            │  artist / label royalty dashboard
-                  └───┬───────────────────┬────┘
-   play heartbeat     │                   │  catalog + dashboard reads (SQL)
-   (every minute)     │                   │
-                      ▼                   ▼
-            ┌────────────────────┐   ┌──────────────────────────┐
-            │     DynamoDB       │   │       Aurora DSQL         │
-            │  hot metering path │   │  scale-to-zero relational │
-            │                    │   │  system of record         │
-            │ PK = USER#<id>     │   │                           │
-            │ SK = TS#<minute>   │   │  accounts · artists ·     │
-            │ TTL on raw events  │   │  tracks · catalog ·       │
-            │ atomic per-track   │   │  royalty ledger ·         │
-            │   minute counters  │   │  invoices · balances · BI │
-            └─────────┬──────────┘   └────────────▲──────────────┘
-                      │ Streams → Lambda rollup    │
-                      └────────────────────────────┘
-                      ▲                            │
-   audio bytes        │                            ▼
-  ┌────────────────┐  │              ┌──────────────────────────────┐
-  │ S3 + CloudFront│──┘              │  Stripe (usage-based billing) │
-  │ SSE-KMS audio  │                 │  top-up + artist payout stmt  │
-  │ presigned, CDN │                 └──────────────────────────────┘
-  └───────┬────────┘
-          │ unwrap data key (only after the meter authorizes)
-          ▼
-  ┌────────────────┐
-  │    AWS KMS     │  envelope encryption — per-track data keys,
-  │  stream keys   │  decrypt gated by balance + play session
-  └────────────────┘
-                      ┌──────────────────────────────┐
-   ask your earnings  │   Amazon Bedrock (Claude)     │
-   ───────────────────►│  "explain my royalty stmt" / │
-                      │   natural-language catalog Q&A │
-                      └──────────────────────────────┘
+  Listener app  (Vercel / v0 — HLS player + live per-minute meter · artist/label dashboard)
+       │                                              │
+       │ every ~45s:  POST /api/renew                 │ GET audio segments
+       │ (the meter tick — forge-proof)               │ (CloudFront signed cookie)
+       ▼                                              ▼
+  ┌──────────────────────────┐               ┌────────────────────────┐
+  │        /api/renew        │               │   CloudFront  (OAC)    │
+  │ 1. conditional decrement │               │   signed-cookie gate   │
+  │    balance >= cost       │               └───────────┬────────────┘
+  │ 2. write metered event   │                 origin pull, transparent
+  │ 3. issue fresh 60s cookie│                           ▼ SSE-KMS decrypt
+  └────────────┬─────────────┘               ┌────────────────────────┐
+               ▼                              │     S3  (SSE-KMS)      │◄── AWS KMS
+  ┌──────────────────────────┐               └────────────────────────┘   one CMK;
+  │        DynamoDB          │                                             OAC holds
+  │  • balance item          │   hard stop-at-zero on the hot path         kms:Decrypt
+  │    (conditional write)   │
+  │  • metered events (TTL)  │
+  │  • Streams ──────────────┼──►  Lambda rollup  ──►  Aurora DSQL  (scale-to-zero OLTP)
+  └──────────────────────────┘     idempotent,          • catalog · accounts
+                                    dedup by unique key, • append-only royalty ledger (SoR)
+                                    ≤3k rows / txn       • per-artist/day summaries (BI)
+                                                              │            │
+                                       dashboard reads (cheap point/range) │
+                                       Bedrock (Claude) ── "explain my royalty statement"
+                                       Stripe ── balance top-up + artist payout statement
 ```
 
-- **Amazon DynamoDB** — the high-write metering hot path. Every minute of playback is a heartbeat: an atomic `ADD` to a per-listener, per-track minute counter, with a TTL on the raw events so the hot table stays small. Streams drive the rollup into the billing system-of-record. This is the meter.
-- **Amazon Aurora DSQL** — serverless, **scale-to-zero**, Postgres-compatible relational store doing triple duty: the **catalog** (artists, tracks, rates), the **royalty ledger** (who earned what, per minute, per rightsholder — the billing system-of-record), and the **label BI** dashboard. Idle between billing runs costs nothing.
-- **S3 + CloudFront** — all audio, encrypted at rest with **SSE-KMS**. Presigned uploads, signed CDN delivery; egress is the dominant scaling lever and sits inside CloudFront's always-free tier at demo scale.
-- **AWS KMS** — manages the streaming keys. Each track's audio is sealed under a KMS-wrapped data key (envelope encryption); the decrypt path is **gated by the meter** — the backend only requests a `Decrypt`/unwraps the data key after the listener's balance and play session are validated. KMS key policy + grants ensure only the streaming function can unwrap, and rotation is managed by KMS, not by hand.
-- **Amazon Bedrock (Claude)** — natural-language access to your own numbers: *"explain this month's royalty statement,"* *"which track earned the most per minute?"* Catalog and ledger are bounded, so no vector database is needed — a single model call answers over a scoped SQL result.
+- **Amazon DynamoDB — the metering hot path.** Holds the listener's **real-time balance** (a conditional `UpdateItem` that decrements only while `balance >= cost`, so a listener can never stream past zero) and the **raw metered-event firehose** (TTL keeps the hot table small). **Streams** trigger the rollup. Chosen for single-digit-ms conditional writes, TTL, and Streams — not for raw volume.
+- **Amazon Aurora DSQL — the system of record.** Serverless, **scale-to-zero**, Postgres-compatible OLTP store holding the **catalog**, the **append-only royalty ledger** (one immutable credit row per rolled-up minute), and **precomputed per-artist/day summaries** for the dashboard. Kept *out* of the per-minute hot loop so it can actually scale to zero between billing runs.
+- **S3 + CloudFront + AWS KMS — delivery & stream keys.** Audio is encrypted at rest with **SSE-KMS** (one CMK). CloudFront uses **Origin Access Control (OAC)** — which, unlike legacy OAI, supports SSE-KMS — and S3 ↔ KMS decryption is **transparent** (no per-play KMS call in our code, CDN stays hot). Access is gated by **short-TTL signed cookies** that `/api/renew` issues *only after the meter authorizes*. The meter controls access; KMS protects the bytes.
+- **AWS Lambda — the rollup.** Consumes DynamoDB Streams (**at-least-once**, so duplicates are expected) and writes the ledger **idempotently** (UNIQUE idempotency key + `ON CONFLICT DO NOTHING`), batched within DSQL's 3,000-row / 10 MiB / 5-min transaction limits, and maintains the summary tables.
+- **Amazon Bedrock (Claude)** — natural-language access to your own numbers (*"explain this month's statement," "which track earned most per minute?"*). Catalog + ledger are bounded, so a single model call answers over a scoped SQL result — no vector database.
 - **Stripe (usage-based)** — listener balance top-ups and artist payout statements, fed by the DSQL ledger.
 
-### Core access patterns
+## How a stream is metered (server-authoritative)
+
+The meter cannot be forged or bypassed, because **playback depends on the meter**, not the other way around:
+
+1. Listener hits play → app requests a session; `/api/renew` checks balance, issues a **60-second** CloudFront signed cookie, decrements the hot balance, and writes a metered event.
+2. The HLS player streams segments from CloudFront using that cookie.
+3. Every ~45s the player must call `/api/renew` again to get a fresh cookie. Each renewal is a **balance-checked, recorded, forge-proof meter tick**.
+4. Stop paying (balance hits zero) or stop renewing → the current cookie expires → **playback stops**. You can't listen free (no cookie, no segments) and you can't wash-stream to inflate earnings (no renewal, no recorded minute).
+
+## Core access patterns
 
 | Pattern | Design |
 |---|---|
-| Heartbeat a minute played | DynamoDB `UpdateItem ADD minutes 1` on `PK=USER#<id>`, `SK=TRACK#<id>` |
-| Raw event audit trail | `PK=USER#<id>`, `SK=TS#<minute>#<track>`, with 24–72h TTL |
-| Roll up to the ledger | Streams → Lambda → atomic insert/credit into Aurora DSQL |
-| Listener balance / spend | SQL on DSQL `accounts` / `ledger` |
-| Artist royalty statement | SQL aggregate on DSQL `ledger` by rightsholder + period |
-| Browse catalog | SQL on DSQL `tracks` joined to `artists` |
-| Stream audio | Meter authorizes → KMS unwraps the track data key → decrypt → presigned S3 GET via CloudFront |
-| Ask your earnings | Scoped SQL result → Claude on Bedrock |
+| Authorize / continue a stream | `/api/renew`: conditional `UpdateItem ADD spent … ConditionExpression balance >= cost` (DynamoDB), then issue a short-TTL CloudFront signed cookie |
+| Record a metered minute | DynamoDB metered event `PK=USER#<id>`, `SK=TS#<minute>#<track>`, generous TTL (only after it's durable in the ledger) |
+| Roll up to the ledger | Streams → Lambda → idempotent insert into DSQL ledger, dedup on `UNIQUE(user,track,minute)`, chunked ≤3,000 rows/txn |
+| Listener balance / spend | DynamoDB balance item (hot) ; DSQL ledger (durable reconciliation) |
+| Artist royalty statement | Read precomputed DSQL summary rows (no heavy scan) |
+| Browse catalog | SQL on DSQL `tracks` joined to `artists` (FKs enforced in app — DSQL has none) |
+| Stream audio | Meter issues signed cookie → CloudFront (OAC) → S3 (SSE-KMS, transparent decrypt) |
+| Ask your earnings | Scoped SQL summary → Claude on Bedrock |
 
-### Region
+## Designing around Aurora DSQL
 
-All resources run in **`us-east-1`** (DynamoDB, Aurora DSQL, Lambda, S3, Bedrock; CloudFront is global) — co-located, and the region where Claude on Bedrock is available on-demand.
+DSQL is not vanilla Postgres, and the design leans into its grain rather than fighting it:
+
+- **No foreign keys, triggers, or PL/pgSQL** → referential integrity and "trigger" logic live in the app / the Streams→Lambda pipeline.
+- **Optimistic concurrency (no row locks)** → a mutable "running total" row would throw `40001` conflicts under load. The ledger is **append-only**; balances are `SUM`/summary, which is both OCC-friendly and the correct accounting pattern.
+- **OLTP, not analytics** (128 MiB/query) → BI runs off **precomputed summaries**, never large `GROUP BY` over the raw ledger.
+- **Per-transaction caps** (3,000 rows / 10 MiB / 5 min) → rollups write in bounded batches.
+- **IAM-token auth, client-side pooling only** (no RDS Proxy / PgBouncer) → serverless functions generate the token at cold start and reuse a module-scoped `pg` client across warm invocations.
+
+## Region
+
+All resources run in **`us-east-1`** (DynamoDB, Aurora DSQL, Lambda, S3, KMS, Bedrock; CloudFront is global) — co-located, and the region where Claude on Bedrock is available on-demand.
 
 ---
 
@@ -105,7 +113,7 @@ All resources run in **`us-east-1`** (DynamoDB, Aurora DSQL, Lambda, S3, Bedrock
 
 ## Stack
 
-Next.js (v0) · Vercel · Amazon DynamoDB · Amazon Aurora DSQL · AWS Lambda · Amazon S3 · CloudFront · AWS KMS · Amazon Bedrock (Claude) · Stripe (usage-based billing)
+Next.js (v0) · Vercel · Amazon DynamoDB · Amazon Aurora DSQL · AWS Lambda · Amazon S3 · CloudFront (OAC) · AWS KMS · Amazon Bedrock (Claude) · Stripe (usage-based billing)
 
 ## Status
 
