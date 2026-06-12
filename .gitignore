@@ -1,0 +1,10 @@
+# Internal-only strategy — never publish
+INTERNAL_STRATEGY.md
+
+# Node / Next.js (for when the app is scaffolded here)
+node_modules/
+.next/
+.vercel/
+.env
+.env.local
+*.log
