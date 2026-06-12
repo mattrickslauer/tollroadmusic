@@ -1,0 +1,24 @@
+{
+  "name": "tollroad-infra",
+  "version": "0.1.0",
+  "private": true,
+  "bin": { "tollroad": "bin/tollroad.ts" },
+  "scripts": {
+    "build": "tsc",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy",
+    "migrate": "node scripts/migrate-dsql.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "aws-cdk": "^2.160.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.160.0",
+    "constructs": "^10.3.0",
+    "source-map-support": "^0.5.21"
+  }
+}

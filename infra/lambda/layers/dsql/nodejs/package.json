@@ -1,0 +1,10 @@
+{
+  "name": "tollroad-dsql-layer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runtime deps for the DSQL-touching Lambdas (pg + DSQL IAM signer)",
+  "dependencies": {
+    "pg": "^8.13.0",
+    "@aws-sdk/dsql-signer": "^3.1065.0"
+  }
+}
