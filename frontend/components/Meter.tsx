@@ -3,61 +3,107 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * The signature instrument: a live taximeter for music.
- * Cost ticks up in real time at a per-minute rate while a track "plays".
- * Pauses when scrolled off-screen / tab hidden to stay honest about being live.
+ * The signature instrument — now metering a REAL track.
+ * The bill accrues only while the song is actually playing, at the
+ * artist's per-minute rate. Tries to autoplay; falls back to the
+ * play button when the browser blocks audible autoplay.
  */
 const RATE_PER_MIN = 0.0011; // $/min — the artist's set rate
-const TICK_MS = 60;
-const TRACK_SECONDS = 214; // 3:34
+const ARTIST_SHARE = 0.7;
+const SRC = "/kanye-west/Kanye West - Stronger.mp3";
+const TITLE = "Stronger";
+const ARTIST = "Kanye West";
+
+function clock(t: number) {
+  if (!isFinite(t) || t < 0) t = 0;
+  const m = Math.floor(t / 60);
+  const s = Math.floor(t % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${m}:${s}`;
+}
 
 export default function Meter() {
-  const [seconds, setSeconds] = useState(11.2);
-  const visible = useRef(true);
-  const hostRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [billedSec, setBilledSec] = useState(0); // metered seconds (cumulative)
+  const [cur, setCur] = useState(0);
+  const [dur, setDur] = useState(0);
 
   useEffect(() => {
-    const el = hostRef.current;
-    let io: IntersectionObserver | undefined;
-    if (el) {
-      io = new IntersectionObserver(
-        ([e]) => (visible.current = e.isIntersecting),
-        { threshold: 0.2 }
-      );
-      io.observe(el);
-    }
+    const a = audioRef.current;
+    if (!a) return;
+    a.volume = 0.85;
 
+    const onMeta = () => setDur(a.duration || 0);
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    a.addEventListener("loadedmetadata", onMeta);
+    a.addEventListener("play", onPlay);
+    a.addEventListener("pause", onPause);
+
+    // attempt audible autoplay — may be blocked until first interaction
+    a.play().catch(() => setPlaying(false));
+
+    // smooth billing loop: accrue real elapsed playback time
+    let last = a.currentTime;
     const id = window.setInterval(() => {
-      if (!visible.current || document.hidden) return;
-      setSeconds((s) => (s >= TRACK_SECONDS ? 11.2 : s + TICK_MS / 1000));
-    }, TICK_MS);
+      if (a.paused) {
+        last = a.currentTime;
+        return;
+      }
+      const now = a.currentTime;
+      const delta = now - last;
+      last = now;
+      if (delta > 0 && delta < 2) setBilledSec((b) => b + delta); // ignore seeks/loops
+      setCur(now);
+    }, 80);
 
     return () => {
       window.clearInterval(id);
-      io?.disconnect();
+      a.removeEventListener("loadedmetadata", onMeta);
+      a.removeEventListener("play", onPlay);
+      a.removeEventListener("pause", onPause);
     };
   }, []);
 
-  const minutes = seconds / 60;
-  const cost = minutes * RATE_PER_MIN;
-  const earned = cost * 0.7; // artist take of the metered minute
-  const progress = Math.min(100, (seconds / TRACK_SECONDS) * 100);
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) a.play().catch(() => {});
+    else a.pause();
+  };
 
-  const mm = Math.floor(seconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const ss = Math.floor(seconds % 60)
-    .toString()
-    .padStart(2, "0");
+  const minutes = billedSec / 60;
+  const cost = minutes * RATE_PER_MIN;
+  const earned = cost * ARTIST_SHARE;
+  const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
 
   return (
-    <div className="meter fade-up d3" ref={hostRef} aria-hidden="true">
+    <div className="meter fade-up d3">
+      <audio ref={audioRef} src={encodeURI(SRC)} preload="auto" loop />
+
       <div className="meter-head">
-        <span className="live">
+        <span className="live" data-on={playing}>
           <span className="dot" />
-          LIVE · METERING
+          {playing ? "LIVE · METERING" : "PAUSED"}
         </span>
-        <span className="mono-label">$0.0011 / MIN</span>
+        <button
+          className="meter-btn"
+          onClick={toggle}
+          aria-label={playing ? "Pause" : "Play"}
+        >
+          {playing ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="6" y="5" width="4" height="14" rx="1" />
+              <rect x="14" y="5" width="4" height="14" rx="1" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 5l12 7-12 7z" />
+            </svg>
+          )}
+        </button>
       </div>
 
       <div className="meter-readout">
@@ -66,7 +112,7 @@ export default function Meter() {
         <span className="unit">USD</span>
       </div>
       <div className="meter-sub">
-        Now playing — “Asphalt Lullaby” · {mm}:{ss}
+        {TITLE} · {ARTIST} — {clock(cur)} / {clock(dur)}
       </div>
 
       <div className="meter-bar">
@@ -75,7 +121,7 @@ export default function Meter() {
 
       <div className="meter-split">
         <div className="meter-cell">
-          <div className="k">Minutes played</div>
+          <div className="k">Minutes billed</div>
           <div className="v">{minutes.toFixed(2)}</div>
         </div>
         <div className="meter-cell">
