@@ -23,6 +23,7 @@ export default function Home() {
           <div className="nav-links">
             <a href="#flow">How</a>
             <a href="#outcomes">Why</a>
+            <a href="/browse">Browse music</a>
             <a href="/signup">For artists</a>
             <a href="#start" className="btn btn-primary">
               Open a balance →

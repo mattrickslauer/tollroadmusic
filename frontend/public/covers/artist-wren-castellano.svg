@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+<defs><linearGradient id="g435" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="hsl(56 65% 32%)"/><stop offset="1" stop-color="hsl(43 70% 18%)"/></linearGradient></defs>
+<rect width="400" height="400" fill="url(#g435)"/>
+<circle cx="320" cy="86" r="150" fill="hsl(43 80% 60%)" opacity="0.18"/>
+<circle cx="70" cy="330" r="110" fill="hsl(56 80% 70%)" opacity="0.14"/>
+<text x="200" y="200" font-family="Georgia, serif" font-size="150" font-weight="700" fill="#fff" fill-opacity="0.92" text-anchor="middle" dominant-baseline="central">WC</text>
+</svg>

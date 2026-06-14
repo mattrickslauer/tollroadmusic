@@ -8,7 +8,10 @@
     "synth": "cdk synth",
     "deploy": "cdk deploy",
     "destroy": "cdk destroy",
-    "migrate": "node scripts/migrate-dsql.mjs"
+    "migrate": "node scripts/migrate-dsql.mjs",
+    "seed:assets": "node scripts/gen-demo-assets.mjs",
+    "seed:demo": "node scripts/seed-demo.mjs",
+    "seed:reset": "node scripts/seed-demo.mjs --reset"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -17,8 +20,10 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@aws-sdk/dsql-signer": "^3.1065.0",
     "aws-cdk-lib": "^2.160.0",
     "constructs": "^10.3.0",
+    "pg": "^8.13.0",
     "source-map-support": "^0.5.21"
   }
 }

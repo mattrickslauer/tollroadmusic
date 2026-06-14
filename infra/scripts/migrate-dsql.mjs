@@ -52,6 +52,12 @@ const STATEMENTS = [
      audio_key              TEXT NOT NULL,
      created_at             TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
+  // Cover art lives next to the audio (a CDN/public key, same convention as
+  // audio_key). Nullable so the upload flow stays simple; the catalog falls
+  // back to a generated placeholder when absent.
+  `ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_image_key TEXT`,
+  // Artist avatar — same storage convention as track covers.
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS avatar_key TEXT`,
   `CREATE INDEX ASYNC IF NOT EXISTS tracks_by_artist ON tracks (artist_id)`,
   `CREATE TABLE IF NOT EXISTS accounts (
      user_id     UUID PRIMARY KEY,
