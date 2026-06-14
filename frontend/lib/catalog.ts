@@ -59,11 +59,12 @@ const EARNINGS_SQL = `
 
 export async function getCatalog(): Promise<Catalog> {
   return withDsql(async (db) => {
-    const [artistsR, tracksR, earnR] = await Promise.all([
-      db.query(ARTISTS_SQL),
-      db.query(TRACKS_SQL),
-      db.query(EARNINGS_SQL),
-    ]);
+    // A single pg Client runs one query at a time; issuing these concurrently
+    // (Promise.all) trips pg's "client is already executing a query" warning
+    // and breaks under pg@9. Run them sequentially on the one connection.
+    const artistsR = await db.query(ARTISTS_SQL);
+    const tracksR = await db.query(TRACKS_SQL);
+    const earnR = await db.query(EARNINGS_SQL);
 
     const earnings = new Map<string, { minutes: number; earningsCents: number }>();
     for (const r of earnR.rows) {
