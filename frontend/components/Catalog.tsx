@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Catalog, CatalogTrack } from "@/lib/catalog";
+import { fetchMe } from "@/lib/auth";
+import SignInSheet from "@/components/SignInSheet";
 
 function clock(t: number) {
   if (!isFinite(t) || t < 0) t = 0;
@@ -26,6 +28,14 @@ export default function Catalog({ data }: { data: Catalog }) {
   const [billedSec, setBilledSec] = useState(0);
   const [cur, setCur] = useState(0);
   const [dur, setDur] = useState(0);
+  // Metering requires a signed-in listener (only when auth is configured).
+  // `gate` holds the track the user tried to play while signed out.
+  const [needsAuth, setNeedsAuth] = useState(false); // auth configured AND not signed in
+  const [gate, setGate] = useState<CatalogTrack | null>(null);
+
+  useEffect(() => {
+    fetchMe().then((m) => setNeedsAuth(Boolean(m.authConfigured) && !m.account));
+  }, []);
 
   const genres = useMemo(
     () => ["All", ...Array.from(new Set(tracks.map((t) => t.genre).filter(Boolean) as string[])).sort()],
@@ -70,19 +80,31 @@ export default function Catalog({ data }: { data: Catalog }) {
     };
   }, []);
 
-  const play = (t: CatalogTrack) => {
+  const start = (t: CatalogTrack) => {
     const a = audioRef.current;
     if (!a) return;
-    if (nowId === t.id) {
-      if (a.paused) a.play().catch(() => {});
-      else a.pause();
-      return;
-    }
     setNowId(t.id);
     setCur(0);
     setDur(0);
     a.src = encodeURI(t.audioKey);
     a.play().catch(() => {});
+  };
+
+  const play = (t: CatalogTrack) => {
+    const a = audioRef.current;
+    if (!a) return;
+    // Toggle the already-playing track without re-gating.
+    if (nowId === t.id) {
+      if (a.paused) a.play().catch(() => {});
+      else a.pause();
+      return;
+    }
+    // The meter only bills signed-in listeners — gate the first play.
+    if (needsAuth) {
+      setGate(t);
+      return;
+    }
+    start(t);
   };
 
   const minutes = billedSec / 60;
@@ -179,6 +201,19 @@ export default function Catalog({ data }: { data: Catalog }) {
             </div>
           </div>
         </div>
+      )}
+
+      {gate && (
+        <SignInSheet
+          reason="Sign in to start listening — the meter only bills signed-in listeners."
+          onClose={() => setGate(null)}
+          onSignedIn={() => {
+            setNeedsAuth(false);
+            const t = gate;
+            setGate(null);
+            start(t);
+          }}
+        />
       )}
     </>
   );

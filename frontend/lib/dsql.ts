@@ -8,7 +8,7 @@
 // Route handlers are short-lived and may run on many lambdas, so we connect
 // per request and close — no warm-pool assumptions, no stale 15-min tokens.
 
-import { Client } from "pg";
+import { Client, type QueryResult, type QueryResultRow } from "pg";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
 
 const ENDPOINT = process.env.TOLLROAD_DSQL_ENDPOINT;
@@ -45,4 +45,12 @@ export async function withDsql<T>(fn: (db: Client) => Promise<T>): Promise<T> {
   } finally {
     await db.end().catch(() => {});
   }
+}
+
+/** One-shot parameterised query on a fresh connection. */
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<QueryResult<T>> {
+  return withDsql((db) => db.query<T>(sql, params));
 }

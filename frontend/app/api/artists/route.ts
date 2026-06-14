@@ -1,17 +1,17 @@
-// POST /api/artists — artist sign-up. Writes one row into the DSQL `artists`
-// table (the relational system-of-record). Name + email are required; the
-// rest is optional so the form stays SuperEasy.
+// POST /api/artists — create the ARTIST PROFILE for the signed-in account.
+// Artist is now a profile of an account (artists.account_id), so this requires
+// a session: sign in with email first, then attach the profile. An account may
+// hold both an artist profile and a listener profile at once.
 //
-// Payouts (Stripe Connect) are deferred — we just capture the profile for now.
-// The stripe_account_id / payouts_enabled columns exist but are left null.
-
+// Name + email are required; the rest is optional so the form stays SuperEasy.
+// Stripe Connect payouts remain deferred.
 import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "node:crypto";
 import { withDsql, dsqlConfigured } from "@/lib/dsql";
+import { readSession, sessionConfigured } from "@/lib/server/session";
+import { createArtistProfile } from "@/lib/server/accounts";
 
 // `pg` + the DSQL signer need Node APIs — not the edge runtime.
 export const runtime = "nodejs";
-// Never cache a write endpoint.
 export const dynamic = "force-dynamic";
 
 const MAX = { name: 120, email: 254, genre: 80, location: 120, website: 200, bio: 2000 };
@@ -26,12 +26,16 @@ function clean(v: unknown, max: number): string | null {
 // Deliberately permissive — good enough to catch typos, not a gatekeeper.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const INSERT_SQL = `
-  INSERT INTO artists (id, name, email, genre, location, website, bio)
-  VALUES ($1, $2, $3, $4, $5, $6, $7)
-  RETURNING id, created_at`;
-
 export async function POST(req: NextRequest) {
+  if (!dsqlConfigured() || !sessionConfigured()) {
+    return NextResponse.json({ error: "Sign-up is not configured yet." }, { status: 503 });
+  }
+
+  const session = await readSession(req);
+  if (!session) {
+    return NextResponse.json({ error: "Sign in first to create an artist profile." }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -53,25 +57,13 @@ export async function POST(req: NextRequest) {
   const website = clean(body.website, MAX.website);
   const bio = clean(body.bio, MAX.bio);
 
-  if (!dsqlConfigured()) {
-    return NextResponse.json(
-      { error: "Sign-up is not configured yet (TOLLROAD_DSQL_ENDPOINT missing)." },
-      { status: 503 },
-    );
-  }
-
-  const id = randomUUID();
   try {
-    const result = await withDsql((db) =>
-      db.query(INSERT_SQL, [id, name, email, genre, location, website, bio]),
+    const profile = await withDsql(async () =>
+      createArtistProfile(session.sub, { name, email, genre, location, website, bio }),
     );
-    const row = result.rows[0];
-    return NextResponse.json({ id: row.id, name, createdAt: row.created_at }, { status: 201 });
+    return NextResponse.json({ id: profile.id, name: profile.name }, { status: 201 });
   } catch (err) {
-    console.error("artist sign-up failed:", err);
-    return NextResponse.json(
-      { error: "Could not save your sign-up. Please try again." },
-      { status: 500 },
-    );
+    console.error("artist profile create failed:", err);
+    return NextResponse.json({ error: "Could not save your profile. Please try again." }, { status: 500 });
   }
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchMe, type Me } from "@/lib/auth";
+import SignInSheet from "@/components/SignInSheet";
 
 type Status =
   | { kind: "idle" | "saving" }
@@ -9,6 +11,14 @@ type Status =
 
 export default function SignupForm() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  // Artist is a profile of an account, so creating one needs a session.
+  const [me, setMe] = useState<Me | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [sheet, setSheet] = useState(false);
+
+  useEffect(() => {
+    fetchMe().then((m) => { setMe(m); setLoaded(true); });
+  }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,6 +35,12 @@ export default function SignupForm() {
         body: JSON.stringify(data),
       });
       const json = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        // Session expired / not signed in — prompt sign-in, then retry.
+        setStatus({ kind: "idle" });
+        setSheet(true);
+        return;
+      }
       if (!res.ok) {
         setStatus({ kind: "error", msg: json.error || "Something went wrong. Please try again." });
         return;
@@ -34,6 +50,25 @@ export default function SignupForm() {
     } catch {
       setStatus({ kind: "error", msg: "Network error. Please try again." });
     }
+  }
+
+  // Not signed in → gate the form behind email sign-in. When auth isn't
+  // configured we skip the gate and show the form (it returns 503 on submit,
+  // the same as before auth existed).
+  if (loaded && !me?.account && me?.authConfigured) {
+    return (
+      <div className="signup-gate">
+        <p>Artist profiles attach to your account. Sign in with your email to continue — it takes a few seconds.</p>
+        <button className="btn btn-primary" onClick={() => setSheet(true)}>Sign in to continue</button>
+        {sheet && (
+          <SignInSheet
+            reason="Sign in to create your artist profile."
+            onClose={() => setSheet(false)}
+            onSignedIn={(m) => { setMe(m); setSheet(false); }}
+          />
+        )}
+      </div>
+    );
   }
 
   if (status.kind === "done") {
@@ -55,6 +90,14 @@ export default function SignupForm() {
   const saving = status.kind === "saving";
 
   return (
+    <>
+    {sheet && (
+      <SignInSheet
+        reason="Sign in to create your artist profile."
+        onClose={() => setSheet(false)}
+        onSignedIn={(m) => { setMe(m); setSheet(false); }}
+      />
+    )}
     <form className="signup-form" onSubmit={onSubmit} noValidate>
       <label className="field">
         <span className="field-label">Artist / band name <i>*</i></span>
@@ -94,5 +137,6 @@ export default function SignupForm() {
       </button>
       <p className="signup-fine">No fees to join. Set your own per-minute rate later.</p>
     </form>
+    </>
   );
 }

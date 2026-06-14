@@ -59,9 +59,44 @@ const STATEMENTS = [
   // Artist avatar — same storage convention as track covers.
   `ALTER TABLE artists ADD COLUMN IF NOT EXISTS avatar_key TEXT`,
   `CREATE INDEX ASYNC IF NOT EXISTS tracks_by_artist ON tracks (artist_id)`,
+  // accounts = the unified AUTH identity (the canonical user id used across the
+  // app and as royalty_ledger.user_id). An anonymous device is a row with
+  // claimed_at = null; email-OTP sign-in upgrades it in place so the id never
+  // changes. user_id stays the primary key (server code aliases it to `id`).
   `CREATE TABLE IF NOT EXISTS accounts (
      user_id     UUID PRIMARY KEY,
      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+  // Auth columns — one ADD per statement (DSQL allows a single DDL op per txn);
+  // all nullable because DSQL rejects ADD COLUMN with a constraint/default.
+  `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email         TEXT`,
+  `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS handle        TEXT`,
+  `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS display_name  TEXT`,
+  `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS auth_method   TEXT`,
+  `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS claimed_at    TIMESTAMPTZ`,
+  `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ`,
+  `CREATE INDEX ASYNC IF NOT EXISTS accounts_by_email ON accounts (email)`,
+  // An account can hold BOTH profiles at once. Artist profile = an artists row
+  // linked back to its account (demo-seeded artists leave account_id null).
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS account_id UUID`,
+  `CREATE INDEX ASYNC IF NOT EXISTS artists_by_account ON artists (account_id)`,
+  // Listener profile = a prepaid balance the meter draws against. Separate row
+  // so an account can be a listener, an artist, or both.
+  `CREATE TABLE IF NOT EXISTS listener_profiles (
+     account_id    UUID PRIMARY KEY,
+     balance_cents BIGINT NOT NULL DEFAULT 0,
+     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+  // Email OTP challenges (replaces sonar's DynamoDB items — we keep everything
+  // in DSQL). Only a salted HASH of the code is stored; expiry + attempt cap are
+  // enforced in SQL. Rows are burned on success and lazily on expiry.
+  `CREATE TABLE IF NOT EXISTS auth_otp (
+     email         TEXT PRIMARY KEY,
+     code_hash     TEXT NOT NULL,
+     attempts_left INTEGER NOT NULL,
+     sent_at       BIGINT NOT NULL,
+     send_count    INTEGER NOT NULL,
+     expires_at    BIGINT NOT NULL
    )`,
   // Append-only royalty ledger — one immutable credit row per metered minute.
   `CREATE TABLE IF NOT EXISTS royalty_ledger (

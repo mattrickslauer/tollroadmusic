@@ -1,6 +1,7 @@
 import Meter from "@/components/Meter";
 import Reveal from "@/components/Reveal";
 import BrandMark from "@/components/BrandMark";
+import AuthButton from "@/components/AuthButton";
 import {
   IconYou,
   IconPool,
@@ -25,9 +26,7 @@ export default function Home() {
             <a href="#outcomes">Why</a>
             <a href="/browse">Browse music</a>
             <a href="/signup">For artists</a>
-            <a href="#start" className="btn btn-primary">
-              Open a balance →
-            </a>
+            <AuthButton />
           </div>
         </div>
       </nav>

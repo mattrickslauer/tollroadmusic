@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
+import AuthButton from "@/components/AuthButton";
 import SignupForm from "@/components/SignupForm";
 
 export const metadata: Metadata = {
@@ -19,6 +20,8 @@ export default function SignupPage() {
           </Link>
           <div className="nav-links">
             <Link href="/">Home</Link>
+            <Link href="/browse">Browse music</Link>
+            <AuthButton />
           </div>
         </div>
       </nav>

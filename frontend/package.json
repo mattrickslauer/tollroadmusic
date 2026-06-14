@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1068.0",
     "@aws-sdk/dsql-signer": "^3.1065.0",
+    "jose": "^6.2.3",
     "next": "^15.3.0",
     "pg": "^8.13.0",
     "react": "^19.1.0",

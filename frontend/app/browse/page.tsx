@@ -4,6 +4,7 @@
 
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
+import AuthButton from "@/components/AuthButton";
 import Catalog from "@/components/Catalog";
 import { getCatalog } from "@/lib/catalog";
 import { dsqlConfigured } from "@/lib/dsql";
@@ -35,7 +36,7 @@ export default async function BrowsePage() {
           <div className="nav-links">
             <Link href="/">Home</Link>
             <Link href="/signup">For artists</Link>
-            <Link href="/browse" className="btn btn-primary">Browse music →</Link>
+            <AuthButton />
           </div>
         </div>
       </nav>
