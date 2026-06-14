@@ -43,7 +43,7 @@ export default function SignupPage() {
             <ul className="signup-points">
               <li>Free to join — no upfront fees</li>
               <li>Set your own per-minute price</li>
-              <li>Secure payouts via Stripe — paid on real plays</li>
+              <li>Auditable ledger, paid on real plays</li>
             </ul>
           </div>
 

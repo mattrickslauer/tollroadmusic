@@ -3,16 +3,16 @@
 import { useState } from "react";
 
 type Status =
-  | { kind: "idle" | "saving" | "redirecting" }
+  | { kind: "idle" | "saving" }
   | { kind: "error"; msg: string }
-  | { kind: "done"; name: string; warning?: string };
+  | { kind: "done"; name: string };
 
 export default function SignupForm() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (status.kind === "saving" || status.kind === "redirecting") return;
+    if (status.kind === "saving") return;
     setStatus({ kind: "saving" });
 
     const form = e.currentTarget;
@@ -29,28 +29,11 @@ export default function SignupForm() {
         setStatus({ kind: "error", msg: json.error || "Something went wrong. Please try again." });
         return;
       }
-      // Happy path: hand off to Stripe-hosted onboarding.
-      if (json.onboardingUrl) {
-        setStatus({ kind: "redirecting" });
-        window.location.assign(json.onboardingUrl);
-        return;
-      }
-      // Saved, but the onboarding link couldn't be minted — show a soft notice.
-      setStatus({ kind: "done", name: json.name || (data.name as string), warning: json.warning });
+      setStatus({ kind: "done", name: json.name || (data.name as string) });
       form.reset();
     } catch {
       setStatus({ kind: "error", msg: "Network error. Please try again." });
     }
-  }
-
-  if (status.kind === "redirecting") {
-    return (
-      <div className="signup-done">
-        <div className="signup-spinner" aria-hidden="true" />
-        <h2>Taking you to Stripe…</h2>
-        <p>Hang tight — we&apos;re opening secure payout setup so you can get paid per minute.</p>
-      </div>
-    );
   }
 
   if (status.kind === "done") {
@@ -58,7 +41,10 @@ export default function SignupForm() {
       <div className="signup-done">
         <div className="signup-check" aria-hidden="true">✓</div>
         <h2>You&apos;re on the road, {status.name}.</h2>
-        <p>{status.warning || "Your profile is saved and we'll get you set up for payouts shortly."}</p>
+        <p>
+          Your details are saved. We&apos;ll be in touch about bringing your catalog on and
+          getting you paid per minute played.
+        </p>
         <button className="btn btn-ghost" onClick={() => setStatus({ kind: "idle" })}>
           Sign up another artist
         </button>
@@ -66,7 +52,7 @@ export default function SignupForm() {
     );
   }
 
-  const busy = status.kind === "saving";
+  const saving = status.kind === "saving";
 
   return (
     <form className="signup-form" onSubmit={onSubmit} noValidate>
@@ -103,12 +89,10 @@ export default function SignupForm() {
 
       {status.kind === "error" && <p className="signup-error" role="alert">{status.msg}</p>}
 
-      <button className="btn btn-primary signup-submit" type="submit" disabled={busy}>
-        {busy ? "Setting up…" : "Join & set up payouts →"}
+      <button className="btn btn-primary signup-submit" type="submit" disabled={saving}>
+        {saving ? "Saving…" : "Join TollRoad →"}
       </button>
-      <p className="signup-fine">
-        No fees to join. Next, you&apos;ll set up secure payouts with Stripe — we never see your bank details.
-      </p>
+      <p className="signup-fine">No fees to join. Set your own per-minute rate later.</p>
     </form>
   );
 }
