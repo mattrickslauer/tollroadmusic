@@ -20,6 +20,9 @@ function clock(t: number) {
 export default function Catalog({ data }: { data: Catalog }) {
   const { tracks, stats } = data;
   const audioRef = useRef<HTMLAudioElement>(null);
+  // True while the listener is seeking/scrubbing — gates the meter so dragged
+  // (skipped) time is never charged, only contiguous real playback is.
+  const seekingRef = useRef(false);
 
   const [genre, setGenre] = useState<string>("All");
   const [q, setQ] = useState("");
@@ -53,19 +56,26 @@ export default function Catalog({ data }: { data: Catalog }) {
 
   const now = useMemo(() => tracks.find((t) => t.id === nowId) || null, [tracks, nowId]);
 
-  // metering loop — accrue real elapsed playback time, ignore seeks/loops
+  // metering loop — accrue real elapsed playback time only; never bill seeks,
+  // scrubs, or loops. `seeking`/`seeked` (fired for clicks, drags, keyboard,
+  // and any programmatic currentTime change) pause the meter and re-anchor it
+  // to the post-seek position so the jump itself is free.
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
+    let last = a.currentTime;
     const onMeta = () => setDur(a.duration || 0);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
+    const onSeeking = () => { seekingRef.current = true; };
+    const onSeeked = () => { seekingRef.current = false; last = a.currentTime; setCur(a.currentTime); };
     a.addEventListener("loadedmetadata", onMeta);
     a.addEventListener("play", onPlay);
     a.addEventListener("pause", onPause);
-    let last = a.currentTime;
+    a.addEventListener("seeking", onSeeking);
+    a.addEventListener("seeked", onSeeked);
     const id = window.setInterval(() => {
-      if (a.paused) { last = a.currentTime; return; }
+      if (a.paused || a.seeking || seekingRef.current) { last = a.currentTime; return; }
       const t = a.currentTime;
       const delta = t - last;
       last = t;
@@ -77,8 +87,20 @@ export default function Catalog({ data }: { data: Catalog }) {
       a.removeEventListener("loadedmetadata", onMeta);
       a.removeEventListener("play", onPlay);
       a.removeEventListener("pause", onPause);
+      a.removeEventListener("seeking", onSeeking);
+      a.removeEventListener("seeked", onSeeked);
     };
   }, []);
+
+  // Full-service scrubbing: seek anywhere in the track. Setting currentTime
+  // fires the native seek events above, so the skipped span is never billed.
+  const scrub = (to: number) => {
+    const a = audioRef.current;
+    if (!a || !isFinite(to)) return;
+    seekingRef.current = true; // suppress the meter immediately, before `seeking` lands
+    a.currentTime = Math.max(0, Math.min(to, a.duration || to));
+    setCur(a.currentTime);
+  };
 
   const start = (t: CatalogTrack) => {
     const a = audioRef.current;
@@ -192,7 +214,21 @@ export default function Catalog({ data }: { data: Catalog }) {
                 <span className="live" data-on={playing}><span className="dot" />{playing ? "LIVE · METERING" : "PAUSED"}</span>
                 <strong>{now.title}</strong> · {now.artistName}
               </div>
-              <div className="cat-bar-bar"><span style={{ width: `${progress}%` }} /></div>
+              <div className="cat-bar-bar">
+                <span style={{ width: `${progress}%` }} />
+                <i className="cat-bar-knob" style={{ left: `${progress}%` }} aria-hidden="true" />
+                <input
+                  className="cat-bar-scrub"
+                  type="range"
+                  min={0}
+                  max={dur || 0}
+                  step="any"
+                  value={Math.min(cur, dur || 0)}
+                  disabled={!dur}
+                  aria-label={`Seek — ${clock(cur)} of ${clock(dur)}`}
+                  onChange={(e) => scrub(Number(e.target.value))}
+                />
+              </div>
               <div className="cat-bar-time">{clock(cur)} / {clock(dur)}</div>
             </div>
             <div className="cat-bar-cost">

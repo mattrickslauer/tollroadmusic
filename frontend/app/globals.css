@@ -1275,8 +1275,26 @@ h1.hero-title .serif {
 .cat-bar-track { flex: 1 1 auto; min-width: 0; }
 .cat-bar-now { font-size: 0.86rem; color: var(--bone-dim); display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cat-bar-now strong { color: var(--bone); font-weight: 600; }
-.cat-bar-bar { height: 4px; background: var(--asphalt-600); border-radius: 999px; margin: 7px 0 4px; overflow: hidden; }
-.cat-bar-bar span { display: block; height: 100%; background: var(--gold); border-radius: 999px; }
+.cat-bar-bar { position: relative; height: 4px; background: var(--asphalt-600); border-radius: 999px; margin: 7px 0 4px; }
+.cat-bar-bar span { display: block; height: 100%; background: var(--gold); border-radius: 999px; pointer-events: none; }
+/* Scrub knob — sits at the playhead, grows on hover/scrub for an easy grab. */
+.cat-bar-knob {
+  position: absolute; top: 50%; width: 11px; height: 11px; margin-left: -5.5px;
+  transform: translateY(-50%) scale(0); transform-origin: center;
+  background: var(--gold); border-radius: 50%; pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.45); transition: transform 0.12s ease;
+}
+.cat-bar-bar:hover .cat-bar-knob, .cat-bar-bar:has(.cat-bar-scrub:focus-visible) .cat-bar-knob { transform: translateY(-50%) scale(1); }
+/* Transparent native range overlaid for click/drag/keyboard seeking. The taller
+   hit area makes the thin bar easy to grab; the gold fill/knob are the visuals. */
+.cat-bar-scrub {
+  position: absolute; inset: -9px 0; width: 100%; height: 22px;
+  margin: 0; padding: 0; background: transparent; opacity: 0; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+}
+.cat-bar-scrub:disabled { cursor: default; }
+.cat-bar-scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; }
+.cat-bar-scrub::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: transparent; }
 .cat-bar-time { font-family: var(--font-mono); font-size: 0.72rem; color: var(--bone-faint); }
 .cat-bar-cost { display: flex; gap: 20px; flex: none; }
 .cat-bar-readout { font-family: var(--font-mono); font-size: 1.05rem; color: var(--bone); text-align: right; }
