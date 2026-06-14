@@ -37,7 +37,10 @@ const STATEMENTS = [
   `ALTER TABLE artists ADD COLUMN IF NOT EXISTS location          TEXT`,
   `ALTER TABLE artists ADD COLUMN IF NOT EXISTS website           TEXT`,
   `ALTER TABLE artists ADD COLUMN IF NOT EXISTS stripe_account_id TEXT`,
-  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS payouts_enabled   BOOLEAN NOT NULL DEFAULT false`,
+  // DSQL rejects ALTER ADD COLUMN with a constraint/default, so payouts_enabled
+  // is nullable here. The app always inserts an explicit false and the webhook
+  // sets true/false, so NULL never occurs in practice; treat NULL as false.
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS payouts_enabled   BOOLEAN`,
   `CREATE INDEX ASYNC IF NOT EXISTS artists_by_email ON artists (email)`,
   `CREATE INDEX ASYNC IF NOT EXISTS artists_by_stripe ON artists (stripe_account_id)`,
   `CREATE TABLE IF NOT EXISTS tracks (
