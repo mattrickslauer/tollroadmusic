@@ -22,18 +22,24 @@ const STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS artists (
      id          UUID PRIMARY KEY,
      name        TEXT NOT NULL,
-     payout_ref  TEXT,
      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
   // Artist sign-up captures more than the catalog needs — one ADD COLUMN per
-  // statement (DSQL allows a single DDL op per transaction). All nullable so
-  // the form stays SuperEasy: only name + email are required, at the app layer.
-  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS email    TEXT`,
-  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS genre    TEXT`,
-  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS bio      TEXT`,
-  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS location TEXT`,
-  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS website  TEXT`,
+  // statement (DSQL allows a single DDL op per transaction). Most are nullable
+  // so the form stays SuperEasy: only name + email are required (app layer).
+  //
+  // Payouts run on Stripe Connect (Express): we store the connected-account id
+  // (acct_…) and whether Stripe has enabled payouts. Bank/identity details live
+  // in Stripe, never here.
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS email             TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS genre             TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS bio               TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS location          TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS website           TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS stripe_account_id TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS payouts_enabled   BOOLEAN NOT NULL DEFAULT false`,
   `CREATE INDEX ASYNC IF NOT EXISTS artists_by_email ON artists (email)`,
+  `CREATE INDEX ASYNC IF NOT EXISTS artists_by_stripe ON artists (stripe_account_id)`,
   `CREATE TABLE IF NOT EXISTS tracks (
      id                     UUID PRIMARY KEY,
      artist_id              UUID NOT NULL,

@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 
-type Status = { kind: "idle" | "saving" } | { kind: "error"; msg: string } | { kind: "done"; name: string };
+type Status =
+  | { kind: "idle" | "saving" | "redirecting" }
+  | { kind: "error"; msg: string }
+  | { kind: "done"; name: string; warning?: string };
 
 export default function SignupForm() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (status.kind === "saving") return;
+    if (status.kind === "saving" || status.kind === "redirecting") return;
     setStatus({ kind: "saving" });
 
     const form = e.currentTarget;
@@ -26,11 +29,28 @@ export default function SignupForm() {
         setStatus({ kind: "error", msg: json.error || "Something went wrong. Please try again." });
         return;
       }
-      setStatus({ kind: "done", name: json.name || (data.name as string) });
+      // Happy path: hand off to Stripe-hosted onboarding.
+      if (json.onboardingUrl) {
+        setStatus({ kind: "redirecting" });
+        window.location.assign(json.onboardingUrl);
+        return;
+      }
+      // Saved, but the onboarding link couldn't be minted — show a soft notice.
+      setStatus({ kind: "done", name: json.name || (data.name as string), warning: json.warning });
       form.reset();
     } catch {
       setStatus({ kind: "error", msg: "Network error. Please try again." });
     }
+  }
+
+  if (status.kind === "redirecting") {
+    return (
+      <div className="signup-done">
+        <div className="signup-spinner" aria-hidden="true" />
+        <h2>Taking you to Stripe…</h2>
+        <p>Hang tight — we&apos;re opening secure payout setup so you can get paid per minute.</p>
+      </div>
+    );
   }
 
   if (status.kind === "done") {
@@ -38,10 +58,7 @@ export default function SignupForm() {
       <div className="signup-done">
         <div className="signup-check" aria-hidden="true">✓</div>
         <h2>You&apos;re on the road, {status.name}.</h2>
-        <p>
-          Your details are saved. We&apos;ll reach out about bringing your catalog on and
-          getting you paid per minute played.
-        </p>
+        <p>{status.warning || "Your profile is saved and we'll get you set up for payouts shortly."}</p>
         <button className="btn btn-ghost" onClick={() => setStatus({ kind: "idle" })}>
           Sign up another artist
         </button>
@@ -49,7 +66,7 @@ export default function SignupForm() {
     );
   }
 
-  const saving = status.kind === "saving";
+  const busy = status.kind === "saving";
 
   return (
     <form className="signup-form" onSubmit={onSubmit} noValidate>
@@ -61,12 +78,6 @@ export default function SignupForm() {
       <label className="field">
         <span className="field-label">Email <i>*</i></span>
         <input name="email" type="email" required maxLength={254} placeholder="you@example.com" autoComplete="email" />
-      </label>
-
-      <label className="field">
-        <span className="field-label">Payout reference</span>
-        <input name="payoutRef" type="text" maxLength={200} placeholder="Wallet address or payout handle" autoComplete="off" />
-        <span className="field-hint">Where your per-minute earnings land. You can add this later.</span>
       </label>
 
       <div className="field-row">
@@ -92,10 +103,12 @@ export default function SignupForm() {
 
       {status.kind === "error" && <p className="signup-error" role="alert">{status.msg}</p>}
 
-      <button className="btn btn-primary signup-submit" type="submit" disabled={saving}>
-        {saving ? "Saving…" : "Join TollRoad →"}
+      <button className="btn btn-primary signup-submit" type="submit" disabled={busy}>
+        {busy ? "Setting up…" : "Join & set up payouts →"}
       </button>
-      <p className="signup-fine">No fees to join. Set your own per-minute rate later.</p>
+      <p className="signup-fine">
+        No fees to join. Next, you&apos;ll set up secure payouts with Stripe — we never see your bank details.
+      </p>
     </form>
   );
 }
