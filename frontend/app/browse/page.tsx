@@ -44,7 +44,7 @@ export default async function BrowsePage() {
         <div className="wrap">
           <span className="eyebrow"><span className="dot" /><span className="mono-label">The catalog</span></span>
           <h1 className="cat-h1">Independent music, <span className="serif">metered by the minute.</span></h1>
-          <p className="cat-sub">Press play on anything. The meter bills against live playback at the artist&apos;s rate — and 70% goes straight to them.</p>
+          <p className="cat-sub">Press play on anything. The meter bills only while a track is actually playing, at its per-minute rate.</p>
         </div>
       </header>
 

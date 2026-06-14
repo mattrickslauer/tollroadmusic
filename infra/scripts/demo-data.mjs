@@ -49,19 +49,22 @@ const slug = (s) =>
 // Tracks rotate over the pool filtered by their genre's family.
 // ---------------------------------------------------------------------------
 
+// `seconds` is the real rendered length of each loop. A track's metadata
+// duration is set to its loop's `seconds`, so the catalog never claims a length
+// the audio doesn't have. Lengths are spread across a realistic 2:18–3:30 band.
 export const AUDIO_POOL = [
-  { id: "midnight-drive", family: "electronic", bpm: 110, key: 220.0, mood: "warm synthwave pad" },
-  { id: "neon-pulse", family: "electronic", bpm: 124, key: 261.63, mood: "driving house" },
-  { id: "deep-current", family: "electronic", bpm: 120, key: 196.0, mood: "deep techno" },
-  { id: "golden-hour", family: "chill", bpm: 84, key: 293.66, mood: "lo-fi keys" },
-  { id: "paper-rain", family: "chill", bpm: 72, key: 246.94, mood: "ambient bells" },
-  { id: "slow-tide", family: "chill", bpm: 90, key: 174.61, mood: "downtempo" },
-  { id: "back-pocket", family: "urban", bpm: 96, key: 130.81, mood: "boom-bap hip-hop" },
-  { id: "velvet-rope", family: "urban", bpm: 100, key: 164.81, mood: "smooth r&b" },
-  { id: "after-hours", family: "urban", bpm: 88, key: 146.83, mood: "trap soul" },
-  { id: "open-road", family: "band", bpm: 128, key: 329.63, mood: "indie rock" },
-  { id: "front-porch", family: "band", bpm: 104, key: 220.0, mood: "folk acoustic" },
-  { id: "blue-note", family: "band", bpm: 112, key: 261.63, mood: "jazz trio" },
+  { id: "midnight-drive", family: "electronic", bpm: 110, key: 220.0, seconds: 174, mood: "warm synthwave pad" },
+  { id: "neon-pulse", family: "electronic", bpm: 124, key: 261.63, seconds: 198, mood: "driving house" },
+  { id: "deep-current", family: "electronic", bpm: 120, key: 196.0, seconds: 210, mood: "deep techno" },
+  { id: "golden-hour", family: "chill", bpm: 84, key: 293.66, seconds: 156, mood: "lo-fi keys" },
+  { id: "paper-rain", family: "chill", bpm: 72, key: 246.94, seconds: 168, mood: "ambient bells" },
+  { id: "slow-tide", family: "chill", bpm: 90, key: 174.61, seconds: 204, mood: "downtempo" },
+  { id: "back-pocket", family: "urban", bpm: 96, key: 130.81, seconds: 162, mood: "boom-bap hip-hop" },
+  { id: "velvet-rope", family: "urban", bpm: 100, key: 164.81, seconds: 186, mood: "smooth r&b" },
+  { id: "after-hours", family: "urban", bpm: 88, key: 146.83, seconds: 150, mood: "trap soul" },
+  { id: "open-road", family: "band", bpm: 128, key: 329.63, seconds: 192, mood: "indie rock" },
+  { id: "front-porch", family: "band", bpm: 104, key: 220.0, seconds: 165, mood: "folk acoustic" },
+  { id: "blue-note", family: "band", bpm: 112, key: 261.63, seconds: 138, mood: "jazz trio" },
 ];
 
 // genre → which audio family its tracks pull from
@@ -215,7 +218,9 @@ export function buildTracks(artist, perMin = 3, perMax = 5) {
     }
     used.add(title);
     const audio = audioForGenre(artist.genre, `${artist.id}:${i}`);
-    const duration = 135 + Math.floor(r() * 150); // 2:15 – 4:45
+    // Metadata duration is the loop's real length, so the catalog never claims
+    // a runtime the audio file can't back up.
+    const duration = audio.seconds;
     // most artists set the floor (1¢/min); a few price higher
     const price = r() < 0.72 ? 1 : pick(r, [2, 2, 3, 4, 5]);
     tracks.push({

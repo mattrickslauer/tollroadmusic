@@ -3,20 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Catalog, CatalogTrack } from "@/lib/catalog";
 
-const ARTIST_SHARE = 0.7;
-
 function clock(t: number) {
   if (!isFinite(t) || t < 0) t = 0;
   const m = Math.floor(t / 60);
   const s = Math.floor(t % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
-const money = (cents: number) =>
-  `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
 /**
  * The browse experience. A grid of real, playable tracks; selecting one streams
- * it and a docked meter bills against live playback at the artist's per-minute
+ * it and a docked meter bills against live playback at the track's per-minute
  * rate — the same instrument as the landing page, now over the whole catalog.
  */
 export default function Catalog({ data }: { data: Catalog }) {
@@ -91,7 +87,6 @@ export default function Catalog({ data }: { data: Catalog }) {
 
   const minutes = billedSec / 60;
   const cost = now ? (minutes * now.pricePerMinuteCents) / 100 : 0;
-  const earned = cost * ARTIST_SHARE;
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
 
   return (
@@ -100,7 +95,7 @@ export default function Catalog({ data }: { data: Catalog }) {
         <Stat k="Artists" v={String(stats.artists)} />
         <Stat k="Tracks" v={String(stats.tracks)} />
         <Stat k="Minutes played" v={stats.minutes.toLocaleString("en-US")} />
-        <Stat k="Paid to artists" v={money(stats.earningsCents)} green />
+        <Stat k="Genres" v={String(Math.max(0, genres.length - 1))} />
       </div>
 
       <div className="cat-controls">
@@ -180,7 +175,7 @@ export default function Catalog({ data }: { data: Catalog }) {
             </div>
             <div className="cat-bar-cost">
               <div className="cat-bar-readout">${cost.toFixed(4)}<span>billed</span></div>
-              <div className="cat-bar-readout green">${earned.toFixed(4)}<span>artist earns</span></div>
+              <div className="cat-bar-readout">{now.pricePerMinuteCents}¢<span>per minute</span></div>
             </div>
           </div>
         </div>

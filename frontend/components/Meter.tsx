@@ -5,11 +5,10 @@ import { useEffect, useRef, useState } from "react";
 /**
  * The signature instrument — now metering a REAL track.
  * The bill accrues only while the song is actually playing, at the
- * artist's per-minute rate. Tries to autoplay; falls back to the
+ * track's per-minute rate. Tries to autoplay; falls back to the
  * play button when the browser blocks audible autoplay.
  */
-const RATE_PER_MIN = 0.0011; // $/min — the artist's set rate
-const ARTIST_SHARE = 0.7;
+const RATE_PER_MIN = 0.0011; // $/min — what the listener pays
 const SRC = "/kanye-west/Kanye West - Stronger.mp3";
 const TITLE = "Stronger";
 const ARTIST = "Kanye West";
@@ -76,7 +75,6 @@ export default function Meter() {
 
   const minutes = billedSec / 60;
   const cost = minutes * RATE_PER_MIN;
-  const earned = cost * ARTIST_SHARE;
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
 
   return (
@@ -125,8 +123,8 @@ export default function Meter() {
           <div className="v">{minutes.toFixed(2)}</div>
         </div>
         <div className="meter-cell">
-          <div className="k green">Artist earned</div>
-          <div className="v green">${earned.toFixed(4)}</div>
+          <div className="k">Per minute</div>
+          <div className="v">${RATE_PER_MIN.toFixed(4)}</div>
         </div>
       </div>
     </div>

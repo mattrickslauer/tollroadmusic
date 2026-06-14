@@ -22,7 +22,9 @@ const PUBLIC = resolve(HERE, "../../frontend/public");
 const AUDIO_DIR = resolve(PUBLIC, "audio/demo");
 const COVER_DIR = resolve(PUBLIC, "covers");
 const FORCE = process.argv.includes("--force");
-const DUR = 32; // seconds per loop — the meter loops it anyway
+// 96 kbps keeps these mono-ish sine pads small; full-length loops × 12 would
+// otherwise bloat the repo. Plenty of fidelity for ambient demo audio.
+const BITRATE = "96k";
 
 const exists = (p) => access(p).then(() => true).catch(() => false);
 
@@ -42,21 +44,22 @@ async function renderAudio(track) {
   if (!FORCE && (await exists(out))) return { id: track.id, skipped: true };
   const { freqs, lowpass } = familyShape(track.family, track.key);
   const trem = (track.bpm / 60).toFixed(3); // pulse ~ beats per second
+  const dur = track.seconds; // real length of this loop = the track metadata
 
   const inputs = [];
   freqs.forEach((f) => {
-    inputs.push("-f", "lavfi", "-i", `sine=frequency=${f}:duration=${DUR}`);
+    inputs.push("-f", "lavfi", "-i", `sine=frequency=${f}:duration=${dur}`);
   });
   const mix = `amix=inputs=${freqs.length}:normalize=1`;
   // loudnorm gives every loop a consistent, audible level regardless of how
   // many partials it mixes; tremolo adds a rhythmic pulse, lowpass tames the
   // harshness, fades top and tail it.
-  const shape = `tremolo=f=${trem}:d=0.55,lowpass=f=${lowpass},loudnorm=I=-15:TP=-1.0:LRA=11,aformat=channel_layouts=stereo,afade=t=in:ss=0:d=0.8,afade=t=out:st=${DUR - 1}:d=1`;
+  const shape = `tremolo=f=${trem}:d=0.55,lowpass=f=${lowpass},loudnorm=I=-15:TP=-1.0:LRA=11,aformat=channel_layouts=stereo,afade=t=in:ss=0:d=0.8,afade=t=out:st=${dur - 1}:d=1`;
   const args = [
     "-y", "-hide_banner", "-loglevel", "error",
     ...inputs,
     "-filter_complex", `${mix},${shape}[a]`,
-    "-map", "[a]", "-c:a", "libmp3lame", "-b:a", "160k", "-ar", "44100",
+    "-map", "[a]", "-c:a", "libmp3lame", "-b:a", BITRATE, "-ar", "44100",
     out,
   ];
   await exec("ffmpeg", args);
