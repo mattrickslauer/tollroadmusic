@@ -109,7 +109,10 @@ export class TollroadStack extends cdk.Stack {
         },
       ],
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
+      // NOTE: autoDeleteObjects intentionally omitted. Its custom resource +
+      // bucket-policy edits form a circular dependency with the SSE-KMS key and
+      // the CloudFront OAC bucket policy (CFN rejects the changeset). On destroy,
+      // empty the bucket first. Audio is permanent catalog content anyway.
     });
 
     // ---------------------------------------------------------------------
@@ -149,6 +152,11 @@ export class TollroadStack extends cdk.Stack {
     });
 
     // CloudFront OAC must be able to decrypt with the audio CMK.
+    // Scope by account (wildcard distribution id), NOT distribution.distributionId:
+    // referencing the concrete id makes the KMS key depend on the distribution,
+    // which depends on the bucket, which depends on the key — a circular
+    // dependency CFN rejects. The wildcard keeps the grant OAC-only while
+    // breaking the cycle (matches CDK's own auto-generated OAC key policy).
     audioKey.addToResourcePolicy(
       new iam.PolicyStatement({
         sid: "AllowCloudFrontOacDecrypt",
@@ -157,7 +165,10 @@ export class TollroadStack extends cdk.Stack {
         resources: ["*"],
         conditions: {
           StringEquals: {
-            "aws:SourceArn": `arn:aws:cloudfront::${cdk.Aws.ACCOUNT_ID}:distribution/${distribution.distributionId}`,
+            "aws:SourceAccount": cdk.Aws.ACCOUNT_ID,
+          },
+          ArnLike: {
+            "aws:SourceArn": `arn:aws:cloudfront::${cdk.Aws.ACCOUNT_ID}:distribution/*`,
           },
         },
       })

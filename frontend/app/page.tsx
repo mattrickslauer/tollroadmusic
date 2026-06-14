@@ -23,6 +23,7 @@ export default function Home() {
           <div className="nav-links">
             <a href="#flow">How</a>
             <a href="#outcomes">Why</a>
+            <a href="/signup">For artists</a>
             <a href="#start" className="btn btn-primary">
               Open a balance →
             </a>
@@ -220,7 +221,7 @@ export default function Home() {
             <a href="#" className="btn btn-primary">
               Open a balance →
             </a>
-            <a href="#" className="btn btn-ghost">
+            <a href="/signup" className="btn btn-ghost">
               Bring a catalog
             </a>
           </Reveal>

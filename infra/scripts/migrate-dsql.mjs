@@ -25,6 +25,15 @@ const STATEMENTS = [
      payout_ref  TEXT,
      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
+  // Artist sign-up captures more than the catalog needs — one ADD COLUMN per
+  // statement (DSQL allows a single DDL op per transaction). All nullable so
+  // the form stays SuperEasy: only name + email are required, at the app layer.
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS email    TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS genre    TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS bio      TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS location TEXT`,
+  `ALTER TABLE artists ADD COLUMN IF NOT EXISTS website  TEXT`,
+  `CREATE INDEX ASYNC IF NOT EXISTS artists_by_email ON artists (email)`,
   `CREATE TABLE IF NOT EXISTS tracks (
      id                     UUID PRIMARY KEY,
      artist_id              UUID NOT NULL,
