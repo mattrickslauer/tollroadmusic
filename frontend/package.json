@@ -11,18 +11,21 @@
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1068.0",
     "@aws-sdk/dsql-signer": "^3.1065.0",
+    "@stripe/react-stripe-js": "^6.6.0",
+    "@stripe/stripe-js": "^9.8.0",
     "jose": "^6.2.3",
     "next": "^15.3.0",
     "pg": "^8.13.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "stripe": "^22.2.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.10",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "@eslint/eslintrc": "^3.2.0",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.3.0",
     "typescript": "^5.7.0"

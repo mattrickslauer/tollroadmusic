@@ -53,6 +53,7 @@ export default function AuthButton() {
           {!isArtist && <a className="auth-menu-item" href="/signup">Become an artist</a>}
           {isArtist && <a className="auth-menu-item" href="/signup">Artist profile</a>}
           <a className="auth-menu-item" href="/browse">Browse music</a>
+          <a className="auth-menu-item" href="/wallet">Wallet &amp; history</a>
           <button
             className="auth-menu-item danger"
             onClick={async () => { await logout(); setMe({ account: null, profiles: null }); setMenu(false); }}

@@ -109,6 +109,9 @@ const STATEMENTS = [
      created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
   `CREATE INDEX ASYNC IF NOT EXISTS ledger_by_artist_minute ON royalty_ledger (artist_id, minute_epoch)`,
+  // The listener's own streaming history reads the ledger by user_id — the rows
+  // a listener paid for ARE their play history (one per metered minute).
+  `CREATE INDEX ASYNC IF NOT EXISTS ledger_by_user_minute ON royalty_ledger (user_id, minute_epoch)`,
   // Precomputed BI — dashboard reads this, never scans the ledger.
   `CREATE TABLE IF NOT EXISTS artist_daily_summary (
      artist_id     UUID NOT NULL,
@@ -117,6 +120,21 @@ const STATEMENTS = [
      amount_cents  BIGINT NOT NULL DEFAULT 0,
      PRIMARY KEY (artist_id, day)
    )`,
+  // Wallet top-ups — one row per funded Stripe payment (ACH or card). The PK is
+  // the Stripe PaymentIntent id (or a demo ref), so crediting a balance is
+  // idempotent: a replayed webhook / confirm call is a no-op. amount_cents is
+  // what we credit (the $10 face value); fee_cents records any card surcharge
+  // the listener paid on top. method is 'ach' | 'card' | 'demo'.
+  `CREATE TABLE IF NOT EXISTS wallet_topups (
+     payment_ref   TEXT PRIMARY KEY,
+     account_id    UUID NOT NULL,
+     amount_cents  BIGINT NOT NULL,
+     fee_cents     BIGINT NOT NULL DEFAULT 0,
+     method        TEXT NOT NULL,
+     status        TEXT NOT NULL,
+     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS topups_by_account ON wallet_topups (account_id, created_at)`,
 ];
 
 const signer = new DsqlSigner({ hostname: ENDPOINT, region: REGION });

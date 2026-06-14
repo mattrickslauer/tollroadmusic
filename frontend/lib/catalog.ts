@@ -13,7 +13,6 @@ export type CatalogTrack = {
   genre: string | null;
   durationSeconds: number;
   pricePerMinuteCents: number;
-  audioKey: string;
   coverImageKey: string | null;
 };
 
@@ -44,7 +43,7 @@ const ARTISTS_SQL = `
 
 const TRACKS_SQL = `
   SELECT t.id, t.title, t.artist_id, a.name AS artist_name, a.genre,
-         t.duration_seconds, t.price_per_minute_cents, t.audio_key, t.cover_image_key
+         t.duration_seconds, t.price_per_minute_cents, t.cover_image_key
   FROM tracks t
   JOIN artists a ON a.id = t.artist_id
   ORDER BY a.name, t.title`;
@@ -99,7 +98,6 @@ export async function getCatalog(): Promise<Catalog> {
       genre: r.genre,
       durationSeconds: r.duration_seconds,
       pricePerMinuteCents: r.price_per_minute_cents,
-      audioKey: r.audio_key,
       coverImageKey: r.cover_image_key,
     }));
 

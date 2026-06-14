@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import type { Catalog, CatalogTrack } from "@/lib/catalog";
 import { fetchMe } from "@/lib/auth";
 import SignInSheet from "@/components/SignInSheet";
+import TopUpSheet from "@/components/TopUpSheet";
 
 function clock(t: number) {
   if (!isFinite(t) || t < 0) t = 0;
@@ -11,11 +13,13 @@ function clock(t: number) {
   const s = Math.floor(t % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
+const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
 /**
  * The browse experience. A grid of real, playable tracks; selecting one streams
- * it and a docked meter bills against live playback at the track's per-minute
- * rate — the same instrument as the landing page, now over the whole catalog.
+ * it through /api/stream — which only decrypts the audio AFTER the minute is
+ * billed — and a docked meter draws from the listener's prepaid wallet at the
+ * track's per-minute rate. No funds → the top-up sheet, not the audio.
  */
 export default function Catalog({ data }: { data: Catalog }) {
   const { tracks, stats } = data;
@@ -31,13 +35,24 @@ export default function Catalog({ data }: { data: Catalog }) {
   const [billedSec, setBilledSec] = useState(0);
   const [cur, setCur] = useState(0);
   const [dur, setDur] = useState(0);
-  // Metering requires a signed-in listener (only when auth is configured).
-  // `gate` holds the track the user tried to play while signed out.
-  const [needsAuth, setNeedsAuth] = useState(false); // auth configured AND not signed in
-  const [gate, setGate] = useState<CatalogTrack | null>(null);
+
+  // Auth + wallet gating. `needsAuth`: auth configured AND not signed in.
+  // `balanceCents`: the listener's prepaid balance the meter draws from.
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [balanceCents, setBalanceCents] = useState(0);
+  const [gate, setGate] = useState<CatalogTrack | null>(null);   // sign-in prompt
+  const [topup, setTopup] = useState(false);                      // add-funds prompt
+  const [pending, setPending] = useState<CatalogTrack | null>(null); // play after funded
+
+  // Minutes already paid for the current play (1 after the prepaid first minute).
+  const chargedMinutesRef = useRef(0);
+  const nowRef = useRef<CatalogTrack | null>(null);
 
   useEffect(() => {
-    fetchMe().then((m) => setNeedsAuth(Boolean(m.authConfigured) && !m.account));
+    fetchMe().then((m) => {
+      setNeedsAuth(Boolean(m.authConfigured) && !m.account);
+      setBalanceCents(m.profiles?.listener?.balanceCents ?? 0);
+    });
   }, []);
 
   const genres = useMemo(
@@ -55,6 +70,7 @@ export default function Catalog({ data }: { data: Catalog }) {
   }, [tracks, genre, q]);
 
   const now = useMemo(() => tracks.find((t) => t.id === nowId) || null, [tracks, nowId]);
+  useEffect(() => { nowRef.current = now; }, [now]);
 
   // metering loop — accrue real elapsed playback time only; never bill seeks,
   // scrubs, or loops. `seeking`/`seeked` (fired for clicks, drags, keyboard,
@@ -92,6 +108,44 @@ export default function Catalog({ data }: { data: Catalog }) {
     };
   }, []);
 
+  /** Charge one metered minute. Returns the new balance and whether it covered. */
+  async function postCharge(trackId: string): Promise<{ ok: boolean; balanceCents: number }> {
+    try {
+      const res = await fetch("/api/play/charge", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ trackId }),
+      });
+      const d = await res.json().catch(() => null);
+      if (res.status === 402) return { ok: false, balanceCents: d?.balanceCents ?? 0 };
+      if (!res.ok) return { ok: false, balanceCents };
+      return { ok: true, balanceCents: d.balanceCents };
+    } catch {
+      return { ok: false, balanceCents };
+    }
+  }
+
+  // Per-minute billing: the first minute is prepaid in beginPlay; thereafter,
+  // each time real playback crosses another whole minute we charge the next one.
+  // Out of funds mid-track → pause and open the top-up sheet.
+  useEffect(() => {
+    const t = nowRef.current;
+    if (!t || !playing) return;
+    const reached = Math.floor(billedSec / 60); // whole minutes beyond the first
+    if (reached >= chargedMinutesRef.current) {
+      chargedMinutesRef.current = reached + 1; // claim the slot before the await
+      postCharge(t.id).then((r) => {
+        setBalanceCents(r.balanceCents);
+        if (!r.ok) {
+          audioRef.current?.pause();
+          setPending(t);
+          setTopup(true);
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billedSec, playing]);
+
   // Full-service scrubbing: seek anywhere in the track. Setting currentTime
   // fires the native seek events above, so the skipped span is never billed.
   const scrub = (to: number) => {
@@ -102,15 +156,30 @@ export default function Catalog({ data }: { data: Catalog }) {
     setCur(a.currentTime);
   };
 
-  const start = (t: CatalogTrack) => {
+  /** Point the player at the decrypting stream and play. */
+  const stream = (t: CatalogTrack) => {
     const a = audioRef.current;
     if (!a) return;
     setNowId(t.id);
     setCur(0);
     setDur(0);
-    a.src = encodeURI(t.audioKey);
+    setBilledSec(0);
+    a.src = `/api/stream/${t.id}`;
     a.play().catch(() => {});
   };
+
+  /** Bill the first minute, THEN stream (so nothing decrypts unpaid). */
+  async function beginPlay(t: CatalogTrack) {
+    const charge = await postCharge(t.id);
+    setBalanceCents(charge.balanceCents);
+    if (!charge.ok) {
+      setPending(t);
+      setTopup(true);
+      return;
+    }
+    chargedMinutesRef.current = 1; // the first minute is paid
+    stream(t);
+  }
 
   const play = (t: CatalogTrack) => {
     const a = audioRef.current;
@@ -121,12 +190,9 @@ export default function Catalog({ data }: { data: Catalog }) {
       else a.pause();
       return;
     }
-    // The meter only bills signed-in listeners — gate the first play.
-    if (needsAuth) {
-      setGate(t);
-      return;
-    }
-    start(t);
+    if (needsAuth) { setGate(t); return; }   // must sign in first
+    if (balanceCents <= 0) { setPending(t); setTopup(true); return; } // must have funds
+    beginPlay(t);
   };
 
   const minutes = billedSec / 60;
@@ -141,6 +207,16 @@ export default function Catalog({ data }: { data: Catalog }) {
         <Stat k="Minutes played" v={stats.minutes.toLocaleString("en-US")} />
         <Stat k="Genres" v={String(Math.max(0, genres.length - 1))} />
       </div>
+
+      {!needsAuth && (
+        <div className="cat-wallet">
+          <span className="cat-wallet-bal" data-low={balanceCents <= 0}>
+            Wallet: <strong>{usd(balanceCents)}</strong>
+          </span>
+          <button className="cat-wallet-add" onClick={() => setTopup(true)}>Add funds</button>
+          <Link className="cat-wallet-link" href="/wallet">History →</Link>
+        </div>
+      )}
 
       <div className="cat-controls">
         <input
@@ -232,8 +308,8 @@ export default function Catalog({ data }: { data: Catalog }) {
               <div className="cat-bar-time">{clock(cur)} / {clock(dur)}</div>
             </div>
             <div className="cat-bar-cost">
-              <div className="cat-bar-readout">${cost.toFixed(4)}<span>billed</span></div>
-              <div className="cat-bar-readout">{now.pricePerMinuteCents}¢<span>per minute</span></div>
+              <div className="cat-bar-readout">{usd(balanceCents)}<span>balance</span></div>
+              <div className="cat-bar-readout">${cost.toFixed(4)}<span>this session</span></div>
             </div>
           </div>
         </div>
@@ -241,13 +317,31 @@ export default function Catalog({ data }: { data: Catalog }) {
 
       {gate && (
         <SignInSheet
-          reason="Sign in to start listening — the meter only bills signed-in listeners."
+          reason="Sign in to start listening — the meter bills your wallet by the minute."
           onClose={() => setGate(null)}
-          onSignedIn={() => {
+          onSignedIn={(m) => {
             setNeedsAuth(false);
             const t = gate;
             setGate(null);
-            start(t);
+            const bal = m.profiles?.listener?.balanceCents ?? 0;
+            setBalanceCents(bal);
+            if (!t) return;
+            if (bal <= 0) { setPending(t); setTopup(true); }
+            else beginPlay(t);
+          }}
+        />
+      )}
+
+      {topup && (
+        <TopUpSheet
+          reason={balanceCents <= 0 ? "You're out of funds — add money to keep listening." : undefined}
+          onClose={() => { setTopup(false); setPending(null); }}
+          onFunded={(cents) => {
+            setBalanceCents(cents);
+            setTopup(false);
+            const t = pending;
+            setPending(null);
+            if (t) beginPlay(t);
           }}
         />
       )}
