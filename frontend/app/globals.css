@@ -167,14 +167,14 @@ h3 {
   align-items: center;
   gap: 30px;
 }
-.nav-links a {
+.nav-links a:not(.btn) {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   color: var(--bone-dim);
   transition: color 0.2s var(--ease);
 }
-.nav-links a:hover {
+.nav-links a:not(.btn):hover {
   color: var(--bone);
 }
 @media (max-width: 760px) {
@@ -215,6 +215,20 @@ h3 {
 .btn-ghost:hover {
   border-color: var(--bone-faint);
   background: var(--asphalt-700);
+}
+
+/* artist path — metering green (earned) */
+.btn-green {
+  border-color: rgba(102, 230, 166, 0.35);
+  color: var(--meter-green);
+  background: rgba(102, 230, 166, 0.08);
+}
+.btn-green:hover {
+  border-color: var(--meter-green);
+  background: rgba(102, 230, 166, 0.14);
+  box-shadow: 0 14px 44px -10px rgba(102, 230, 166, 0.22),
+    0 0 0 4px rgba(102, 230, 166, 0.12);
+  transform: translateY(-1px);
 }
 
 /* ============================================================
