@@ -135,6 +135,48 @@ const STATEMENTS = [
      created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
   `CREATE INDEX ASYNC IF NOT EXISTS topups_by_account ON wallet_topups (account_id, created_at)`,
+
+  // ---------------------------------------------------------------------
+  // Listener library — likes, playlists, recently-played. New access patterns,
+  // each a clean point/range query (no ledger scans). No FKs (DSQL); ownership
+  // is enforced in the app by always scoping on account_id.
+  // ---------------------------------------------------------------------
+  // Liked tracks — one row per (listener, track); the heart state + "Liked
+  // Songs" list. Read by account, newest first.
+  `CREATE TABLE IF NOT EXISTS likes (
+     account_id  UUID NOT NULL,
+     track_id    UUID NOT NULL,
+     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+     PRIMARY KEY (account_id, track_id)
+   )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS likes_by_account ON likes (account_id, created_at)`,
+  // Playlists — a listener's named collections.
+  `CREATE TABLE IF NOT EXISTS playlists (
+     id             UUID PRIMARY KEY,
+     account_id     UUID NOT NULL,
+     name           TEXT NOT NULL,
+     cover_track_id UUID,
+     created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS playlists_by_account ON playlists (account_id, created_at)`,
+  // Playlist membership — ordered tracks within a playlist.
+  `CREATE TABLE IF NOT EXISTS playlist_tracks (
+     playlist_id UUID NOT NULL,
+     track_id    UUID NOT NULL,
+     position    INTEGER NOT NULL DEFAULT 0,
+     added_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+     PRIMARY KEY (playlist_id, track_id)
+   )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS playlist_tracks_by_playlist ON playlist_tracks (playlist_id, position)`,
+  // Recently played — one row per (listener, track), upserted on play. Read by
+  // account ORDER BY played_at DESC for the "recently played" rail.
+  `CREATE TABLE IF NOT EXISTS recently_played (
+     account_id  UUID NOT NULL,
+     track_id    UUID NOT NULL,
+     played_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+     PRIMARY KEY (account_id, track_id)
+   )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS recents_by_account ON recently_played (account_id, played_at)`,
 ];
 
 const signer = new DsqlSigner({ hostname: ENDPOINT, region: REGION });

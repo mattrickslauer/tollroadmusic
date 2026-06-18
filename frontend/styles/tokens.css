@@ -1,0 +1,42 @@
+/* ============================================================
+   TollRoad — app design tokens (the listener experience)
+   The warm editorial brand tokens live in app/globals.css :root and
+   stay the marketing source of truth. This file adds the .app-dark
+   scope: the dark, immersive design system for the (listen) app —
+   surfaces, text ramp, accents, and shell geometry. New listen/artist
+   components read ONLY these tokens, so the dark palette is iterable
+   without touching any component logic.
+   ============================================================ */
+
+.app-dark {
+  /* surfaces — near-black, layered for depth */
+  --app-bg: #060608;
+  --app-bg-grad: radial-gradient(1200px 600px at 70% -10%, rgba(255, 176, 46, 0.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(102, 230, 166, 0.05), transparent 55%);
+  --app-surface: #0c0c10;
+  --app-surface-2: #121218;
+  --app-elev: #1a1a22;
+  --app-elev-hi: #23232d;
+  --app-line: rgba(255, 255, 255, 0.08);
+  --app-line-soft: rgba(255, 255, 255, 0.05);
+
+  /* text ramp (reuses the brand bone palette, brighter for contrast) */
+  --app-text: #f6f1e6;
+  --app-text-dim: #aaa69b;
+  --app-text-faint: #6f6c63;
+
+  /* accents — amber signage (action) + meter-green (earned/live) */
+  --app-accent: var(--amber);
+  --app-accent-bright: var(--amber-bright);
+  --app-accent-glow: rgba(255, 176, 46, 0.22);
+  --app-green: var(--meter-green);
+
+  /* shell geometry */
+  --sidebar-w: 248px;
+  --playerbar-h: 92px;
+  --app-r: 12px;
+  --app-r-lg: 18px;
+
+  background: var(--app-bg);
+  color: var(--app-text);
+}

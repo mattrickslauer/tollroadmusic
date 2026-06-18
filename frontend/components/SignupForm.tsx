@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchMe, type Me } from "@/lib/auth";
+import * as api from "@/lib/api/client";
 import SignInSheet from "@/components/SignInSheet";
 
 type Status =
@@ -29,26 +30,18 @@ export default function SignupForm() {
     const data = Object.fromEntries(new FormData(form).entries());
 
     try {
-      const res = await fetch("/api/artists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (res.status === 401) {
+      const json = await api.createArtist(data);
+      setStatus({ kind: "done", name: json.name || (data.name as string) });
+      form.reset();
+    } catch (e) {
+      if (e instanceof api.ApiError && e.status === 401) {
         // Session expired / not signed in — prompt sign-in, then retry.
         setStatus({ kind: "idle" });
         setSheet(true);
         return;
       }
-      if (!res.ok) {
-        setStatus({ kind: "error", msg: json.error || "Something went wrong. Please try again." });
-        return;
-      }
-      setStatus({ kind: "done", name: json.name || (data.name as string) });
-      form.reset();
-    } catch {
-      setStatus({ kind: "error", msg: "Network error. Please try again." });
+      const msg = e instanceof api.ApiError ? e.message : "Network error. Please try again.";
+      setStatus({ kind: "error", msg });
     }
   }
 

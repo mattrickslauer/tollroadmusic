@@ -111,9 +111,23 @@ All resources run in **`us-east-1`** (DynamoDB, Aurora DSQL, Lambda, S3, KMS, Be
 - **Artists / labels** set a per-minute rate and earn on metered consumption, reconciled to an auditable statement.
 - **TollRoad** takes a thin platform margin on metered minutes — revenue scales directly with consumption, mirroring the underlying metering infrastructure's own economics.
 
+## API-first — and x402
+
+TollRoad is a **backend API with clients**, not a monolith. A standalone service
+(**Amazon API Gateway** REST + Lambda — see [`backend/`](backend/)) is the system
+of record; the Next.js app, third-party integrations, and AI agents are all just
+consumers of the same `/v1` contract ([`backend/openapi.yaml`](backend/openapi.yaml)).
+
+Streaming is gated by an **x402-style protocol** — `request → 402 Payment
+Required → pay → retry` — but **crypto-free**: settlement is the prepaid wallet
+reconciled in Aurora DSQL, not a chain. A paid request returns a short-lived
+CloudFront signed URL; the bytes never flow through the API. The public API
+carries **usage-plan API keys** so an agent can stream-and-pay programmatically
+(see [`scripts/agent-demo.mjs`](scripts/agent-demo.mjs)).
+
 ## Stack
 
-Next.js (v0) · Vercel · Amazon DynamoDB · Amazon Aurora DSQL · AWS Lambda · Amazon S3 · CloudFront (OAC) · AWS KMS · Amazon Bedrock (Claude) · Stripe (usage-based billing)
+Next.js (v0) · Vercel · **Amazon API Gateway** · Amazon DynamoDB · Amazon Aurora DSQL · AWS Lambda · Amazon S3 · CloudFront (OAC) · AWS KMS · Amazon Bedrock (Claude) · Stripe (usage-based billing) · x402-style metered API
 
 ## Status
 
