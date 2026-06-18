@@ -1,0 +1,28 @@
+{
+  "name": "tollroad-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TollRoad metered streaming API — the x402-style system of record behind API Gateway.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "node --env-file-if-exists=.env --experimental-strip-types src/local-server.ts",
+    "test": "node --experimental-strip-types --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.1070.0",
+    "@aws-sdk/cloudfront-signer": "^3.1065.0",
+    "@aws-sdk/dsql-signer": "^3.1065.0",
+    "jose": "^6.2.3",
+    "pg": "^8.13.0",
+    "stripe": "^22.2.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.7.0"
+  }
+}

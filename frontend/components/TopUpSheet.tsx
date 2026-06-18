@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import * as api from "@/lib/api/client";
 
 type Method = "ach" | "card";
 
@@ -60,31 +61,15 @@ export default function TopUpSheet({ reason, onClose, onFunded }: Props) {
     setPending(true);
     setError(null);
     try {
-      const res = await fetch("/api/billing/create-intent", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ method }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        setError(data?.error ?? "Could not start payment.");
-        return;
-      }
+      const data = await api.topup(method);
       if (data.demo) {
-        const cr = await fetch("/api/billing/demo-credit", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ method }),
-        });
-        const cd = await cr.json().catch(() => null);
-        if (!cr.ok) {
-          setError(cd?.error ?? "Could not add funds.");
-          return;
-        }
+        const cd = await api.demoCredit(method);
         onFunded(cd.balanceCents);
         return;
       }
       setQuote(data as Quote);
+    } catch (e) {
+      setError(e instanceof api.ApiError ? e.message : "Could not start payment.");
     } finally {
       setPending(false);
     }
@@ -186,18 +171,14 @@ function PayForm({
       setPending(false);
       return;
     }
-    const res = await fetch("/api/billing/confirm", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ paymentIntentId: paymentIntent?.id }),
-    });
-    const data = await res.json().catch(() => null);
-    setPending(false);
-    if (!res.ok) {
-      onError(data?.error ?? "Could not confirm payment.");
-      return;
+    try {
+      const data = await api.confirmTopup(paymentIntent?.id ?? "");
+      setPending(false);
+      onFunded(data.balanceCents);
+    } catch (e) {
+      setPending(false);
+      onError(e instanceof api.ApiError ? e.message : "Could not confirm payment.");
     }
-    onFunded(data.balanceCents);
   }
 
   return (

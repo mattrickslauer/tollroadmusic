@@ -54,6 +54,16 @@ royalty_ledger(                       -- APPEND-ONLY, one row per metered minute
 artist_daily_summary(                 -- PRECOMPUTED BI (no ledger scans)
   artist_id, day, minutes, amount_cents,
   PRIMARY KEY(artist_id, day))
+
+-- Listener library — new access patterns, each a clean point/range query
+-- (no ledger scans). No FKs; ownership scoped on account_id in the app.
+likes(account_id, track_id, created_at,
+  PRIMARY KEY(account_id, track_id))                          -- idx: account, created_at
+playlists(id PK, account_id, name, cover_track_id, created_at) -- idx: account, created_at
+playlist_tracks(playlist_id, track_id, position, added_at,
+  PRIMARY KEY(playlist_id, track_id))                          -- idx: playlist, position
+recently_played(account_id, track_id, played_at,              -- UPSERT on play
+  PRIMARY KEY(account_id, track_id))                           -- idx: account, played_at DESC
 ```
 
 ### Rollup (DynamoDB Streams → Lambda)

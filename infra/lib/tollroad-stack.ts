@@ -10,6 +10,8 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as kms from "aws-cdk-lib/aws-kms";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as apigw from "aws-cdk-lib/aws-apigateway";
+import { NodejsFunction, OutputFormat } from "aws-cdk-lib/aws-lambda-nodejs";
 
 /**
  * TollRoad data + billing layer.
@@ -126,6 +128,9 @@ export class TollroadStack extends cdk.Stack {
     const cfPublicKeyPem = this.node.tryGetContext("cfPublicKey") as string | undefined;
     let trustedKeyGroups: cloudfront.IKeyGroup[] | undefined;
     let keyGroupId = "(none — pass -c cfPublicKey to enable signed cookies)";
+    // The PublicKey id doubles as the CloudFront key-pair id the API uses to sign
+    // stream URLs (TOLLROAD_CF_KEY_PAIR_ID).
+    let cfKeyPairId: string | undefined;
     if (cfPublicKeyPem) {
       const pubKey = new cloudfront.PublicKey(this, "TollroadCfPublicKey", {
         encodedKey: cfPublicKeyPem,
@@ -135,6 +140,7 @@ export class TollroadStack extends cdk.Stack {
       });
       trustedKeyGroups = [keyGroup];
       keyGroupId = keyGroup.keyGroupId;
+      cfKeyPairId = pubKey.publicKeyId;
     }
 
     // OAC S3 origin: CloudFront authenticates to the private bucket and is granted
@@ -255,8 +261,133 @@ export class TollroadStack extends cdk.Stack {
     });
 
     // ---------------------------------------------------------------------
+    // API — the standalone backend (API Gateway REST + a single proxy Lambda)
+    // ---------------------------------------------------------------------
+    // One Lambda runs the whole backend router (../../backend/src/lambda.ts); it
+    // dispatches every /v1 route, so we need just one function + one proxy
+    // resource. The front-end, third-party apps, and AI agents are all clients of
+    // this API. Secrets are supplied at deploy time via context (-c name=value)
+    // or edited on the function afterwards.
+    const ctx = (name: string): string | undefined => this.node.tryGetContext(name) as string | undefined;
+
+    const apiEnv: Record<string, string> = {
+      NODE_ENV: "production",
+      TOLLROAD_DSQL_ENDPOINT: dsqlEndpoint,
+      TOLLROAD_DSQL_REGION: region,
+      TOLLROAD_CDN_DOMAIN: distribution.distributionDomainName,
+    };
+    if (cfKeyPairId) apiEnv.TOLLROAD_CF_KEY_PAIR_ID = cfKeyPairId;
+    for (const k of [
+      "TOLLROAD_SESSION_SECRET",
+      "TOLLROAD_CF_PRIVATE_KEY",
+      "TOLLROAD_SES_SENDER",
+      "TOLLROAD_ALLOWED_ORIGINS",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+    ]) {
+      const v = ctx(k);
+      if (v) apiEnv[k] = v;
+    }
+
+    const apiFn = new NodejsFunction(this, "ApiFn", {
+      functionName: "tollroad-api",
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, "..", "..", "backend", "src", "lambda.ts"),
+      // The backend is a sibling package of infra/; bundle it from its own root
+      // (where esbuild + its deps live).
+      projectRoot: path.join(__dirname, "..", "..", "backend"),
+      depsLockFilePath: path.join(__dirname, "..", "..", "backend", "package-lock.json"),
+      handler: "handler",
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: apiEnv,
+      bundling: {
+        format: OutputFormat.ESM,
+        target: "node20",
+        // The Node 20 runtime ships the AWS SDK v3 — don't bundle it.
+        externalModules: ["@aws-sdk/*"],
+      },
+    });
+    // The API reads catalog/ledger/library and runs the metering transaction on
+    // DSQL; it generates the IAM auth token itself (DbConnectAdmin), same as the
+    // rollup. Email sign-in codes go out via SES.
+    apiFn.addToRolePolicy(dsqlConnectAdmin);
+    apiFn.addToRolePolicy(
+      new iam.PolicyStatement({ sid: "TollroadApiSendOtpEmail", actions: ["ses:SendEmail"], resources: ["*"] }),
+    );
+
+    // REST API. Stage `v1` ⇒ invoke URL .../v1/<route>. The proxy ANY method
+    // requires an API key (usage-plan attribution + throttling) — the metering/
+    // monetization surface for the public API. The front-end proxy and agents
+    // both present a key. CORS preflight (OPTIONS) and the Stripe webhook are
+    // key-exempt. End-user identity is the session JWT, verified inside the
+    // handlers (see backend/src/lib/http.ts); a per-route Gateway authorizer
+    // (backend/src/handlers/authorizer.ts) is available if stricter gating is
+    // wanted later.
+    const allowedOrigins = (ctx("TOLLROAD_ALLOWED_ORIGINS") ?? "http://localhost:3000")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const api = new apigw.RestApi(this, "TollroadApi", {
+      restApiName: "tollroad-api",
+      description: "TollRoad metered streaming API (x402-style)",
+      binaryMediaTypes: ["audio/mpeg", "application/octet-stream"],
+      deployOptions: {
+        stageName: "v1",
+        throttlingRateLimit: 50,
+        throttlingBurstLimit: 100,
+      },
+      defaultCorsPreflightOptions: {
+        allowOrigins: allowedOrigins,
+        allowMethods: apigw.Cors.ALL_METHODS,
+        allowHeaders: ["Content-Type", "Authorization", "x-api-key", "stripe-signature", "Range"],
+        allowCredentials: true,
+      },
+    });
+
+    const lambdaIntegration = new apigw.LambdaIntegration(apiFn);
+
+    // Stripe can't send an API key — give the webhook its own key-exempt path.
+    const stripeRes = api.root.addResource("stripe").addResource("webhook");
+    stripeRes.addMethod("POST", lambdaIntegration, { apiKeyRequired: false });
+
+    // Everything else flows through the keyed proxy.
+    api.root.addProxy({
+      defaultIntegration: lambdaIntegration,
+      anyMethod: true,
+      defaultMethodOptions: { apiKeyRequired: true },
+    });
+
+    // Usage plan + keys: one for the consumer app, one for the demo agent. Real
+    // third parties would each get their own key + plan tier.
+    const plan = api.addUsagePlan("TollroadUsagePlan", {
+      name: "tollroad-standard",
+      throttle: { rateLimit: 50, burstLimit: 100 },
+      quota: { limit: 1_000_000, period: apigw.Period.MONTH },
+    });
+    plan.addApiStage({ stage: api.deploymentStage });
+    const appKey = api.addApiKey("TollroadAppKey", { apiKeyName: "tollroad-app" });
+    const agentKey = api.addApiKey("TollroadAgentKey", { apiKeyName: "tollroad-demo-agent" });
+    plan.addApiKey(appKey);
+    plan.addApiKey(agentKey);
+
+    // ---------------------------------------------------------------------
     // Outputs
     // ---------------------------------------------------------------------
+    new cdk.CfnOutput(this, "ApiBaseUrl", {
+      value: api.url, // ends with /v1/
+      description: "Set as NEXT_PUBLIC_API_BASE (the front-end + agents call this)",
+    });
+    new cdk.CfnOutput(this, "AppApiKeyId", {
+      value: appKey.keyId,
+      description: "Front-end app API key id — fetch the value via `aws apigateway get-api-key --include-value`",
+    });
+    new cdk.CfnOutput(this, "AgentApiKeyId", {
+      value: agentKey.keyId,
+      description: "Demo-agent API key id (for scripts/agent-demo.mjs)",
+    });
     new cdk.CfnOutput(this, "TableName", { value: table.tableName });
     new cdk.CfnOutput(this, "TableStreamArn", { value: table.tableStreamArn ?? "" });
     new cdk.CfnOutput(this, "DsqlClusterArn", { value: dsqlCluster.attrResourceArn });

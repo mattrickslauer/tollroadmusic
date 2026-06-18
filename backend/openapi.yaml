@@ -1,0 +1,249 @@
+openapi: 3.1.0
+info:
+  title: TollRoad API
+  version: "1.0.0"
+  description: >
+    The metered-billing music API. Every minute of audio is a paid, metered
+    event. Streaming is gated by an **x402-style** protocol (crypto-free): a
+    request for a paid resource that has no recent paid minute returns
+    **402 Payment Required** with machine-readable payment requirements; the
+    caller pays via `POST /v1/charge` (debiting its prepaid wallet, reconciled in
+    Aurora DSQL) and retries. The consumer app, third-party integrations, and AI
+    agents are all just clients of this one contract.
+servers:
+  - url: "{apiBaseUrl}/v1"
+    variables:
+      apiBaseUrl:
+        default: https://api.tollroad.music
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Session JWT from POST /auth/otp/verify (or the tollroad_session cookie).
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Usage-plan API key for programmatic / agent consumers.
+  schemas:
+    PaymentRequirements:
+      type: object
+      properties:
+        scheme: { type: string, enum: [prepaid] }
+        network: { type: string, enum: [tollroad] }
+        asset: { type: string, enum: [usd] }
+        maxAmountRequired: { type: integer, description: Cents to satisfy this request (one minute). }
+        resource: { type: string }
+        description: { type: string }
+        mimeType: { type: string }
+        payTo: { type: string, description: Endpoint to pay (the charge route). }
+        topUpUrl: { type: string }
+        pricePerMinuteCents: { type: integer }
+    PaymentRequired:
+      type: object
+      properties:
+        x402Version: { type: integer, example: 1 }
+        error: { type: string, example: payment required }
+        accepts:
+          type: array
+          items: { $ref: "#/components/schemas/PaymentRequirements" }
+    Track:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        artistId: { type: string }
+        artistName: { type: string }
+        genre: { type: string, nullable: true }
+        durationSeconds: { type: integer }
+        pricePerMinuteCents: { type: integer }
+        coverImageKey: { type: string, nullable: true }
+    Catalog:
+      type: object
+      properties:
+        artists: { type: array, items: { type: object } }
+        tracks: { type: array, items: { $ref: "#/components/schemas/Track" } }
+        stats: { type: object }
+    ChargeResult:
+      type: object
+      properties:
+        balanceCents: { type: integer }
+        charged: { type: boolean }
+    StreamGrant:
+      type: object
+      description: A short-lived authorization to fetch the audio bytes from CloudFront.
+      properties:
+        url: { type: string, description: Signed CloudFront URL. }
+        expiresAt: { type: integer, description: Epoch seconds. }
+        mode: { type: string, enum: [signed-url, proxy] }
+  responses:
+    Unauthorized:
+      description: Missing or invalid session.
+      content: { application/json: { schema: { type: object, properties: { error: { type: string } } } } }
+    PaymentRequired:
+      description: x402 — pay then retry.
+      content: { application/json: { schema: { $ref: "#/components/schemas/PaymentRequired" } } }
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/otp/start:
+    post:
+      summary: Begin an email OTP challenge.
+      security: []
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [email], properties: { email: { type: string } } } } }
+      responses:
+        "200": { description: Code sent (or throttled). }
+  /auth/otp/verify:
+    post:
+      summary: Verify an OTP code; mints a session JWT and ensures profiles.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string }
+                code: { type: string }
+                anonId: { type: string, description: Client device id to claim. }
+                displayName: { type: string }
+      responses:
+        "200":
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  account: { type: object }
+                  profiles: { type: object }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /auth/me:
+    get:
+      summary: The current account, profiles, and balance.
+      responses:
+        "200": { description: OK }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /auth/logout:
+    post:
+      summary: Clear the session cookie (front-end proxy).
+      security: []
+      responses: { "200": { description: OK } }
+
+  /catalog:
+    get:
+      summary: Full catalog (artists + tracks + stats).
+      security: [{ bearerAuth: [] }, { apiKey: [] }]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Catalog" } } } }
+  /tracks/{trackId}:
+    get:
+      summary: A single track.
+      security: [{ bearerAuth: [] }, { apiKey: [] }]
+      parameters: [{ name: trackId, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: OK }, "404": { description: Not found } }
+  /artists:
+    get:
+      summary: Artists.
+      security: [{ bearerAuth: [] }, { apiKey: [] }]
+      responses: { "200": { description: OK } }
+
+  /charge:
+    post:
+      summary: Pay for one metered minute of a track (the x402 payment step).
+      description: >
+        Conditionally debits the caller's wallet by the track's per-minute rate
+        and writes an append-only royalty-ledger row, idempotent per
+        (user, track, wall-clock minute). Returns 402 if the balance can't cover it.
+      security: [{ bearerAuth: [] }, { apiKey: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [trackId], properties: { trackId: { type: string } } } } }
+      responses:
+        "200": { description: Paid, content: { application/json: { schema: { $ref: "#/components/schemas/ChargeResult" } } } }
+        "402": { $ref: "#/components/responses/PaymentRequired" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /stream/{trackId}:
+    get:
+      summary: Authorize streaming a track (x402-gated).
+      description: >
+        If the caller has a paid minute for this track in the last ~2.5 min,
+        returns a short-lived **signed CloudFront URL** for the audio (bytes never
+        flow through the API). Otherwise returns **402** with payment requirements.
+      security: [{ bearerAuth: [] }, { apiKey: [] }]
+      parameters: [{ name: trackId, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: Authorized, content: { application/json: { schema: { $ref: "#/components/schemas/StreamGrant" } } } }
+        "402": { $ref: "#/components/responses/PaymentRequired" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /balance:
+    get:
+      summary: Wallet balance + listening history.
+      responses: { "200": { description: OK } }
+  /wallet/topup:
+    post:
+      summary: Create a Stripe PaymentIntent (or demo credit) to fund the wallet.
+      responses: { "200": { description: OK } }
+  /stripe/webhook:
+    post:
+      summary: Stripe webhook — credits the wallet on a funded top-up.
+      security: []
+      responses: { "200": { description: OK } }
+
+  /library/likes:
+    get:
+      summary: The caller's liked tracks.
+      responses: { "200": { description: OK } }
+    post:
+      summary: Like a track.
+      responses: { "200": { description: OK } }
+    delete:
+      summary: Unlike a track.
+      responses: { "200": { description: OK } }
+  /playlists:
+    get:
+      summary: The caller's playlists.
+      responses: { "200": { description: OK } }
+    post:
+      summary: Create a playlist.
+      responses: { "200": { description: OK } }
+  /playlists/{playlistId}:
+    get:
+      summary: A playlist with its tracks.
+      parameters: [{ name: playlistId, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: OK }, "404": { description: Not found } }
+    delete:
+      summary: Delete a playlist.
+      parameters: [{ name: playlistId, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: OK } }
+  /playlists/{playlistId}/tracks:
+    post:
+      summary: Add a track to a playlist.
+      parameters: [{ name: playlistId, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: OK } }
+    delete:
+      summary: Remove a track from a playlist.
+      parameters: [{ name: playlistId, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: OK } }
+  /recents:
+    get:
+      summary: Recently played tracks.
+      responses: { "200": { description: OK } }
+    post:
+      summary: Record that a track was played (upsert).
+      responses: { "200": { description: OK } }
+
+  /artist/summary:
+    get:
+      summary: The signed-in artist's royalty summary (from precomputed DSQL summaries).
+      responses: { "200": { description: OK }, "403": { description: Not an artist } }

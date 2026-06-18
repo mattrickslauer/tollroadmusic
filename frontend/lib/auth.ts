@@ -42,7 +42,7 @@ export function loadAnonId(): string {
 /** The currently signed-in account + profiles, or nulls. Reads the cookie. */
 export async function fetchMe(): Promise<Me> {
   try {
-    const res = await fetch("/api/auth/me", { cache: "no-store" });
+    const res = await fetch("/api/v1/auth/me", { cache: "no-store" });
     if (!res.ok) return { account: null, profiles: null, authConfigured: false };
     return (await res.json()) as Me;
   } catch {
@@ -52,7 +52,7 @@ export async function fetchMe(): Promise<Me> {
 
 /** Request an email OTP. */
 export async function startOtp(email: string): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch("/api/auth/otp/start", {
+  const res = await fetch("/api/v1/auth/otp/start", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email }),
@@ -68,7 +68,7 @@ export async function verifyOtp(
   code: string,
   anonId: string,
 ): Promise<{ account: Account; profiles: Profiles; claimed: boolean } | { error: string }> {
-  const res = await fetch("/api/auth/otp/verify", {
+  const res = await fetch("/api/v1/auth/otp/verify", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, code, anonId }),
@@ -80,5 +80,5 @@ export async function verifyOtp(
 
 /** Clear the session. */
 export async function logout(): Promise<void> {
-  await fetch("/api/auth/logout", { method: "POST" });
+  await fetch("/api/v1/auth/logout", { method: "POST" });
 }

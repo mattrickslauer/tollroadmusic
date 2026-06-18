@@ -1,0 +1,44 @@
+// Server-side API access for Server Components. Calls the backend directly
+// (server→server, no CORS), forwarding the session cookie as a bearer token and
+// attaching the app's usage-plan key. The front-end server layer holds no DB
+// access — it's a thin client of the backend, same as the browser.
+import { cookies } from "next/headers";
+import type { ArtistSummary, Catalog, HistoryRow } from "./types";
+
+const BACKEND = (process.env.TOLLROAD_API_BASE ?? "http://localhost:8787/v1").replace(/\/$/, "");
+const APP_KEY = process.env.TOLLROAD_APP_API_KEY;
+const SESSION_COOKIE = "tollroad_session";
+
+export function apiConfigured(): boolean {
+  return Boolean(process.env.TOLLROAD_API_BASE);
+}
+
+async function serverGet<T>(path: string, opts: { auth?: boolean } = {}): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (APP_KEY) headers["x-api-key"] = APP_KEY;
+  if (opts.auth) {
+    const token = (await cookies()).get(SESSION_COOKIE)?.value;
+    if (token) headers["authorization"] = `Bearer ${token}`;
+  }
+  const res = await fetch(`${BACKEND}${path}`, { headers, cache: "no-store" });
+  if (!res.ok) throw new Error(`backend ${path} -> ${res.status}`);
+  return (await res.json()) as T;
+}
+
+export const serverCatalog = () => serverGet<Catalog>("/catalog");
+export const serverBalance = () => serverGet<{ balanceCents: number; history: HistoryRow[] }>("/balance", { auth: true });
+
+/** The signed-in artist's royalty summary, or null if the account has no artist
+ *  profile / the backend can't serve it (so the page can prompt to join). */
+export async function serverArtistSummary(): Promise<ArtistSummary | null> {
+  try {
+    return await serverGet<ArtistSummary>("/artist/summary", { auth: true });
+  } catch {
+    return null;
+  }
+}
+
+/** Whether a (verified) session cookie is present — for SSR gating. */
+export async function hasSessionCookie(): Promise<boolean> {
+  return Boolean((await cookies()).get(SESSION_COOKIE)?.value);
+}
