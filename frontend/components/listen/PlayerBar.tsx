@@ -3,6 +3,7 @@
 import { usePlayer } from "@/context/PlayerProvider";
 import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
+import CoverImage from "./CoverImage";
 
 /** The persistent now-playing bar, lifted out of Catalog into the (listen)
  *  layout. It consumes the global player, so it stays live and docked across
@@ -18,8 +19,7 @@ export default function PlayerBar() {
       <div className="lx-player-left">
         {current ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="lx-player-cover" src={current.coverImageKey || "/covers/placeholder.svg"} alt="" />
+            <CoverImage className="lx-player-cover" coverKey={current.coverImageKey} loading="eager" />
             <div className="lx-player-meta">
               <span className="lx-player-title" title={current.title}>{current.title}</span>
               <span className="lx-player-artist">{current.artistName}</span>

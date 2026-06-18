@@ -5,6 +5,7 @@ import { usePlayer } from "@/context/PlayerProvider";
 import { clock } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
+import CoverImage from "./CoverImage";
 
 interface Props {
   tracks: LibraryTrack[];
@@ -46,8 +47,7 @@ export default function TrackList({ tracks, onRemove, removeLabel = "Remove" }: 
               </span>
             </button>
             <button className="lx-row-title" onClick={() => play(t, queue)}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="lx-row-cover" src={t.coverImageKey || "/covers/placeholder.svg"} alt="" loading="lazy" />
+              <CoverImage className="lx-row-cover" coverKey={t.coverImageKey} />
               <span className="lx-row-text">
                 <span className="lx-row-name" title={t.title}>{t.title}</span>
                 <span className="lx-row-artist">{t.artistName}</span>
