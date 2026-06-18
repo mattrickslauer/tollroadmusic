@@ -307,6 +307,10 @@ export class TollroadStack extends cdk.Stack {
         target: "node20",
         // The Node 20 runtime ships the AWS SDK v3 — don't bundle it.
         externalModules: ["@aws-sdk/*"],
+        // pg (and other CJS deps) call require() of Node builtins; under ESM
+        // output esbuild stubs require() with a thrower ("Dynamic require of
+        // 'events' is not supported"). Re-create a real require so they work.
+        banner: "import{createRequire as __cr}from'module';const require=__cr(import.meta.url);",
       },
     });
     // The API reads catalog/ledger/library and runs the metering transaction on
