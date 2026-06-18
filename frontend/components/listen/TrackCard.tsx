@@ -5,6 +5,7 @@ import { usePlayer } from "@/context/PlayerProvider";
 import { clock } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
+import CoverImage from "./CoverImage";
 
 /** A playable track tile for grids. Dispatches play into the global player
  *  (seeding the surrounding list as the queue), shows live EQ when active. */
@@ -16,8 +17,7 @@ export default function TrackCard({ track, queue }: { track: CatalogTrack; queue
   return (
     <article className="lx-card" data-on={active}>
       <button className="lx-card-cover" onClick={() => play(track, queue)} aria-label={`Play ${track.title}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={track.coverImageKey || "/covers/placeholder.svg"} alt="" loading="lazy" />
+        <CoverImage coverKey={track.coverImageKey} />
         <span className="lx-card-play">
           {isPlaying ? (
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>

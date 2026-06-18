@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import TopUpSheet from "@/components/TopUpSheet";
+import CoverImage from "./listen/CoverImage";
 
 export interface HistoryItem {
   trackId: string;
@@ -61,8 +62,7 @@ export default function WalletPanel({ initialBalanceCents, history }: Props) {
         <ul className="wallet-history">
           {history.map((h) => (
             <li key={h.trackId} className="wallet-row">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="wallet-row-cover" src={h.coverImageKey || "/covers/placeholder.svg"} alt="" loading="lazy" />
+              <CoverImage className="wallet-row-cover" coverKey={h.coverImageKey} />
               <div className="wallet-row-main">
                 <div className="wallet-row-title">{h.title}</div>
                 <div className="wallet-row-artist">{h.artistName}</div>
