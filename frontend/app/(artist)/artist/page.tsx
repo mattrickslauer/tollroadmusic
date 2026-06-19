@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+const dur = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 export default async function ArtistDashboardPage() {
   const configured = apiConfigured();
@@ -51,6 +52,26 @@ export default async function ArtistDashboardPage() {
             <Stat k="Tracks" v={String(summary.trackCount)} />
             <Stat k="Genre" v={summary.artist.genre || "—"} />
           </div>
+
+          {summary.tracks.length > 0 && (
+            <section className="az-recent">
+              <h2 className="az-recent-h">Your tracks</h2>
+              <table className="az-table">
+                <thead>
+                  <tr><th>Title</th><th>Length</th><th>Rate / min</th></tr>
+                </thead>
+                <tbody>
+                  {summary.tracks.map((t) => (
+                    <tr key={t.id}>
+                      <td>{t.title}</td>
+                      <td>{dur(t.durationSeconds)}</td>
+                      <td className="az-amt">{usd(t.pricePerMinuteCents)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
 
           <section className="az-recent">
             <h2 className="az-recent-h">Recent activity</h2>

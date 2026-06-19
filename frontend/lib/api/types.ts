@@ -63,6 +63,14 @@ export type StreamGrant = {
 
 /** The signed-in artist's royalty summary (GET /v1/artist/summary). Read from
  *  the precomputed artist_daily_summary — never the raw ledger. */
+export type ArtistTrack = {
+  id: string;
+  title: string;
+  durationSeconds: number;
+  pricePerMinuteCents: number;
+  coverImageKey: string | null;
+};
+
 export type ArtistSummary = {
   artist: { id: string; name: string; genre: string | null };
   artistId: string;
@@ -70,4 +78,5 @@ export type ArtistSummary = {
   earningsCents: number;
   trackCount: number;
   byDay: { day: string; minutes: number; amountCents: number }[];
+  tracks: ArtistTrack[];
 };
