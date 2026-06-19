@@ -448,6 +448,14 @@
 .lx-rail-track { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; }
 .lx-rail-item {
   flex: 0 0 138px;
+  width: 138px;
+  /* Without this, a flex item's default `min-width: auto` floors its width at
+     its min-content size. A pathological title (a long unbroken token, e.g.
+     mojibake) would then blow the item far past its 138px basis — and because
+     the cover is `width: 100%; aspect-ratio: 1`, it scaled equally tall, making
+     the whole rail massive. min-width: 0 + overflow: hidden pins each item to 138px. */
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -461,8 +469,8 @@
 }
 .lx-rail-item:hover { background: var(--app-surface-2); }
 .lx-rail-item img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
-.lx-rail-name { color: var(--app-text); font-weight: 600; font-size: 0.84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lx-rail-artist { color: var(--app-text-dim); font-size: 0.76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lx-rail-name { max-width: 100%; color: var(--app-text); font-weight: 600; font-size: 0.84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lx-rail-artist { max-width: 100%; color: var(--app-text-dim); font-size: 0.76rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- empty / misc ---------- */
 .lx-empty { color: var(--app-text-dim); padding: 30px 0; }
