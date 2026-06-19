@@ -34,6 +34,7 @@ export default function Sidebar() {
   const { playlists, createPlaylist } = useLibrary();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
+  const [open, setOpen] = useState(false);
 
   async function create() {
     const n = name.trim();
@@ -43,55 +44,73 @@ export default function Sidebar() {
     setCreating(false);
   }
 
+  const close = () => setOpen(false);
+
   return (
-    <aside className="lx-sidebar">
-      <Link href="/" className="lx-brand">
-        <BrandMark size={26} />
-        <span>TollRoad</span>
-      </Link>
+    <>
+      <button
+        className="lx-burger"
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+        aria-expanded={open}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18" />
+        </svg>
+      </button>
+      <div className="lx-scrim" data-open={open} onClick={close} aria-hidden="true" />
 
-      <nav className="lx-nav">
-        {NAV.map((n) => {
-          const active = pathname === n.href || (n.href !== "/browse" && pathname.startsWith(n.href));
-          return (
-            <Link key={n.href} href={n.href} className="lx-nav-item" data-on={active}>
-              <Icon name={n.icon} />
-              <span>{n.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <aside className="lx-sidebar" data-open={open}>
+        <button className="lx-sidebar-close" onClick={close} aria-label="Close menu">×</button>
 
-      <div className="lx-pl">
-        <div className="lx-pl-head">
-          <span>Playlists</span>
-          <button className="lx-pl-new" onClick={() => setCreating((v) => !v)} aria-label="New playlist" title="New playlist">+</button>
-        </div>
-        {creating && (
-          <div className="lx-pl-create">
-            <input
-              autoFocus
-              placeholder="Playlist name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") create(); if (e.key === "Escape") setCreating(false); }}
-            />
-            <button onClick={create} disabled={!name.trim()}>Add</button>
-          </div>
-        )}
-        <div className="lx-pl-list">
-          {playlists.map((p) => {
-            const href = `/playlist/${p.id}`;
+        <Link href="/" className="lx-brand" onClick={close}>
+          <BrandMark size={26} />
+          <span>TollRoad</span>
+        </Link>
+
+        <nav className="lx-nav">
+          {NAV.map((n) => {
+            const active = pathname === n.href || (n.href !== "/browse" && pathname.startsWith(n.href));
             return (
-              <Link key={p.id} href={href} className="lx-pl-item" data-on={pathname === href}>
-                {p.name}
-                <span className="lx-pl-count">{p.trackCount}</span>
+              <Link key={n.href} href={n.href} className="lx-nav-item" data-on={active} onClick={close}>
+                <Icon name={n.icon} />
+                <span>{n.label}</span>
               </Link>
             );
           })}
-          {playlists.length === 0 && !creating && <p className="lx-pl-empty">Create your first playlist.</p>}
+        </nav>
+
+        <div className="lx-pl">
+          <div className="lx-pl-head">
+            <span>Playlists</span>
+            <button className="lx-pl-new" onClick={() => setCreating((v) => !v)} aria-label="New playlist" title="New playlist">+</button>
+          </div>
+          {creating && (
+            <div className="lx-pl-create">
+              <input
+                autoFocus
+                placeholder="Playlist name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") create(); if (e.key === "Escape") setCreating(false); }}
+              />
+              <button onClick={create} disabled={!name.trim()}>Add</button>
+            </div>
+          )}
+          <div className="lx-pl-list">
+            {playlists.map((p) => {
+              const href = `/playlist/${p.id}`;
+              return (
+                <Link key={p.id} href={href} className="lx-pl-item" data-on={pathname === href} onClick={close}>
+                  {p.name}
+                  <span className="lx-pl-count">{p.trackCount}</span>
+                </Link>
+              );
+            })}
+            {playlists.length === 0 && !creating && <p className="lx-pl-empty">Create your first playlist.</p>}
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

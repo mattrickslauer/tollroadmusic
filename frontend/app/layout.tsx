@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import "@/styles/tokens.css";
@@ -33,6 +33,12 @@ export const metadata: Metadata = {
       "Streaming, metered like a utility. Pay per minute played. Artists earn per minute heard.",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
