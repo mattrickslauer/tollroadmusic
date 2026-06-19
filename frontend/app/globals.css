@@ -1375,6 +1375,83 @@ h1.hero-title .serif {
 .signup-gate { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .signup-gate p { color: var(--bone-dim); font-size: 0.95rem; line-height: 1.5; }
 
+/* ============================== ONBOARDING ============================== */
+.onb-sheet { max-width: 440px; padding: 0 0 24px; overflow: hidden; text-align: center; }
+.onb-sheet .auth-close {
+  z-index: 3; top: 12px; right: 12px; width: 30px; height: 30px;
+  border-radius: 999px; background: rgba(8, 8, 10, 0.45); color: var(--bone);
+  display: grid; place-items: center;
+}
+
+.onb-visual { position: relative; height: 188px; overflow: hidden; }
+
+/* slide 1 — the toll lane (amber dashes rolling under a toll sign) */
+.onb-lane { background: linear-gradient(180deg, var(--asphalt-700), var(--asphalt-900)); }
+.onb-lane-road {
+  position: absolute; left: -90px; right: -90px; top: 54%; height: 64px;
+  transform: translateY(-50%) rotate(-3deg);
+  background: var(--asphalt-900);
+  border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft);
+}
+.onb-lane-road::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, var(--amber) 0 34px, transparent 34px 70px) left center / 104px 6px repeat-x;
+  opacity: 0.9; animation: onb-roll 0.8s linear infinite;
+}
+@keyframes onb-roll { to { background-position: -104px center; } }
+.onb-lane-sign {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2;
+  font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.06em; color: #1a1206;
+  background: var(--gold); padding: 7px 14px; border-radius: 8px;
+  box-shadow: 0 10px 30px -8px var(--amber-glow);
+}
+
+/* slide 2 — the live meter */
+.onb-meter {
+  background: radial-gradient(120% 120% at 50% 0, rgba(102, 230, 166, 0.10), transparent 60%), var(--asphalt-900);
+  display: flex; flex-direction: column; justify-content: center; gap: 13px; padding: 0 30px; text-align: left;
+}
+.onb-meter-head { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.72rem; }
+.onb-meter-live { color: var(--meter-green); letter-spacing: 0.06em; }
+.onb-meter-rate { color: var(--bone-faint); }
+.onb-meter-track { height: 10px; border-radius: 999px; background: var(--asphalt-700); border: 1px solid var(--line-soft); overflow: hidden; }
+.onb-meter-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, rgba(102, 230, 166, 0.35), var(--meter-green));
+  box-shadow: 0 0 16px rgba(102, 230, 166, 0.5); animation: onb-fill 2.6s ease-in-out infinite;
+}
+@keyframes onb-fill { 0% { width: 6%; } 80%, 100% { width: 100%; } }
+.onb-meter-cost { font-family: var(--font-mono); font-size: 1.9rem; color: var(--meter-green); text-shadow: 0 0 24px rgba(102, 230, 166, 0.35); }
+
+/* slide 3 — the gift */
+.onb-gift {
+  background: radial-gradient(120% 120% at 50% 35%, rgba(255, 176, 46, 0.16), transparent 62%), var(--asphalt-900);
+  display: grid; place-items: center;
+}
+.onb-gift-glow {
+  position: absolute; width: 230px; height: 230px; border-radius: 999px;
+  background: radial-gradient(circle, var(--amber-glow), transparent 65%); animation: onb-pulse 2.4s ease-in-out infinite;
+}
+@keyframes onb-pulse { 0%, 100% { transform: scale(0.9); opacity: 0.5; } 50% { transform: scale(1.06); opacity: 0.85; } }
+.onb-gift-amt {
+  position: relative; font-family: var(--font-display); font-size: 3.4rem; font-weight: 800; line-height: 1;
+  background: var(--gold); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.onb-gift-min { position: relative; margin-top: 8px; font-family: var(--font-mono); font-size: 0.82rem; letter-spacing: 0.05em; color: var(--amber-bright); }
+
+/* copy + controls */
+.onb-body { padding: 22px 26px 0; text-align: center; }
+.onb-eyebrow { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--amber-bright); }
+.onb-title { font-family: var(--font-display); font-size: 1.7rem; line-height: 1.12; margin: 10px 0 0; }
+.onb-title .onb-serif { font-style: italic; color: var(--amber-bright); }
+.onb-sub { color: var(--bone-dim); font-size: 0.95rem; line-height: 1.55; margin: 12px 0 0; }
+.onb-dots { display: flex; justify-content: center; gap: 8px; margin: 20px 0 0; }
+.onb-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: var(--line); cursor: pointer; transition: all 0.2s var(--ease); }
+.onb-dot.active { background: var(--amber); width: 22px; }
+.onb-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 26px 0; }
+.onb-go { justify-content: center; }
+.onb-go:disabled { opacity: 0.55; cursor: default; }
+
 /* ── Wallet strip on /browse ─────────────────────────────────────────── */
 .cat-wallet {
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;

@@ -5,7 +5,7 @@ import { type Handler, ok, error, requireSession } from "../lib/http.ts";
 import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import { stripe, stripeConfigured, publishableKey } from "../domain/stripe.ts";
-import { TOPUP_CENTS, cardFeeCents, creditTopup, getBalanceCents, getListeningHistory } from "../domain/billing.ts";
+import { TOPUP_CENTS, cardFeeCents, creditTopup, creditOnboardingGift, getBalanceCents, getListeningHistory } from "../domain/billing.ts";
 
 export const balance: Handler = async (req) => {
   if (!sessionConfigured() || !dsqlConfigured()) return error(503, "billing not configured");
@@ -76,6 +76,15 @@ export const demoCredit: Handler = async (req) => {
     status: "succeeded",
   });
   return ok({ balanceCents, demo: true });
+};
+
+/** POST /v1/wallet/onboarding-gift — grant the one-time $3 welcome balance.
+ *  Idempotent: a second call returns credited:false with the current balance. */
+export const onboardingGift: Handler = async (req) => {
+  if (!sessionConfigured() || !dsqlConfigured()) return error(503, "billing not configured");
+  const session = await requireSession(req);
+  const { credited, balanceCents } = await creditOnboardingGift(session.sub);
+  return ok({ credited, balanceCents });
 };
 
 const CREDITABLE = new Set(["succeeded", "processing", "requires_capture"]);

@@ -17,6 +17,23 @@ import * as api from "@/lib/api/client";
 import { fetchMe } from "@/lib/auth";
 import SignInSheet from "@/components/SignInSheet";
 import TopUpSheet from "@/components/TopUpSheet";
+import OnboardingFlow from "@/components/OnboardingFlow";
+
+// Once a listener skips onboarding in this tab session we don't re-pop it on
+// every navigation; the gift stays claimable and re-offers on a fresh session
+// until claimed (the server flag is the source of truth).
+const ONB_SKIP_KEY = "tollroad_onb_skip";
+function onbDismissed(): boolean {
+  try { return sessionStorage.getItem(ONB_SKIP_KEY) === "1"; } catch { return false; }
+}
+function dismissOnb(): void {
+  try { sessionStorage.setItem(ONB_SKIP_KEY, "1"); } catch { /* ignore */ }
+}
+/** A signed-in listener who hasn't yet claimed the welcome gift (and hasn't
+ *  skipped this session) should see onboarding. */
+function shouldOnboard(listener?: { onboardingGiftClaimed?: boolean } | null): boolean {
+  return Boolean(listener) && !listener!.onboardingGiftClaimed && !onbDismissed();
+}
 
 export interface PlayerState {
   current: CatalogTrack | null;
@@ -74,7 +91,8 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const [balanceReady, setBalanceReady] = useState(false);
   const [gate, setGate] = useState<CatalogTrack | null>(null); // sign-in prompt
   const [topup, setTopup] = useState(false); // add-funds prompt
-  const [pending, setPending] = useState<CatalogTrack | null>(null); // play after funded
+  const [onboard, setOnboard] = useState(false); // first-run welcome + gift
+  const [pending, setPending] = useState<CatalogTrack | null>(null); // play after funded/gifted
 
   // Minutes already paid for the current play (1 after the prepaid first minute).
   const chargedMinutesRef = useRef(0);
@@ -89,11 +107,27 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       .then((m) => {
         setNeedsAuth(Boolean(m.authConfigured) && !m.account);
         setBalanceCents(m.profiles?.listener?.balanceCents ?? 0);
+        // Already signed in but never claimed the welcome gift → onboard them.
+        if (m.account && shouldOnboard(m.profiles?.listener)) setOnboard(true);
       })
       .finally(() => setBalanceReady(true));
   }, []);
 
   useEffect(() => { loadMe(); }, [loadMe]);
+
+  // Any sign-in anywhere in the app (AuthButton, sign-up form, top-up gate, …)
+  // broadcasts this event; a first-time listener gets the welcome flow + gift.
+  useEffect(() => {
+    const onSignedIn = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { profiles?: { listener?: { balanceCents?: number; onboardingGiftClaimed?: boolean } | null } } | undefined;
+      const listener = detail?.profiles?.listener ?? null;
+      setNeedsAuth(false);
+      setBalanceCents(listener?.balanceCents ?? 0);
+      if (shouldOnboard(listener)) setOnboard(true);
+    };
+    window.addEventListener("tollroad:signedin", onSignedIn);
+    return () => window.removeEventListener("tollroad:signedin", onSignedIn);
+  }, []);
 
   useEffect(() => { nowRef.current = current; }, [current]);
 
@@ -302,11 +336,28 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
             setNeedsAuth(false);
             const t = gate;
             setGate(null);
-            const bal = m.profiles?.listener?.balanceCents ?? 0;
+            const listener = m.profiles?.listener ?? null;
+            const bal = listener?.balanceCents ?? 0;
             setBalanceCents(bal);
+            // Brand-new listener: welcome them and hand over the $3 gift, then
+            // resume the track they tried to play — never dead-end into top-up.
+            if (shouldOnboard(listener)) { setPending(t); setOnboard(true); return; }
             if (!t) return;
             if (bal <= 0) { setPending(t); setTopup(true); }
             else beginPlay(t);
+          }}
+        />
+      )}
+
+      {onboard && (
+        <OnboardingFlow
+          onClose={() => { dismissOnb(); setOnboard(false); setPending(null); }}
+          onClaimed={(cents) => {
+            setBalanceCents(cents);
+            setOnboard(false);
+            const t = pending;
+            setPending(null);
+            if (t && cents > 0) beginPlay(t);
           }}
         />
       )}

@@ -50,6 +50,7 @@ const ROUTES: Route[] = [
   compile("GET", "/balance", wallet.balance),
   compile("POST", "/wallet/topup", wallet.topup),
   compile("POST", "/wallet/demo-credit", wallet.demoCredit),
+  compile("POST", "/wallet/onboarding-gift", wallet.onboardingGift),
   compile("POST", "/wallet/confirm", wallet.confirm),
   compile("POST", "/stripe/webhook", webhook),
 

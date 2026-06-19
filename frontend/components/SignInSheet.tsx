@@ -72,6 +72,10 @@ export default function SignInSheet({ reason, onClose, onSignedIn }: Props) {
       setCode("");
       return;
     }
+    // Broadcast so app-wide listeners (e.g. the onboarding gate) can react no
+    // matter which sheet triggered the sign-in. `claimed` is true on a brand-new
+    // account — i.e. a first sign-up.
+    window.dispatchEvent(new CustomEvent("tollroad:signedin", { detail: res }));
     onSignedIn({ account: res.account, profiles: res.profiles });
   }
 

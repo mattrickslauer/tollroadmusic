@@ -72,6 +72,8 @@ export const topup = (method: "ach" | "card") =>
     body({ method }),
   );
 export const demoCredit = (method: "ach" | "card") => req<{ balanceCents: number; demo: boolean }>("/wallet/demo-credit", body({ method }));
+/** Claim the one-time $3 (300-minute) welcome gift. Idempotent server-side. */
+export const claimOnboardingGift = () => req<{ credited: boolean; balanceCents: number }>("/wallet/onboarding-gift", body({}));
 export const confirmTopup = (paymentIntentId: string) => req<{ balanceCents: number; status: string }>("/wallet/confirm", body({ paymentIntentId }));
 
 // --- Library ---------------------------------------------------------------

@@ -7,6 +7,10 @@ import { withDsql, query } from "../lib/dsql.ts";
 
 export const TOPUP_CENTS = 1000;
 
+// The one-time welcome gift: $3.00 = 300 minutes of listening at the 1¢/min
+// default rate. Granted once per account on first onboarding.
+export const ONBOARDING_GIFT_CENTS = 300;
+
 export function cardFeeCents(amountCents: number): number {
   return Math.ceil(amountCents * 0.029) + 30;
 }
@@ -152,6 +156,47 @@ export async function creditTopup(input: CreditInput): Promise<CreditResult> {
         );
         await db.query("COMMIT");
         return { credited: true, balanceCents: Number(upd.rows[0]!.balance_cents) };
+      } catch (err) {
+        await db.query("ROLLBACK").catch(() => {});
+        throw err;
+      }
+    }),
+  );
+}
+
+export type GiftResult = { credited: boolean; balanceCents: number };
+
+/** Credit the one-time onboarding gift exactly once per account. Idempotent on
+ *  listener_profiles.onboarding_gift_claimed_at: the first call credits and
+ *  stamps the column; any replay returns credited:false with the live balance. */
+export async function creditOnboardingGift(accountId: string): Promise<GiftResult> {
+  return withRetry(() =>
+    withDsql(async (db) => {
+      try {
+        await db.query("BEGIN");
+        // Upsert so a missing profile row is still handled; the conditional
+        // DO UPDATE only fires (and only RETURNs a row) when unclaimed.
+        const upd = await db.query<{ balance_cents: string }>(
+          `INSERT INTO listener_profiles (account_id, balance_cents, onboarding_gift_claimed_at)
+             VALUES ($1, $2, now())
+           ON CONFLICT (account_id) DO UPDATE
+             SET balance_cents = listener_profiles.balance_cents + EXCLUDED.balance_cents,
+                 onboarding_gift_claimed_at = now()
+             WHERE listener_profiles.onboarding_gift_claimed_at IS NULL
+           RETURNING balance_cents`,
+          [accountId, ONBOARDING_GIFT_CENTS],
+        );
+        if (upd.rowCount) {
+          await db.query("COMMIT");
+          return { credited: true, balanceCents: Number(upd.rows[0]!.balance_cents) };
+        }
+        // Already claimed — no credit, return the current balance.
+        const bal = await db.query<{ balance_cents: string }>(
+          `SELECT balance_cents FROM listener_profiles WHERE account_id = $1`,
+          [accountId],
+        );
+        await db.query("COMMIT");
+        return { credited: false, balanceCents: Number(bal.rows[0]?.balance_cents ?? 0) };
       } catch (err) {
         await db.query("ROLLBACK").catch(() => {});
         throw err;

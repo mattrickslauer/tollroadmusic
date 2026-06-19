@@ -1,6 +1,7 @@
 import Meter from "@/components/Meter";
 import Cta from "@/components/Cta";
-import { ROUTES, SECTIONS } from "@/lib/routes";
+import SignupCta from "@/components/SignupCta";
+import { SECTIONS } from "@/lib/routes";
 
 export default function Hero() {
   return (
@@ -24,7 +25,7 @@ export default function Hero() {
           </p>
 
           <div className="hero-cta fade-up d4">
-            <Cta href={ROUTES.browse}>Open a balance →</Cta>
+            <SignupCta />
             <Cta href={SECTIONS.flow} variant="ghost">
               See how
             </Cta>

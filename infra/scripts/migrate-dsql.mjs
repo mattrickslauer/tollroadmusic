@@ -87,6 +87,11 @@ const STATEMENTS = [
      balance_cents BIGINT NOT NULL DEFAULT 0,
      created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
+  // One-time onboarding gift: stamped when the listener claims their free
+  // welcome balance ($3 = 300 minutes at 1¢/min). NULL = unclaimed; its presence
+  // makes the grant idempotent (claim is a no-op once set). Nullable because DSQL
+  // rejects ADD COLUMN with a default.
+  `ALTER TABLE listener_profiles ADD COLUMN IF NOT EXISTS onboarding_gift_claimed_at TIMESTAMPTZ`,
   // Email OTP challenges (replaces sonar's DynamoDB items — we keep everything
   // in DSQL). Only a salted HASH of the code is stored; expiry + attempt cap are
   // enforced in SQL. Rows are burned on success and lazily on expiry.

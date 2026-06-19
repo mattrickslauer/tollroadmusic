@@ -24,6 +24,8 @@ export interface ArtistProfile {
 }
 export interface ListenerProfile {
   balanceCents: number;
+  /** Whether the one-time onboarding welcome gift has been claimed. */
+  onboardingGiftClaimed: boolean;
 }
 export interface Profiles {
   artist: ArtistProfile | null;
@@ -162,14 +164,21 @@ export async function ensureListenerProfile(accountId: string): Promise<void> {
 export async function getProfiles(accountId: string): Promise<Profiles> {
   const [artistR, listenerR] = await Promise.all([
     query<ArtistProfile>(`SELECT id, name, genre FROM artists WHERE account_id = $1 LIMIT 1`, [accountId]),
-    query<{ balanceCents: number }>(
-      `SELECT balance_cents AS "balanceCents" FROM listener_profiles WHERE account_id = $1 LIMIT 1`,
+    query<{ balanceCents: number; giftClaimed: boolean }>(
+      `SELECT balance_cents AS "balanceCents",
+              (onboarding_gift_claimed_at IS NOT NULL) AS "giftClaimed"
+         FROM listener_profiles WHERE account_id = $1 LIMIT 1`,
       [accountId],
     ),
   ]);
   return {
     artist: artistR.rows[0] ?? null,
-    listener: listenerR.rows[0] ? { balanceCents: Number(listenerR.rows[0].balanceCents) } : null,
+    listener: listenerR.rows[0]
+      ? {
+          balanceCents: Number(listenerR.rows[0].balanceCents),
+          onboardingGiftClaimed: Boolean(listenerR.rows[0].giftClaimed),
+        }
+      : null,
   };
 }
 
