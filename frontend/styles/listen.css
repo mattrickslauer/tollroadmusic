@@ -668,9 +668,14 @@
   .lx-meter { padding: 6px 10px; gap: 10px; }
   .lx-meter-bal, .lx-meter-cost { font-size: 0.8rem; }
 
-  /* two even card columns */
-  .lx-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 28px; }
+  /* Rail-sized tiles, packed. Fixed `repeat(2, 1fr)` ballooned each card to
+     ~300px near the 640px breakpoint; auto-fill at the 138px rail width keeps
+     covers compact (2–4 per row) across the whole phone/phablet range. */
+  .lx-grid { grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .lx-card { padding: 10px; gap: 8px; }
+  /* At rail-sized widths the footer (like + menu + rate + duration) can run
+     past the card; let it wrap instead of overflowing. */
+  .lx-card-foot { flex-wrap: wrap; row-gap: 4px; }
 
   /* hero shrinks */
   .lx-head-hero { gap: 16px; }
