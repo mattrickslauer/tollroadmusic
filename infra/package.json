@@ -8,7 +8,9 @@
   "scripts": {
     "build": "tsc",
     "synth": "cdk synth",
-    "deploy": "cdk deploy",
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:check": "node scripts/deploy.mjs --check",
+    "deploy:raw": "cdk deploy",
     "destroy": "cdk destroy",
     "migrate": "node scripts/migrate-dsql.mjs",
     "seed:assets": "node scripts/gen-demo-assets.mjs",

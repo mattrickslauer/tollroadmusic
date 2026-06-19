@@ -1,3 +1,25 @@
+# Deploying
+
+```bash
+cd infra
+npm run deploy            # guarded: cdk deploy with all Lambda secrets from backend/.env
+npm run deploy:check      # validate backend/.env + print the plan, deploy nothing
+npm run deploy -- --profile prod --require-approval never   # forward extra cdk args after --
+```
+
+`deploy.mjs` exists because the Lambda's secrets (`TOLLROAD_SESSION_SECRET`, the
+CloudFront signing key, Stripe, Telegram, …) live **outside** CloudFormation —
+the stack only writes them when handed in via `-c name=value`
+(`lib/tollroad-stack.ts`). A bare `cdk deploy` silently omits them and **wipes
+them from the live Lambda**; the usual casualty is auth (no session secret →
+`/auth/me` returns `authConfigured:false` and OTP sign-in 503s). The script reads
+`backend/.env` (the canonical restore source), refuses to deploy if any required
+secret is missing or `TOLLROAD_SESSION_SECRET` is under 32 chars, then forwards
+them all as context.
+
+> Avoid `npm run deploy:raw` (plain `cdk deploy`) unless you know you want to
+> drop the out-of-band secrets — it's the foot-gun this script replaces.
+
 # Demo catalog seeding
 
 Seeds the platform with **55 artists** and **~217 tracks** of playable music plus
