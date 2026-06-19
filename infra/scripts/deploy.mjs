@@ -99,7 +99,14 @@ if (secretLen < 32) {
 const contextArgs = [];
 for (const key of [...REQUIRED, ...OPTIONAL]) {
   const v = process.env[key];
-  if (v && v.trim()) contextArgs.push("-c", `${key}=${v}`);
+  if (!v || !v.trim()) continue;
+  // cdk's `-c key=value` parser TRUNCATES the value at the first newline, so a
+  // multiline PEM (TOLLROAD_CF_PRIVATE_KEY) would arrive as just its header line
+  // and fail to decode (ERR_OSSL_UNSUPPORTED -> stream 503). Collapse real
+  // newlines to the literal "\n" escape; the Lambda's normalizePem() in
+  // backend/src/domain/streaming.ts converts them back. No-op for single-line
+  // secrets.
+  contextArgs.push("-c", `${key}=${v.replace(/\n/g, "\\n")}`);
 }
 
 const present = [...REQUIRED, ...OPTIONAL].filter((k) => process.env[k]?.trim());
