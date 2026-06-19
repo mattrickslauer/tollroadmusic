@@ -100,6 +100,10 @@ export default function AddToPlaylist({ trackId }: { trackId: string }) {
         </svg>
       </button>
       {open && pos && typeof document !== "undefined" && createPortal(
+        // Scope wrapper: the menu portals to <body>, outside .app-dark, so the
+        // --app-* design tokens (its background, borders, text) wouldn't
+        // resolve. display:contents adds the token scope without a box.
+        <div className="app-dark" style={{ display: "contents" }}>
         <div ref={menuRef} className="lx-menu" role="menu" style={pos} onClick={(e) => e.stopPropagation()}>
           <div className="lx-menu-head">Add to playlist</div>
           <div className="lx-menu-list">
@@ -125,6 +129,7 @@ export default function AddToPlaylist({ trackId }: { trackId: string }) {
           ) : (
             <button className="lx-menu-item lx-menu-new" onClick={() => setCreating(true)}>+ New playlist</button>
           )}
+        </div>
         </div>,
         document.body,
       )}
