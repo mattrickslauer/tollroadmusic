@@ -1,3 +1,4 @@
+import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import { ROUTES, SECTIONS } from "@/lib/routes";
 
@@ -18,11 +19,19 @@ export default function SiteFooter() {
           TollRoad
         </a>
         <div className="footer-links">
-          {FOOTER_LINKS.map((link) => (
-            <a key={link.label} href={link.href}>
-              {link.label}
-            </a>
-          ))}
+          {FOOTER_LINKS.map((link) =>
+            // Route links use <Link> (client nav preserves the global player);
+            // hash/placeholder anchors stay <a>.
+            link.href.startsWith("/") ? (
+              <Link key={link.label} href={link.href}>
+                {link.label}
+              </Link>
+            ) : (
+              <a key={link.label} href={link.href}>
+                {link.label}
+              </a>
+            ),
+          )}
         </div>
         <span className="fnote">© {new Date().getFullYear()} TollRoad</span>
       </div>

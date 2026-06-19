@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * The signature instrument — now metering a REAL track.
- * The bill accrues only while the song is actually playing, at the
- * track's per-minute rate. Tries to autoplay; falls back to the
- * play button when the browser blocks audible autoplay.
+ * The signature instrument — metering a REAL track. The bill accrues only
+ * while the song is actually playing, at the track's per-minute rate. Starts
+ * paused: the visitor presses play, so the landing page never blares audio on
+ * load (and never competes with the global player bar).
  */
 const RATE_PER_MIN = 0.0011; // $/min — what the listener pays
 const SRC = "/kanye-west/Kanye West - Stronger.mp3";
@@ -40,9 +40,6 @@ export default function Meter() {
     a.addEventListener("loadedmetadata", onMeta);
     a.addEventListener("play", onPlay);
     a.addEventListener("pause", onPause);
-
-    // attempt audible autoplay — may be blocked until first interaction
-    a.play().catch(() => setPlaying(false));
 
     // smooth billing loop: accrue real elapsed playback time
     let last = a.currentTime;

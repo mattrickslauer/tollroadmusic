@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import TopUpSheet from "@/components/TopUpSheet";
 import CoverImage from "./listen/CoverImage";
 
@@ -57,7 +58,7 @@ export default function WalletPanel({ initialBalanceCents, history }: Props) {
 
       <h2 className="wallet-h2">Streaming history</h2>
       {history.length === 0 ? (
-        <p className="cat-empty">Nothing yet — press play on the <a href="/browse">catalog</a> to start.</p>
+        <p className="cat-empty">Nothing yet — press play on the <Link href="/browse">catalog</Link> to start.</p>
       ) : (
         <ul className="wallet-history">
           {history.map((h) => (

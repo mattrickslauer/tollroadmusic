@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 type CtaVariant = "primary" | "green" | "ghost";
 
@@ -14,9 +15,11 @@ export default function Cta({
   className?: string;
   children: ReactNode;
 }) {
-  return (
-    <a href={href} className={`btn btn-${variant}${className ? ` ${className}` : ""}`}>
-      {children}
-    </a>
-  );
+  const cls = `btn btn-${variant}${className ? ` ${className}` : ""}`;
+  // Internal route → <Link> so entering the app is a client navigation and the
+  // global player survives. Hash anchors (scroll) and external URLs stay <a>.
+  if (href.startsWith("/")) {
+    return <Link href={href} className={cls}>{children}</Link>;
+  }
+  return <a href={href} className={cls}>{children}</a>;
 }

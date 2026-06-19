@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { fetchMe, logout, type Me } from "@/lib/auth";
 import SignInSheet from "@/components/SignInSheet";
 
@@ -50,10 +51,10 @@ export default function AuthButton() {
       {menu && (
         <div className="auth-menu" onMouseLeave={() => setMenu(false)}>
           <div className="auth-menu-head">{isArtist ? "Artist + listener" : "Listener"}</div>
-          {!isArtist && <a className="auth-menu-item" href="/signup">Become an artist</a>}
-          {isArtist && <a className="auth-menu-item" href="/signup">Artist profile</a>}
-          <a className="auth-menu-item" href="/browse">Browse music</a>
-          <a className="auth-menu-item" href="/wallet">Wallet &amp; history</a>
+          {!isArtist && <Link className="auth-menu-item" href="/signup" onClick={() => setMenu(false)}>Become an artist</Link>}
+          {isArtist && <Link className="auth-menu-item" href="/signup" onClick={() => setMenu(false)}>Artist profile</Link>}
+          <Link className="auth-menu-item" href="/browse" onClick={() => setMenu(false)}>Browse music</Link>
+          <Link className="auth-menu-item" href="/wallet" onClick={() => setMenu(false)}>Wallet &amp; history</Link>
           <button
             className="auth-menu-item danger"
             onClick={async () => { await logout(); setMe({ account: null, profiles: null }); setMenu(false); }}
