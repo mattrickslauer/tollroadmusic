@@ -275,8 +275,17 @@ export class TollroadStack extends cdk.Stack {
       TOLLROAD_DSQL_ENDPOINT: dsqlEndpoint,
       TOLLROAD_DSQL_REGION: region,
       TOLLROAD_CDN_DOMAIN: distribution.distributionDomainName,
+      // The charge path mirrors each metered minute into the DynamoDB hot path so
+      // the Streams → rollup pipeline fires (backend/src/domain/meter.ts).
+      TOLLROAD_TABLE: table.tableName,
     };
+    // Prefer a freshly-minted key group (when -c cfPublicKey is passed); otherwise
+    // reuse an existing key-pair id supplied via -c TOLLROAD_CF_KEY_PAIR_ID. Without
+    // this fallback a plain deploy drops the var from the Lambda and breaks signed
+    // streaming (the CF signing setup lives outside CDK).
+    const cfKeyPairIdCtx = ctx("TOLLROAD_CF_KEY_PAIR_ID");
     if (cfKeyPairId) apiEnv.TOLLROAD_CF_KEY_PAIR_ID = cfKeyPairId;
+    else if (cfKeyPairIdCtx) apiEnv.TOLLROAD_CF_KEY_PAIR_ID = cfKeyPairIdCtx;
     for (const k of [
       "TOLLROAD_SESSION_SECRET",
       "TOLLROAD_CF_PRIVATE_KEY",
@@ -320,6 +329,9 @@ export class TollroadStack extends cdk.Stack {
     apiFn.addToRolePolicy(
       new iam.PolicyStatement({ sid: "TollroadApiSendOtpEmail", actions: ["ses:SendEmail"], resources: ["*"] }),
     );
+    // The charge handler writes one METER item per metered minute into the table;
+    // the stream then drives the rollup. Least-privilege: PutItem only.
+    table.grant(apiFn, "dynamodb:PutItem");
 
     // REST API. Stage `v1` ⇒ invoke URL .../v1/<route>. The proxy ANY method
     // requires an API key (usage-plan attribution + throttling) — the metering/
