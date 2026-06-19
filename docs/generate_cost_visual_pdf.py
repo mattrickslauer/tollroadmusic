@@ -37,18 +37,22 @@ def tiered_egress(gb):
 
 
 def cost_lines(users):
+    # API re-platform topology (2026-06-18): Vercel client → API Gateway (REST)
+    # → tollroad-api Lambda → Aurora DSQL; audio still S3 → signed CloudFront
+    # (one mp3/track, ~2 range GETs/min, not 10 HLS segments). Metering is a
+    # dual-write: authoritative DSQL txn + best-effort DynamoDB METER mirror.
     M = users * MINPM
     gb = M * 0.0012
     return M, {
         "CloudFront egress":   tiered_egress(gb) - min(gb, 1024) * 0.085,
-        "CloudFront requests": 0.000001 * max(0, M * 10 - 10_000_000),
-        "DynamoDB writes":     M * 4 * 0.000000625,
-        "DynamoDB reads":      M * 0.5 * 0.000000125,
+        "CloudFront requests": 0.000001 * max(0, M * 2 - 10_000_000),
+        "API Gateway":         0.0000035 * (M * 1.714),   # REST, $3.50/M, no perpetual free tier
+        "DynamoDB writes":     M * 2 * 0.000000625,        # METER mirror only: 1 item + 1 GSI replica
         "DynamoDB storage":    0.25 * max(0, M * 0.3 / 1e6 - 25),
-        "DSQL compute":        0.000008 * max(0, M * 0.073 - 100000),
+        "DSQL compute":        0.000008 * max(0, M * 0.220 - 100000),  # charge txn + reads + rollup
         "DSQL storage":        0.33 * max(0, M * 100 / 1e9 - 1),
-        "Lambda requests":     0.0000002 * max(0, M * 0.1 - 1_000_000),
-        "Lambda duration":     0.0000166667 * max(0, M * 0.1 * 0.0256 - 400000),
+        "Lambda requests":     0.0000002 * max(0, M * 1.811 - 1_000_000),  # one invoke / API request
+        "Lambda duration":     0.0000166667 * max(0, M * 0.0453 - 400000),  # 256 MB, ~100 ms avg
         "KMS key":             1.0,
         "KMS decrypt":         0.000003 * max(0, M * 0.5 - 20000),
         "S3 storage":          0.023 * max(0, 36 - 5),
@@ -155,7 +159,7 @@ def p1():
     # one anchor: an active listener — $98 of music a year, $9.80 rake to the platform
     cards = [("MUSIC STREAMED / YR", "$98.00", "9,800 min @ $0.01/min", VIOLET),
              ("PLATFORM RAKE · 10%", "$9.80", "the platform's cut of that $98", CYAN),
-             ("PLATFORM KEEPS · ACH", "$7.87", "recommended wallet — 80% of rake", GREEN)]
+             ("PLATFORM KEEPS · ACH", "$7.88", "recommended wallet — 80% of rake", GREEN)]
     cw, gap = 360, 26
     x0 = (W - (cw * 3 + gap * 2)) / 2
     for i, (k, big, sub, col) in enumerate(cards):
@@ -178,10 +182,10 @@ def p1():
         b.append(text(lxp + 22, 344, txt, 12.5, MUTED, "start", "700"))
 
     rows = [  # (label, aws, payments, recommended) — precise values; labels round to cents
-        ("Card · monthly top-up", 1.1319, 6.4417, False),
-        ("Card · annual top-up", 1.1319, 3.142, False),
-        ("ACH wallet · $10 min", 1.1319, 0.80, True),
-        ("Pass-through (listener pays)", 1.1319, 0.00, False),
+        ("Card · monthly top-up", 1.121, 6.4417, False),
+        ("Card · annual top-up", 1.121, 3.142, False),
+        ("ACH wallet · $10 min", 1.121, 0.80, True),
+        ("Pass-through (listener pays)", 1.121, 0.00, False),
     ]
     y0, rh, rgap = 372, 58, 18
     for i, (lab, aws, pay, rec) in enumerate(rows):
@@ -208,7 +212,7 @@ def p1():
         b.append(text(bx + bw + 18, y + rh / 2 + 7, f"{keep / RAKE * 100:.0f}%", 22, GREEN, "start", "800"))
         b.append(text(bx + bw + 78, y + rh / 2 + 7, "kept", 12, MUTED, "start"))
 
-    b.append(text(90, 694, "AWS is fixed at ~$1.13/listener/yr — the payment setup is the whole lever, swinging the rake kept from 23% to 88%.",
+    b.append(text(90, 694, "AWS is fixed at ~$1.12/listener/yr — the payment setup is the whole lever, swinging the rake kept from 23% to 88%.",
                   13.5, MUTED, "start", "600"))
     b.append(text(90, 714, "The artist's $88.20 royalty (90%) is separate; its payout fee comes from the artist's share, not this rake.",
                   13.5, MUTED, "start", "600"))
@@ -276,13 +280,13 @@ def p2():
 def p3():
     b = []
     groups = [("CloudFront egress", AMBER), ("CloudFront requests", VIOLET),
-              ("DynamoDB writes", CYAN), ("KMS decrypt", ROSE), ("everything else", FAINT)]
+              ("API Gateway", CYAN), ("KMS decrypt", ROSE), ("everything else", FAINT)]
     def grouped(nm):
         L = MODEL[nm]["lines"]
         rest = sum(v for k, v in L.items() if k not in
-                   ("CloudFront egress", "CloudFront requests", "DynamoDB writes", "KMS decrypt"))
-        return [L["CloudFront egress"], L["CloudFront requests"], L["DynamoDB writes"], L["KMS decrypt"], rest]
-    b.append(text(110, 180, "At every scale the data + compute plane — DynamoDB, DSQL, Lambda, S3, the KMS key — is a rounding error. TollRoad is a bandwidth business.",
+                   ("CloudFront egress", "CloudFront requests", "API Gateway", "KMS decrypt"))
+        return [L["CloudFront egress"], L["CloudFront requests"], L["API Gateway"], L["KMS decrypt"], rest]
+    b.append(text(110, 180, "CloudFront egress is the majority of every bill. After the API re-platform, API Gateway is the largest of the rest; DSQL, Lambda, DynamoDB, S3 and the KMS key stay small. TollRoad is a bandwidth business.",
                   14, MUTED, "start"))
     # stacked horizontal bars for 1K,10K,100K,1M
     rows = ["1K", "10K", "100K", "1M"]
@@ -320,9 +324,10 @@ def p3():
         if sweep > 0.001:
             b.append(arc(dcx, dcy, dr, a, a + sweep, gcol, 28))
         a += sweep
+    cf_pct = (L["lines"]["CloudFront egress"] + L["lines"]["CloudFront requests"]) / tot * 100
     b.append(text(dcx, dcy - 4, "1M", 28, TEXT, "middle", "800"))
     b.append(text(dcx, dcy + 18, money(tot) + "/mo", 12.5, MUTED, "middle", "700"))
-    b.append(text(dcx, dcy + dr + 40, "92% is CloudFront", 14, AMBER, "middle", "700"))
+    b.append(text(dcx, dcy + dr + 40, f"{cf_pct:.0f}% is CloudFront", 14, AMBER, "middle", "700"))
     b.append(text(dcx, dcy + dr + 60, "(egress + requests)", 12, MUTED, "middle"))
     return page("COST COMPOSITION", "Egress is the whole story",
                 "".join(b), 3, sub="What each dollar of the AWS bill is actually spent on")
@@ -410,8 +415,8 @@ def p5():
         yy = yof(gv)
         b.append(line(lx, yy, lx + lw, yy, STROKE, 1, dash="3 5", opacity=0.4))
         b.append(text(lx - 8, yy + 4, f"${gv:.4f}", 10.5, FAINT, "end"))
-    items = [("AWS", 0.0001155, ROSE), ("pay", 0.00008, AMBER),
-             ("PLATFORM", 0.0001955, CYAN),
+    items = [("AWS", 0.0001144, ROSE), ("pay", 0.00008, AMBER),
+             ("PLATFORM", 0.0001944, CYAN),
              ("6%", 0.0006, BLUE), ("8.25%", 0.000825, VIOLET),
              ("10%", 0.001, GREEN), ("15%", 0.0015, AMBER)]
     n = len(items); slot = lw / n; bw = slot * 0.6
@@ -433,7 +438,7 @@ def p5():
     rx, ry = 620, 220
     b.append(text(rx, ry, "ALL-IN FLOW AT 1,000,000 USERS / MONTH", 14, CYAN, "start", "700", spacing=1.2))
     g = 1_000_000 * 817 * 0.01            # $8.17M gross/mo
-    aws_1m, pay_1m, pyt_1m = 50838.58, 0.008 * g, 0.0025 * g * 0.9
+    aws_1m, pay_1m, pyt_1m = MODEL["1M"]["aws"], 0.008 * g, 0.0025 * g * 0.9
     rake = g * 0.10
     profit = rake - aws_1m - pay_1m       # payout is on the artist, not the platform
     flow = [("Gross billed", g, VIOLET, "listeners pay $0.01/min"),
@@ -452,7 +457,7 @@ def p5():
         b.append(text(gutx, yy + 41, sub, 10.5, MUTED, "end"))
         b.append(text(barx + barw + 12, yy + 32, money(v), 19, col, "start", "800"))
         yy += 64
-    b.append(text(rx, yy + 6, "Payments ($65K) now outweigh AWS ($51K). The platform keeps 86% of the rake here;",
+    b.append(text(rx, yy + 6, "Payments ($65K) now outweigh AWS ($50K). The platform keeps 86% of the rake here;",
                   12.5, MUTED, "start", "600"))
     b.append(text(rx, yy + 24, "the artist payout (~$18K/mo) is drawn from the $7.35M royalty, not this flow.",
                   12.5, MUTED, "start", "600"))
@@ -541,8 +546,8 @@ def p7():
     ry = by + 6 * (rh + gap) + 16
     b.append(rect(110, ry, 560, 130, PANEL, CYAN, 14, sw=2))
     b.append(text(132, ry + 30, "RECOMMENDED — ACH-first wallet, $10 minimum, card fallback", 14.5, CYAN, "start", "800"))
-    b.append(text(132, ry + 62, "$9.80 rake  −  $1.13 AWS  −  $0.80 ACH (inbound)", 15, TEXT, "start", "700"))
-    b.append(text(132, ry + 92, "= $7.87 kept", 26, GREEN, "start", "800"))
+    b.append(text(132, ry + 62, "$9.80 rake  −  $1.12 AWS  −  $0.80 ACH (inbound)", 15, TEXT, "start", "700"))
+    b.append(text(132, ry + 92, "= $7.88 kept", 26, GREEN, "start", "800"))
     b.append(text(305, ry + 92, "(80% of the rake)", 14, MUTED, "start"))
     b.append(text(132, ry + 118, "Pass-through → 88%. Artist payout is drawn from the royalty, not the rake.", 12, FAINT, "start"))
     # config knobs (right)
