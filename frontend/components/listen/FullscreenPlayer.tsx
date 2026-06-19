@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { usePlayer } from "@/context/PlayerProvider";
 import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
@@ -34,8 +35,12 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
 
   if (!open || !current) return null;
 
-  return (
-    <div className="lx-full" role="dialog" aria-modal="true" aria-label="Now playing">
+  // Portal to <body>: the player bar sets `backdrop-filter`, which makes it a
+  // containing block for fixed-position descendants — left inside the footer,
+  // this overlay's inset:0 resolves to the BAR's box (the bottom sliver), not
+  // the viewport. Rendering at the body root frees it to fill the screen.
+  return createPortal(
+    <div className="app-dark lx-full" role="dialog" aria-modal="true" aria-label="Now playing">
       <header className="lx-full-top">
         <button className="lx-full-collapse" onClick={onClose} aria-label="Collapse player">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -98,6 +103,7 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
           <span className="lx-meter-cost">${cost.toFixed(4)}<small>session</small></span>
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
