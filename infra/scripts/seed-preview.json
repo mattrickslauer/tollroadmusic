@@ -1,0 +1,1285 @@
+{
+  "artists": [
+    {
+      "id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "name": "Velvet Arcade",
+      "genre": "Synthwave",
+      "location": "Los Angeles, CA",
+      "email": "velvetarcade@proton.me",
+      "website": "https://velvetarcade.co",
+      "bio": "Los Angeles native blending synthwave with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-velvet-arcade.svg",
+      "slug": "velvet-arcade",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "name": "Marisol Vega",
+      "genre": "R&B",
+      "location": "Houston, TX",
+      "email": "marisolvega@proton.me",
+      "website": null,
+      "bio": "Songs about leaving and coming back. R&B from Houston.",
+      "avatar_key": "/covers/artist-marisol-vega.svg",
+      "slug": "marisol-vega",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "name": "The Paper Kites Collective",
+      "genre": "Indie Rock",
+      "location": "Portland, OR",
+      "email": "thepaperkitescollective@icloud.com",
+      "website": "https://thepaperkitescollective.co",
+      "bio": "Indie Rock for late drives and longer nights. Portland.",
+      "avatar_key": "/covers/artist-the-paper-kites-collective.svg",
+      "slug": "the-paper-kites-collective",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "585c9249-7d29-5b9a-9e2d-5d5b0ffbc728",
+      "name": "Koji Tanaka Trio",
+      "genre": "Jazz",
+      "location": "Brooklyn, NY",
+      "email": "kojitanakatrio@proton.me",
+      "website": "https://kojitanakatrio.com",
+      "bio": "Jazz for late drives and longer nights. Brooklyn.",
+      "avatar_key": "/covers/artist-koji-tanaka-trio.svg",
+      "slug": "koji-tanaka-trio",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "a36f1c79-2541-5c66-93ea-3b23d7aa5075",
+      "name": "DJ Halcyon",
+      "genre": "House",
+      "location": "Detroit, MI",
+      "email": "djhalcyon@icloud.com",
+      "website": null,
+      "bio": "Independent house project. Every minute you play goes (almost) straight to the studio rent in Detroit.",
+      "avatar_key": "/covers/artist-dj-halcyon.svg",
+      "slug": "dj-halcyon",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "fa93e1d8-21cd-54f7-a20d-b6999beff484",
+      "name": "Amara Okeke",
+      "genre": "Afro-Soul",
+      "location": "Atlanta, GA",
+      "email": "amaraokeke@gmail.com",
+      "website": "https://amaraokeke.music",
+      "bio": "Afro-Soul for late drives and longer nights. Atlanta.",
+      "avatar_key": "/covers/artist-amara-okeke.svg",
+      "slug": "amara-okeke",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "21b70583-00d9-5ce5-87ed-492cb54f9561",
+      "name": "Nightwell",
+      "genre": "Electronic",
+      "location": "Berlin, DE",
+      "email": "nightwell@nightwell.music",
+      "website": null,
+      "bio": "Berlin native blending electronic with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-nightwell.svg",
+      "slug": "nightwell",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "309a8d8d-f3af-5d59-999b-53762246d5b2",
+      "name": "Sage & Cedar",
+      "genre": "Folk",
+      "location": "Asheville, NC",
+      "email": "sagecedar@proton.me",
+      "website": "https://sagecedar.com",
+      "bio": "Independent folk project. Every minute you play goes (almost) straight to the studio rent in Asheville.",
+      "avatar_key": "/covers/artist-sage-cedar.svg",
+      "slug": "sage-cedar",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "fbfeceea-6cb2-5cbf-b77a-6b09cdd3ddaa",
+      "name": "Rico Delgado",
+      "genre": "Hip-Hop",
+      "location": "Bronx, NY",
+      "email": "ricodelgado@proton.me",
+      "website": "https://ricodelgado.music",
+      "bio": "Songs about leaving and coming back. Hip-Hop from Bronx.",
+      "avatar_key": "/covers/artist-rico-delgado.svg",
+      "slug": "rico-delgado",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "cbe706b0-0a50-5fbd-aff6-3a8eb89acf22",
+      "name": "Lunar Tide",
+      "genre": "Ambient",
+      "location": "Reykjavik, IS",
+      "email": "lunartide@icloud.com",
+      "website": "https://lunartide.co",
+      "bio": "Ambient artist out of Reykjavik. Self-produced, fiercely independent, and built for the long play.",
+      "avatar_key": "/covers/artist-lunar-tide.svg",
+      "slug": "lunar-tide",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "dfd9452f-7f3d-5e58-a1d4-32005241df8a",
+      "name": "The Brass Union",
+      "genre": "Soul",
+      "location": "New Orleans, LA",
+      "email": "thebrassunion@proton.me",
+      "website": "https://thebrassunion.music",
+      "bio": "Soul for late drives and longer nights. New Orleans.",
+      "avatar_key": "/covers/artist-the-brass-union.svg",
+      "slug": "the-brass-union",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "1e6c7d76-aebb-5835-8ee0-70d3596528e1",
+      "name": "Priya Nair",
+      "genre": "Pop",
+      "location": "Toronto, ON",
+      "email": "priyanair@icloud.com",
+      "website": "https://priyanair.co",
+      "bio": "Pop for late drives and longer nights. Toronto.",
+      "avatar_key": "/covers/artist-priya-nair.svg",
+      "slug": "priya-nair",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "55b50faf-b723-5c9f-9c5f-c613fb02badf",
+      "name": "Greyson Pike",
+      "genre": "Indie Rock",
+      "location": "Austin, TX",
+      "email": "greysonpike@icloud.com",
+      "website": "https://greysonpike.co",
+      "bio": "Indie Rock artist out of Austin. Self-produced, fiercely independent, and built for the long play.",
+      "avatar_key": "/covers/artist-greyson-pike.svg",
+      "slug": "greyson-pike",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "c828267a-1266-5b88-a24d-1920994b5d35",
+      "name": "Mute Cinema",
+      "genre": "Downtempo",
+      "location": "London, UK",
+      "email": "mutecinema@icloud.com",
+      "website": "https://mutecinema.com",
+      "bio": "London native blending downtempo with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-mute-cinema.svg",
+      "slug": "mute-cinema",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "83351e2f-8abd-5658-ad0f-c8c7937209c2",
+      "name": "Tasha Monroe",
+      "genre": "R&B",
+      "location": "Chicago, IL",
+      "email": "tashamonroe@proton.me",
+      "website": "https://tashamonroe.music",
+      "bio": "Chicago native blending r&b with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-tasha-monroe.svg",
+      "slug": "tasha-monroe",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "be0dd9c5-7b2b-5c16-bccd-119b58f7cc0d",
+      "name": "Cobalt Hour",
+      "genre": "Synthwave",
+      "location": "Miami, FL",
+      "email": "cobalthour@cobalthour.fm",
+      "website": null,
+      "bio": "Live takes, no autotune crutch. Synthwave with roots in Miami.",
+      "avatar_key": "/covers/artist-cobalt-hour.svg",
+      "slug": "cobalt-hour",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "f6442ee8-69a2-51f2-b392-81b850f9a6bc",
+      "name": "The Wandering Hours",
+      "genre": "Folk",
+      "location": "Nashville, TN",
+      "email": "thewanderinghours@thewanderinghours.com",
+      "website": null,
+      "bio": "Independent folk project. Every minute you play goes (almost) straight to the studio rent in Nashville.",
+      "avatar_key": "/covers/artist-the-wandering-hours.svg",
+      "slug": "the-wandering-hours",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "5adaa422-64cd-546b-836c-efa0b1860655",
+      "name": "Femi Adeyemi",
+      "genre": "Hip-Hop",
+      "location": "London, UK",
+      "email": "femiadeyemi@icloud.com",
+      "website": "https://femiadeyemi.fm",
+      "bio": "Songs about leaving and coming back. Hip-Hop from London.",
+      "avatar_key": "/covers/artist-femi-adeyemi.svg",
+      "slug": "femi-adeyemi",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "09010db2-efd7-5c26-95ea-66c73bf69b76",
+      "name": "Saint Avery",
+      "genre": "Pop",
+      "location": "Los Angeles, CA",
+      "email": "saintavery@proton.me",
+      "website": "https://saintavery.fm",
+      "bio": "Live takes, no autotune crutch. Pop with roots in Los Angeles.",
+      "avatar_key": "/covers/artist-saint-avery.svg",
+      "slug": "saint-avery",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "f4753ade-0f8d-5af3-8665-4f73b02d257b",
+      "name": "Hollow Coast",
+      "genre": "Indie Rock",
+      "location": "Seattle, WA",
+      "email": "hollowcoast@icloud.com",
+      "website": "https://hollowcoast.fm",
+      "bio": "Songs about leaving and coming back. Indie Rock from Seattle.",
+      "avatar_key": "/covers/artist-hollow-coast.svg",
+      "slug": "hollow-coast",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "5b67aabe-583b-5249-8b7f-2e41f6cd10e3",
+      "name": "Niko Vance",
+      "genre": "Drill",
+      "location": "Chicago, IL",
+      "email": "nikovance@nikovance.fm",
+      "website": "https://nikovance.co",
+      "bio": "Making drill that lingers. Based in Chicago, recorded mostly at 2am.",
+      "avatar_key": "/covers/artist-niko-vance.svg",
+      "slug": "niko-vance",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "d107ddc8-b93d-5cd2-82f8-2424aa2e0015",
+      "name": "Ember & Oak",
+      "genre": "Folk",
+      "location": "Denver, CO",
+      "email": "emberoak@icloud.com",
+      "website": "https://emberoak.co",
+      "bio": "Live takes, no autotune crutch. Folk with roots in Denver.",
+      "avatar_key": "/covers/artist-ember-oak.svg",
+      "slug": "ember-oak",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "d7b6e9d6-c600-5b74-ab6f-3b7c277a1fd6",
+      "name": "Selene Cruz",
+      "genre": "Electronic",
+      "location": "Barcelona, ES",
+      "email": "selenecruz@gmail.com",
+      "website": "https://selenecruz.co",
+      "bio": "Barcelona native blending electronic with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-selene-cruz.svg",
+      "slug": "selene-cruz",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "c1a9125c-82d4-5d5d-bd1f-2e453f643304",
+      "name": "The Low Lantern",
+      "genre": "Jazz",
+      "location": "Philadelphia, PA",
+      "email": "thelowlantern@proton.me",
+      "website": null,
+      "bio": "Jazz for late drives and longer nights. Philadelphia.",
+      "avatar_key": "/covers/artist-the-low-lantern.svg",
+      "slug": "the-low-lantern",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "edd7d604-df25-52bf-98fd-2e31baed9ea7",
+      "name": "Mara Lindqvist",
+      "genre": "Ambient",
+      "location": "Stockholm, SE",
+      "email": "maralindqvist@proton.me",
+      "website": null,
+      "bio": "Ambient artist out of Stockholm. Self-produced, fiercely independent, and built for the long play.",
+      "avatar_key": "/covers/artist-mara-lindqvist.svg",
+      "slug": "mara-lindqvist",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "221ce00b-443c-59da-9d69-fa295ea9d9f4",
+      "name": "Two Rivers North",
+      "genre": "Indie Rock",
+      "location": "Minneapolis, MN",
+      "email": "tworiversnorth@proton.me",
+      "website": null,
+      "bio": "Independent indie rock project. Every minute you play goes (almost) straight to the studio rent in Minneapolis.",
+      "avatar_key": "/covers/artist-two-rivers-north.svg",
+      "slug": "two-rivers-north",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "9bfa5253-b479-5794-8059-58b0719b7e38",
+      "name": "Jaylen Brooks",
+      "genre": "R&B",
+      "location": "Memphis, TN",
+      "email": "jaylenbrooks@jaylenbrooks.co",
+      "website": "https://jaylenbrooks.com",
+      "bio": "Live takes, no autotune crutch. R&B with roots in Memphis.",
+      "avatar_key": "/covers/artist-jaylen-brooks.svg",
+      "slug": "jaylen-brooks",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "aa9da4ed-0ee3-5fc0-9a47-853b7f5c462f",
+      "name": "Phantom Arcade",
+      "genre": "Synthwave",
+      "location": "San Francisco, CA",
+      "email": "phantomarcade@proton.me",
+      "website": null,
+      "bio": "Independent synthwave project. Every minute you play goes (almost) straight to the studio rent in San Francisco.",
+      "avatar_key": "/covers/artist-phantom-arcade.svg",
+      "slug": "phantom-arcade",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "f1ec8a15-cdfc-57f1-a368-ff0cc2b6ec58",
+      "name": "Imani Sol",
+      "genre": "Afro-Soul",
+      "location": "Lagos, NG",
+      "email": "imanisol@icloud.com",
+      "website": "https://imanisol.com",
+      "bio": "Independent afro-soul project. Every minute you play goes (almost) straight to the studio rent in Lagos.",
+      "avatar_key": "/covers/artist-imani-sol.svg",
+      "slug": "imani-sol",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "52bdd609-5174-56b3-a7d9-d3b504bbfa1b",
+      "name": "The Dust Choir",
+      "genre": "Folk",
+      "location": "Boise, ID",
+      "email": "thedustchoir@icloud.com",
+      "website": "https://thedustchoir.music",
+      "bio": "Boise native blending folk with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-the-dust-choir.svg",
+      "slug": "the-dust-choir",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "ef283bdd-5419-5022-b514-e9aefb44a0ec",
+      "name": "Kasimir",
+      "genre": "House",
+      "location": "Amsterdam, NL",
+      "email": "kasimir@gmail.com",
+      "website": "https://kasimir.fm",
+      "bio": "Independent house project. Every minute you play goes (almost) straight to the studio rent in Amsterdam.",
+      "avatar_key": "/covers/artist-kasimir.svg",
+      "slug": "kasimir",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "a280c6d5-5fa3-5704-ba7e-c75d8a480784",
+      "name": "Odessa Lane",
+      "genre": "Pop",
+      "location": "Manchester, UK",
+      "email": "odessalane@gmail.com",
+      "website": null,
+      "bio": "Making pop that lingers. Based in Manchester, recorded mostly at 2am.",
+      "avatar_key": "/covers/artist-odessa-lane.svg",
+      "slug": "odessa-lane",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "c7dcff74-70c6-539e-bd6e-ebb2c477c61c",
+      "name": "Bento Reyes",
+      "genre": "Hip-Hop",
+      "location": "São Paulo, BR",
+      "email": "bentoreyes@icloud.com",
+      "website": "https://bentoreyes.music",
+      "bio": "São Paulo native blending hip-hop with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-bento-reyes.svg",
+      "slug": "bento-reyes",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "99dc169c-b3fe-5df3-aa0e-b52ced11c373",
+      "name": "Glass Harbor",
+      "genre": "Ambient",
+      "location": "Vancouver, BC",
+      "email": "glassharbor@proton.me",
+      "website": "https://glassharbor.music",
+      "bio": "Vancouver native blending ambient with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-glass-harbor.svg",
+      "slug": "glass-harbor",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "bbb84b27-3e09-56bf-bdc7-a4dcae2251fc",
+      "name": "The Velour Set",
+      "genre": "Soul",
+      "location": "Detroit, MI",
+      "email": "thevelourset@proton.me",
+      "website": null,
+      "bio": "Detroit native blending soul with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-the-velour-set.svg",
+      "slug": "the-velour-set",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "9e50b6db-336d-519a-9925-2f2625d84669",
+      "name": "Lena Whitfield",
+      "genre": "Jazz",
+      "location": "Kansas City, MO",
+      "email": "lenawhitfield@lenawhitfield.music",
+      "website": "https://lenawhitfield.co",
+      "bio": "Independent jazz project. Every minute you play goes (almost) straight to the studio rent in Kansas City.",
+      "avatar_key": "/covers/artist-lena-whitfield.svg",
+      "slug": "lena-whitfield",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "2f132204-6c08-59cc-ae1e-238f635f8690",
+      "name": "Static Meridian",
+      "genre": "Electronic",
+      "location": "Tokyo, JP",
+      "email": "staticmeridian@gmail.com",
+      "website": "https://staticmeridian.co",
+      "bio": "Tokyo native blending electronic with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-static-meridian.svg",
+      "slug": "static-meridian",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "e60be80a-d745-55fd-a7ef-53904b9e52c8",
+      "name": "Cole Hartman",
+      "genre": "Indie Rock",
+      "location": "Columbus, OH",
+      "email": "colehartman@icloud.com",
+      "website": "https://colehartman.com",
+      "bio": "Making indie rock that lingers. Based in Columbus, recorded mostly at 2am.",
+      "avatar_key": "/covers/artist-cole-hartman.svg",
+      "slug": "cole-hartman",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "7f719636-5fd6-5937-867d-c9ab44ce4dc4",
+      "name": "Yara Haddad",
+      "genre": "Pop",
+      "location": "Beirut, LB",
+      "email": "yarahaddad@yarahaddad.fm",
+      "website": "https://yarahaddad.fm",
+      "bio": "Pop artist out of Beirut. Self-produced, fiercely independent, and built for the long play.",
+      "avatar_key": "/covers/artist-yara-haddad.svg",
+      "slug": "yara-haddad",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "2c72a757-52ae-5241-a100-695112ff22ca",
+      "name": "The Northern Drift",
+      "genre": "Folk",
+      "location": "Halifax, NS",
+      "email": "thenortherndrift@gmail.com",
+      "website": "https://thenortherndrift.music",
+      "bio": "Folk for late drives and longer nights. Halifax.",
+      "avatar_key": "/covers/artist-the-northern-drift.svg",
+      "slug": "the-northern-drift",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "fcacbc40-1d5b-5608-83dd-84d2727142a2",
+      "name": "Dontae Price",
+      "genre": "Drill",
+      "location": "Brooklyn, NY",
+      "email": "dontaeprice@icloud.com",
+      "website": "https://dontaeprice.fm",
+      "bio": "Independent drill project. Every minute you play goes (almost) straight to the studio rent in Brooklyn.",
+      "avatar_key": "/covers/artist-dontae-price.svg",
+      "slug": "dontae-price",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "506a140d-c00f-5b4b-b644-aa34416e13ae",
+      "name": "Aurora Bell",
+      "genre": "Synthwave",
+      "location": "Las Vegas, NV",
+      "email": "aurorabell@proton.me",
+      "website": "https://aurorabell.com",
+      "bio": "Independent synthwave project. Every minute you play goes (almost) straight to the studio rent in Las Vegas.",
+      "avatar_key": "/covers/artist-aurora-bell.svg",
+      "slug": "aurora-bell",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "975a81e1-0d3d-59e3-b291-c3e4cad9b5eb",
+      "name": "Kwame Mensah",
+      "genre": "Afro-Soul",
+      "location": "Accra, GH",
+      "email": "kwamemensah@icloud.com",
+      "website": null,
+      "bio": "Making afro-soul that lingers. Based in Accra, recorded mostly at 2am.",
+      "avatar_key": "/covers/artist-kwame-mensah.svg",
+      "slug": "kwame-mensah",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "6afc6b0f-9345-56c7-96af-3365e7b34b67",
+      "name": "Pale Geometry",
+      "genre": "Downtempo",
+      "location": "Oslo, NO",
+      "email": "palegeometry@proton.me",
+      "website": null,
+      "bio": "Making downtempo that lingers. Based in Oslo, recorded mostly at 2am.",
+      "avatar_key": "/covers/artist-pale-geometry.svg",
+      "slug": "pale-geometry",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "f9ee7378-619e-5476-8960-7182226909ca",
+      "name": "Sofia Marchetti",
+      "genre": "Jazz",
+      "location": "Milan, IT",
+      "email": "sofiamarchetti@gmail.com",
+      "website": "https://sofiamarchetti.music",
+      "bio": "Independent jazz project. Every minute you play goes (almost) straight to the studio rent in Milan.",
+      "avatar_key": "/covers/artist-sofia-marchetti.svg",
+      "slug": "sofia-marchetti",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "90f4db57-52d0-5f65-ba12-c8a8d0911f6b",
+      "name": "The Hush Engine",
+      "genre": "Indie Rock",
+      "location": "Glasgow, UK",
+      "email": "thehushengine@gmail.com",
+      "website": null,
+      "bio": "Indie Rock artist out of Glasgow. Self-produced, fiercely independent, and built for the long play.",
+      "avatar_key": "/covers/artist-the-hush-engine.svg",
+      "slug": "the-hush-engine",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "6c80f9f9-97c1-5463-a636-4aaf6a47d963",
+      "name": "Reza Karimi",
+      "genre": "Electronic",
+      "location": "Dubai, AE",
+      "email": "rezakarimi@gmail.com",
+      "website": null,
+      "bio": "Electronic for late drives and longer nights. Dubai.",
+      "avatar_key": "/covers/artist-reza-karimi.svg",
+      "slug": "reza-karimi",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "2d6db4d1-2f37-5f67-ae7d-3799d63f902e",
+      "name": "Hattie Crow",
+      "genre": "Folk",
+      "location": "Louisville, KY",
+      "email": "hattiecrow@icloud.com",
+      "website": "https://hattiecrow.co",
+      "bio": "Live takes, no autotune crutch. Folk with roots in Louisville.",
+      "avatar_key": "/covers/artist-hattie-crow.svg",
+      "slug": "hattie-crow",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "adf9fc34-329a-5772-b6f2-1c1d97a718cf",
+      "name": "Midas Lane",
+      "genre": "Hip-Hop",
+      "location": "Oakland, CA",
+      "email": "midaslane@icloud.com",
+      "website": null,
+      "bio": "Oakland native blending hip-hop with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-midas-lane.svg",
+      "slug": "midas-lane",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "fe6766a5-075a-53d2-9a28-8628f9a0fe14",
+      "name": "Cyan Fields",
+      "genre": "Ambient",
+      "location": "Wellington, NZ",
+      "email": "cyanfields@proton.me",
+      "website": "https://cyanfields.co",
+      "bio": "Independent ambient project. Every minute you play goes (almost) straight to the studio rent in Wellington.",
+      "avatar_key": "/covers/artist-cyan-fields.svg",
+      "slug": "cyan-fields",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "9659df4a-2606-5ed0-aa69-37b00ad1dbcb",
+      "name": "The Copper Lights",
+      "genre": "Soul",
+      "location": "Birmingham, UK",
+      "email": "thecopperlights@icloud.com",
+      "website": "https://thecopperlights.com",
+      "bio": "Songs about leaving and coming back. Soul from Birmingham.",
+      "avatar_key": "/covers/artist-the-copper-lights.svg",
+      "slug": "the-copper-lights",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "1e7d44c0-ef54-56e7-be15-8e4b895dca78",
+      "name": "Noa Stein",
+      "genre": "Pop",
+      "location": "Tel Aviv, IL",
+      "email": "noastein@icloud.com",
+      "website": "https://noastein.co",
+      "bio": "Making pop that lingers. Based in Tel Aviv, recorded mostly at 2am.",
+      "avatar_key": "/covers/artist-noa-stein.svg",
+      "slug": "noa-stein",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    },
+    {
+      "id": "09e52327-4df9-529d-b6a4-a5e311b4df5e",
+      "name": "Grover & The Tide",
+      "genre": "Indie Rock",
+      "location": "San Diego, CA",
+      "email": "groverthetide@icloud.com",
+      "website": "https://groverthetide.fm",
+      "bio": "Indie Rock for late drives and longer nights. San Diego.",
+      "avatar_key": "/covers/artist-grover-the-tide.svg",
+      "slug": "grover-the-tide",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "6bd32059-ec56-5da8-95b1-53e04da38be9",
+      "name": "Lux Pereira",
+      "genre": "House",
+      "location": "Lisbon, PT",
+      "email": "luxpereira@icloud.com",
+      "website": "https://luxpereira.com",
+      "bio": "House for late drives and longer nights. Lisbon.",
+      "avatar_key": "/covers/artist-lux-pereira.svg",
+      "slug": "lux-pereira",
+      "payouts_enabled": true,
+      "stripe_account_id": null
+    },
+    {
+      "id": "c7425982-5aef-535f-8d94-04ca948a3719",
+      "name": "Wren Castellano",
+      "genre": "Jazz",
+      "location": "Boston, MA",
+      "email": "wrencastellano@proton.me",
+      "website": null,
+      "bio": "Boston native blending jazz with whatever's on the turntable that week.",
+      "avatar_key": "/covers/artist-wren-castellano.svg",
+      "slug": "wren-castellano",
+      "payouts_enabled": false,
+      "stripe_account_id": null
+    }
+  ],
+  "tracks": [
+    {
+      "id": "9ffee68a-6eca-5fe2-9b5b-22b706eff34e",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "title": "Silver Avenue",
+      "duration_seconds": 210,
+      "price_per_minute_cents": 2,
+      "audio_key": "/audio/demo/deep-current.mp3",
+      "cover_image_key": "/covers/track-silver-avenue-deep-current.svg",
+      "popularity": 0.5103149147704245
+    },
+    {
+      "id": "2fbba0dc-ac7a-5c19-8b15-28d91f3bcf2f",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "title": "Moonlit",
+      "duration_seconds": 198,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/neon-pulse.mp3",
+      "cover_image_key": "/covers/track-moonlit-neon-pulse.svg",
+      "popularity": 0.5292867397889496
+    },
+    {
+      "id": "544f4fa8-4585-515d-83db-2cdb12603d24",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "title": "Midnight Lights",
+      "duration_seconds": 174,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/midnight-drive.mp3",
+      "cover_image_key": "/covers/track-midnight-lights-midnight-drive.svg",
+      "popularity": 0.825295771472156
+    },
+    {
+      "id": "1a8c90db-9946-534c-9161-d6447b1d2669",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "title": "Lowlands",
+      "duration_seconds": 162,
+      "price_per_minute_cents": 3,
+      "audio_key": "/audio/demo/back-pocket.mp3",
+      "cover_image_key": "/covers/track-lowlands-back-pocket.svg",
+      "popularity": 0.30025397427380085
+    },
+    {
+      "id": "2893195b-8e39-5725-8c90-6530f876d963",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "title": "Undertow",
+      "duration_seconds": 186,
+      "price_per_minute_cents": 3,
+      "audio_key": "/audio/demo/velvet-rope.mp3",
+      "cover_image_key": "/covers/track-undertow-velvet-rope.svg",
+      "popularity": 0.3193750895559788
+    },
+    {
+      "id": "3c1013d8-d30a-5762-8d8d-26856b67c981",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "title": "Aftertaste",
+      "duration_seconds": 150,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/after-hours.mp3",
+      "cover_image_key": "/covers/track-aftertaste-after-hours.svg",
+      "popularity": 0.7819834100082517
+    },
+    {
+      "id": "73a3c3ac-ec78-5d12-83a3-e688260928ad",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "title": "Quiet Letters",
+      "duration_seconds": 150,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/after-hours.mp3",
+      "cover_image_key": "/covers/track-quiet-letters-after-hours.svg",
+      "popularity": 0.7996834887191653
+    },
+    {
+      "id": "2835efc8-55e5-5a60-972b-88515672d543",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "title": "Wild Avenue",
+      "duration_seconds": 138,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/blue-note.mp3",
+      "cover_image_key": "/covers/track-wild-avenue-blue-note.svg",
+      "popularity": 0.9102387554943563
+    },
+    {
+      "id": "22a05af3-745a-5cad-88bc-81237adde2e6",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "title": "Birdsong",
+      "duration_seconds": 165,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/front-porch.mp3",
+      "cover_image_key": "/covers/track-birdsong-front-porch.svg",
+      "popularity": 0.6911193422973156
+    },
+    {
+      "id": "afdb9094-3793-5dc9-88dc-493046b36a9a",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "title": "Silver Smoke",
+      "duration_seconds": 165,
+      "price_per_minute_cents": 2,
+      "audio_key": "/audio/demo/front-porch.mp3",
+      "cover_image_key": "/covers/track-silver-smoke-front-porch.svg",
+      "popularity": 0.7246927345171572
+    },
+    {
+      "id": "bdb91d5f-1674-5a81-b4c6-fc48729a39c8",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "title": "Afterglow",
+      "duration_seconds": 138,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/blue-note.mp3",
+      "cover_image_key": "/covers/track-afterglow-blue-note.svg",
+      "popularity": 0.5329896232113243
+    },
+    {
+      "id": "cc96b4e4-1343-5148-950a-6ec281a3c851",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "title": "Golden Highway",
+      "duration_seconds": 192,
+      "price_per_minute_cents": 5,
+      "audio_key": "/audio/demo/open-road.mp3",
+      "cover_image_key": "/covers/track-golden-highway-open-road.svg",
+      "popularity": 0.418875858001411
+    },
+    {
+      "id": "6a6600dc-41b7-595a-8608-1f797c0e1caf",
+      "artist_id": "585c9249-7d29-5b9a-9e2d-5d5b0ffbc728",
+      "title": "Concrete",
+      "duration_seconds": 192,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/open-road.mp3",
+      "cover_image_key": "/covers/track-concrete-open-road.svg",
+      "popularity": 0.39724943190813067
+    },
+    {
+      "id": "fb065990-f860-57d7-ab6c-1ebeb553ba1c",
+      "artist_id": "585c9249-7d29-5b9a-9e2d-5d5b0ffbc728",
+      "title": "Silver Mornings",
+      "duration_seconds": 138,
+      "price_per_minute_cents": 2,
+      "audio_key": "/audio/demo/blue-note.mp3",
+      "cover_image_key": "/covers/track-silver-mornings-blue-note.svg",
+      "popularity": 0.8496777197346093
+    },
+    {
+      "id": "abcb5e48-a6ce-5754-8636-07498535846d",
+      "artist_id": "585c9249-7d29-5b9a-9e2d-5d5b0ffbc728",
+      "title": "Afterglow",
+      "duration_seconds": 192,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/open-road.mp3",
+      "cover_image_key": "/covers/track-afterglow-open-road.svg",
+      "popularity": 0.5617709489539267
+    },
+    {
+      "id": "770e640a-a695-5fa6-aad1-fc61118ef3b2",
+      "artist_id": "585c9249-7d29-5b9a-9e2d-5d5b0ffbc728",
+      "title": "Restless Bloom",
+      "duration_seconds": 165,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/front-porch.mp3",
+      "cover_image_key": "/covers/track-restless-bloom-front-porch.svg",
+      "popularity": 0.8957081347703935
+    },
+    {
+      "id": "9083d475-5477-52d7-9fbf-629c16ce811b",
+      "artist_id": "585c9249-7d29-5b9a-9e2d-5d5b0ffbc728",
+      "title": "Backroads",
+      "duration_seconds": 192,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/open-road.mp3",
+      "cover_image_key": "/covers/track-backroads-open-road.svg",
+      "popularity": 0.8706861201673746
+    },
+    {
+      "id": "e2060e14-a233-5447-a488-0fea61e34bbb",
+      "artist_id": "a36f1c79-2541-5c66-93ea-3b23d7aa5075",
+      "title": "Distant Lights",
+      "duration_seconds": 198,
+      "price_per_minute_cents": 1,
+      "audio_key": "/audio/demo/neon-pulse.mp3",
+      "cover_image_key": "/covers/track-distant-lights-neon-pulse.svg",
+      "popularity": 0.8001950951293111
+    },
+    {
+      "id": "1842c893-829a-559e-ace9-1780aae8d74a",
+      "artist_id": "a36f1c79-2541-5c66-93ea-3b23d7aa5075",
+      "title": "Afterglow",
+      "duration_seconds": 174,
+      "price_per_minute_cents": 3,
+      "audio_key": "/audio/demo/midnight-drive.mp3",
+      "cover_image_key": "/covers/track-afterglow-midnight-drive.svg",
+      "popularity": 0.21354043055325747
+    },
+    {
+      "id": "1699731f-a739-5f64-9975-c8091fc7919f",
+      "artist_id": "a36f1c79-2541-5c66-93ea-3b23d7aa5075",
+      "title": "Cassette",
+      "duration_seconds": 174,
+      "price_per_minute_cents": 5,
+      "audio_key": "/audio/demo/midnight-drive.mp3",
+      "cover_image_key": "/covers/track-cassette-midnight-drive.svg",
+      "popularity": 0.8274363402277232
+    }
+  ],
+  "sampleDaily": [
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-20",
+      "minutes": 108,
+      "amount_cents": 101
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-21",
+      "minutes": 123,
+      "amount_cents": 115
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-22",
+      "minutes": 238,
+      "amount_cents": 222
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-23",
+      "minutes": 156,
+      "amount_cents": 146
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-24",
+      "minutes": 264,
+      "amount_cents": 246
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-25",
+      "minutes": 194,
+      "amount_cents": 181
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-26",
+      "minutes": 291,
+      "amount_cents": 272
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-27",
+      "minutes": 126,
+      "amount_cents": 118
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-28",
+      "minutes": 277,
+      "amount_cents": 259
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-29",
+      "minutes": 371,
+      "amount_cents": 346
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-30",
+      "minutes": 273,
+      "amount_cents": 255
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-05-31",
+      "minutes": 330,
+      "amount_cents": 308
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-01",
+      "minutes": 224,
+      "amount_cents": 209
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-02",
+      "minutes": 310,
+      "amount_cents": 289
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-03",
+      "minutes": 390,
+      "amount_cents": 364
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-04",
+      "minutes": 360,
+      "amount_cents": 336
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-05",
+      "minutes": 442,
+      "amount_cents": 413
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-06",
+      "minutes": 232,
+      "amount_cents": 217
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-07",
+      "minutes": 327,
+      "amount_cents": 305
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-08",
+      "minutes": 246,
+      "amount_cents": 230
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-09",
+      "minutes": 207,
+      "amount_cents": 193
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-10",
+      "minutes": 394,
+      "amount_cents": 368
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-11",
+      "minutes": 222,
+      "amount_cents": 207
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-12",
+      "minutes": 407,
+      "amount_cents": 380
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-13",
+      "minutes": 577,
+      "amount_cents": 539
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-14",
+      "minutes": 204,
+      "amount_cents": 190
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-15",
+      "minutes": 477,
+      "amount_cents": 445
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-16",
+      "minutes": 502,
+      "amount_cents": 469
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-17",
+      "minutes": 240,
+      "amount_cents": 224
+    },
+    {
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "day": "2026-06-18",
+      "minutes": 303,
+      "amount_cents": 283
+    }
+  ],
+  "sampleLedger": [
+    {
+      "idempotency_key": "18b72fc0-d427-5ae8-a4ac-21bca23b26df#544f4fa8-4585-515d-83db-2cdb12603d24#29695680",
+      "user_id": "18b72fc0-d427-5ae8-a4ac-21bca23b26df",
+      "track_id": "544f4fa8-4585-515d-83db-2cdb12603d24",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "minute_epoch": 29695680,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "2eaa842a-fc93-5272-9cf7-3be36a6bd787#544f4fa8-4585-515d-83db-2cdb12603d24#29695679",
+      "user_id": "2eaa842a-fc93-5272-9cf7-3be36a6bd787",
+      "track_id": "544f4fa8-4585-515d-83db-2cdb12603d24",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "minute_epoch": 29695679,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "fc80939b-23ab-5d67-b591-ece084d22181#544f4fa8-4585-515d-83db-2cdb12603d24#29695678",
+      "user_id": "fc80939b-23ab-5d67-b591-ece084d22181",
+      "track_id": "544f4fa8-4585-515d-83db-2cdb12603d24",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "minute_epoch": 29695678,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "2eaa842a-fc93-5272-9cf7-3be36a6bd787#544f4fa8-4585-515d-83db-2cdb12603d24#29695677",
+      "user_id": "2eaa842a-fc93-5272-9cf7-3be36a6bd787",
+      "track_id": "544f4fa8-4585-515d-83db-2cdb12603d24",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "minute_epoch": 29695677,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "33ed9ee5-0a6c-5893-bc50-d8c463be3aa2#2fbba0dc-ac7a-5c19-8b15-28d91f3bcf2f#29695680",
+      "user_id": "33ed9ee5-0a6c-5893-bc50-d8c463be3aa2",
+      "track_id": "2fbba0dc-ac7a-5c19-8b15-28d91f3bcf2f",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "minute_epoch": 29695680,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "2f3657d6-6213-53c4-bfc0-b18d9b5ca054#2fbba0dc-ac7a-5c19-8b15-28d91f3bcf2f#29695679",
+      "user_id": "2f3657d6-6213-53c4-bfc0-b18d9b5ca054",
+      "track_id": "2fbba0dc-ac7a-5c19-8b15-28d91f3bcf2f",
+      "artist_id": "0b1175c9-2160-56f9-b8fd-d16af1dece94",
+      "minute_epoch": 29695679,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "18b72fc0-d427-5ae8-a4ac-21bca23b26df#73a3c3ac-ec78-5d12-83a3-e688260928ad#29695680",
+      "user_id": "18b72fc0-d427-5ae8-a4ac-21bca23b26df",
+      "track_id": "73a3c3ac-ec78-5d12-83a3-e688260928ad",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695680,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "fc80939b-23ab-5d67-b591-ece084d22181#73a3c3ac-ec78-5d12-83a3-e688260928ad#29695679",
+      "user_id": "fc80939b-23ab-5d67-b591-ece084d22181",
+      "track_id": "73a3c3ac-ec78-5d12-83a3-e688260928ad",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695679,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "18b72fc0-d427-5ae8-a4ac-21bca23b26df#73a3c3ac-ec78-5d12-83a3-e688260928ad#29695678",
+      "user_id": "18b72fc0-d427-5ae8-a4ac-21bca23b26df",
+      "track_id": "73a3c3ac-ec78-5d12-83a3-e688260928ad",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695678,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a#73a3c3ac-ec78-5d12-83a3-e688260928ad#29695677",
+      "user_id": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a",
+      "track_id": "73a3c3ac-ec78-5d12-83a3-e688260928ad",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695677,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a#73a3c3ac-ec78-5d12-83a3-e688260928ad#29695676",
+      "user_id": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a",
+      "track_id": "73a3c3ac-ec78-5d12-83a3-e688260928ad",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695676,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "fc80939b-23ab-5d67-b591-ece084d22181#73a3c3ac-ec78-5d12-83a3-e688260928ad#29695675",
+      "user_id": "fc80939b-23ab-5d67-b591-ece084d22181",
+      "track_id": "73a3c3ac-ec78-5d12-83a3-e688260928ad",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695675,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "2eaa842a-fc93-5272-9cf7-3be36a6bd787#3c1013d8-d30a-5762-8d8d-26856b67c981#29695680",
+      "user_id": "2eaa842a-fc93-5272-9cf7-3be36a6bd787",
+      "track_id": "3c1013d8-d30a-5762-8d8d-26856b67c981",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695680,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a#3c1013d8-d30a-5762-8d8d-26856b67c981#29695679",
+      "user_id": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a",
+      "track_id": "3c1013d8-d30a-5762-8d8d-26856b67c981",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695679,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "a42bb8e1-8dfc-5324-b3d9-c24a9f7dc820#3c1013d8-d30a-5762-8d8d-26856b67c981#29695678",
+      "user_id": "a42bb8e1-8dfc-5324-b3d9-c24a9f7dc820",
+      "track_id": "3c1013d8-d30a-5762-8d8d-26856b67c981",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695678,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "2f3657d6-6213-53c4-bfc0-b18d9b5ca054#3c1013d8-d30a-5762-8d8d-26856b67c981#29695677",
+      "user_id": "2f3657d6-6213-53c4-bfc0-b18d9b5ca054",
+      "track_id": "3c1013d8-d30a-5762-8d8d-26856b67c981",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695677,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a#3c1013d8-d30a-5762-8d8d-26856b67c981#29695676",
+      "user_id": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a",
+      "track_id": "3c1013d8-d30a-5762-8d8d-26856b67c981",
+      "artist_id": "8066e702-17a3-5f47-a3d5-1ab35d78fd6b",
+      "minute_epoch": 29695676,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a#2835efc8-55e5-5a60-972b-88515672d543#29695680",
+      "user_id": "14cc88fd-3b09-5e9f-ab12-1d6d050ef24a",
+      "track_id": "2835efc8-55e5-5a60-972b-88515672d543",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "minute_epoch": 29695680,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "2f3657d6-6213-53c4-bfc0-b18d9b5ca054#2835efc8-55e5-5a60-972b-88515672d543#29695679",
+      "user_id": "2f3657d6-6213-53c4-bfc0-b18d9b5ca054",
+      "track_id": "2835efc8-55e5-5a60-972b-88515672d543",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "minute_epoch": 29695679,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    },
+    {
+      "idempotency_key": "fc80939b-23ab-5d67-b591-ece084d22181#afdb9094-3793-5dc9-88dc-493046b36a9a#29695680",
+      "user_id": "fc80939b-23ab-5d67-b591-ece084d22181",
+      "track_id": "afdb9094-3793-5dc9-88dc-493046b36a9a",
+      "artist_id": "47f0e59c-5a6d-5734-91f2-d2d07ee9dc09",
+      "minute_epoch": 29695680,
+      "amount_cents": 1,
+      "day": "2026-06-18"
+    }
+  ]
+}
