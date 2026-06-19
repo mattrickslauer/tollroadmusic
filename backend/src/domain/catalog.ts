@@ -109,12 +109,21 @@ export async function getCatalog(): Promise<Catalog> {
 
 /** The signed-in artist's royalty summary, for the artist dashboard. Reads the
  *  precomputed summary rows — never the raw ledger. */
+export type ArtistTrack = {
+  id: string;
+  title: string;
+  durationSeconds: number;
+  pricePerMinuteCents: number;
+  coverImageKey: string | null;
+};
+
 export async function getArtistSummary(artistId: string): Promise<{
   artistId: string;
   minutes: number;
   earningsCents: number;
   trackCount: number;
   byDay: { day: string; minutes: number; amountCents: number }[];
+  tracks: ArtistTrack[];
 }> {
   return withDsql(async (db) => {
     const totalR = await db.query<{ minutes: string; amount_cents: string }>(
@@ -122,8 +131,15 @@ export async function getArtistSummary(artistId: string): Promise<{
          FROM artist_daily_summary WHERE artist_id = $1`,
       [artistId],
     );
-    const tracksR = await db.query<{ n: string }>(
-      `SELECT COUNT(*) AS n FROM tracks WHERE artist_id = $1`,
+    const tracksR = await db.query<{
+      id: string;
+      title: string;
+      duration_seconds: number;
+      price_per_minute_cents: number;
+      cover_image_key: string | null;
+    }>(
+      `SELECT id, title, duration_seconds, price_per_minute_cents, cover_image_key
+         FROM tracks WHERE artist_id = $1 ORDER BY title`,
       [artistId],
     );
     const byDayR = await db.query<{ day: string; minutes: string; amount_cents: string }>(
@@ -131,16 +147,24 @@ export async function getArtistSummary(artistId: string): Promise<{
         WHERE artist_id = $1 ORDER BY day DESC LIMIT 30`,
       [artistId],
     );
+    const tracks: ArtistTrack[] = tracksR.rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      durationSeconds: r.duration_seconds,
+      pricePerMinuteCents: r.price_per_minute_cents,
+      coverImageKey: r.cover_image_key,
+    }));
     return {
       artistId,
       minutes: Number(totalR.rows[0]?.minutes ?? 0),
       earningsCents: Number(totalR.rows[0]?.amount_cents ?? 0),
-      trackCount: Number(tracksR.rows[0]?.n ?? 0),
+      trackCount: tracks.length,
       byDay: byDayR.rows.map((r) => ({
         day: r.day,
         minutes: Number(r.minutes),
         amountCents: Number(r.amount_cents),
       })),
+      tracks,
     };
   });
 }
