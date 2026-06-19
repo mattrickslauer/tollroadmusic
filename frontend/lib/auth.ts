@@ -91,7 +91,11 @@ export function clearRef(): void {
   try { localStorage.removeItem(REF_KEY); } catch {}
 }
 
-/** Clear the session. */
+/** Clear the session. Broadcasts `tollroad:signedout` so providers re-sync
+ *  (mirrors the `tollroad:signedin` broadcast on the way in). */
 export async function logout(): Promise<void> {
   await fetch("/api/v1/auth/logout", { method: "POST" });
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("tollroad:signedout"));
+  }
 }

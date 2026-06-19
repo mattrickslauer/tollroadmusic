@@ -36,10 +36,19 @@ export default function LibraryProvider({ children }: { children: React.ReactNod
   const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
+  const loadLibrary = useCallback(() => {
     const likes = api.getLikes().then((r) => setLikedIds(new Set(r.likedIds))).catch(() => {});
     const pls = api.getPlaylists().then((r) => setPlaylists(r.playlists)).catch(() => {});
     Promise.allSettled([likes, pls]).then(() => setReady(true));
+  }, []);
+
+  useEffect(() => { loadLibrary(); }, [loadLibrary]);
+
+  // Sign-out clears the previous user's liked tracks + playlists from context.
+  useEffect(() => {
+    const onSignedOut = () => { setLikedIds(new Set()); setPlaylists([]); };
+    window.addEventListener("tollroad:signedout", onSignedOut);
+    return () => window.removeEventListener("tollroad:signedout", onSignedOut);
   }, []);
 
   const isLiked = useCallback((id: string) => likedIds.has(id), [likedIds]);
