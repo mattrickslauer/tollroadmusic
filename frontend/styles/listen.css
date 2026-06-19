@@ -836,3 +836,18 @@
 
 /* Sidebar playlist list, loading state. */
 .lx-sk-pl { pointer-events: none; display: flex; align-items: center; }
+
+/* ---------- global player chrome (the bar outside the listener app) ----------
+   The bar now mounts at the app root (components/GlobalPlayer) so it persists
+   across every route group. Inside the dark listener app it docks beside the
+   sidebar (default .lx-player geometry, data-listen="true"). Off it there's no
+   sidebar, so go full-width — and only show once something is playing, so it
+   never clutters the marketing landing or the artist dashboard while empty. */
+.gp-bar[data-listen="false"] .lx-player { left: 0; }
+.gp-bar[data-listen="false"] .lx-player[data-empty="true"] { display: none; }
+
+/* Bottom breathing room for marketing/artist pages while the bar floats (the
+   listener app already reserves this via .lx-main padding-bottom). Literals,
+   not --playerbar-h, since <body> is outside the .app-dark token scope. */
+body.gp-pad { padding-bottom: 92px; }
+@media (max-width: 640px) { body.gp-pad { padding-bottom: 134px; } }

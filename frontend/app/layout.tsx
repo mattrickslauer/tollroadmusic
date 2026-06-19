@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import "@/styles/tokens.css";
+import "@/styles/listen.css";
+import GlobalPlayer from "@/components/GlobalPlayer";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -49,7 +51,7 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${jetbrains.variable} ${manrope.variable}`}
       >
-        {children}
+        <GlobalPlayer>{children}</GlobalPlayer>
       </body>
     </html>
   );
