@@ -12,7 +12,7 @@ export interface Account {
 }
 export interface Profiles {
   artist: { id: string; name: string; genre: string | null } | null;
-  listener: { balanceCents: number } | null;
+  listener: { balanceCents: number; onboardingGiftClaimed?: boolean } | null;
 }
 export interface Me {
   account: Account | null;
