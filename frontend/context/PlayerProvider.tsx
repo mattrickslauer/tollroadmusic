@@ -125,9 +125,15 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       setBalanceCents(listener?.balanceCents ?? 0);
       if (shouldOnboard(listener)) setOnboard(true);
     };
+    // Sign-out anywhere re-syncs auth state (needsAuth flips back on, balance resets).
+    const onSignedOut = () => loadMe();
     window.addEventListener("tollroad:signedin", onSignedIn);
-    return () => window.removeEventListener("tollroad:signedin", onSignedIn);
-  }, []);
+    window.addEventListener("tollroad:signedout", onSignedOut);
+    return () => {
+      window.removeEventListener("tollroad:signedin", onSignedIn);
+      window.removeEventListener("tollroad:signedout", onSignedOut);
+    };
+  }, [loadMe]);
 
   useEffect(() => { nowRef.current = current; }, [current]);
 
