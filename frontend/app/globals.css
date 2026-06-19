@@ -167,18 +167,18 @@ h3 {
   align-items: center;
   gap: 30px;
 }
-.nav-links a:not(.btn) {
+.nav-links > a:not(.btn) {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   color: var(--bone-dim);
   transition: color 0.2s var(--ease);
 }
-.nav-links a:not(.btn):hover {
+.nav-links > a:not(.btn):hover {
   color: var(--bone);
 }
 @media (max-width: 760px) {
-  .nav-links a:not(.btn) {
+  .nav-links > a:not(.btn) {
     display: none;
   }
 }
