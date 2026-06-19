@@ -6,13 +6,14 @@ import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
 import FullscreenPlayer from "./FullscreenPlayer";
+import { Sk } from "./Skeleton";
 
 /** The persistent now-playing bar, lifted out of Catalog into the (listen)
  *  layout. It consumes the global player, so it stays live and docked across
  *  navigation. Shows the live meter: balance + this-session cost.
  *  On phones, tapping the track info expands into the full-screen player. */
 export default function PlayerBar() {
-  const { current, playing, cur, dur, billedSec, balanceCents, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, billedSec, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
   const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
@@ -86,7 +87,10 @@ export default function PlayerBar() {
       <div className="lx-player-right">
         <span className="lx-live" data-on={playing}><span className="lx-live-dot" />{playing ? "METERING" : "PAUSED"}</span>
         <button className="lx-meter" onClick={openTopUp} title="Add funds">
-          <span className="lx-meter-bal" data-low={balanceCents <= 0}>{usd(balanceCents)}<small>balance</small></span>
+          <span className="lx-meter-bal" data-low={balanceReady && balanceCents <= 0}>
+            {balanceReady ? usd(balanceCents) : <Sk h={15} w={48} radius={4} style={{ marginBottom: 3 }} />}
+            <small>balance</small>
+          </span>
           <span className="lx-meter-cost">${cost.toFixed(4)}<small>session</small></span>
         </button>
       </div>

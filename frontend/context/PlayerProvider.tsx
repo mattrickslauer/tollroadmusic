@@ -28,6 +28,9 @@ export interface PlayerState {
   dur: number;
   /** Live prepaid wallet balance (cents) — decremented as minutes are charged. */
   balanceCents: number;
+  /** False until the first balance read resolves — the meter shows a loading
+   *  shell, not a misleading $0.00 "out of funds", while the wallet loads. */
+  balanceReady: boolean;
   /** Whether auth is configured AND the listener is signed out. */
   needsAuth: boolean;
   /** Play a track (optionally seeding a queue for next/prev + autoplay). */
@@ -68,6 +71,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
 
   const [needsAuth, setNeedsAuth] = useState(false);
   const [balanceCents, setBalanceCents] = useState(0);
+  const [balanceReady, setBalanceReady] = useState(false);
   const [gate, setGate] = useState<CatalogTrack | null>(null); // sign-in prompt
   const [topup, setTopup] = useState(false); // add-funds prompt
   const [pending, setPending] = useState<CatalogTrack | null>(null); // play after funded
@@ -81,10 +85,12 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const [queuePos, setQueuePos] = useState(-1);
 
   const loadMe = useCallback(() => {
-    fetchMe().then((m) => {
-      setNeedsAuth(Boolean(m.authConfigured) && !m.account);
-      setBalanceCents(m.profiles?.listener?.balanceCents ?? 0);
-    });
+    fetchMe()
+      .then((m) => {
+        setNeedsAuth(Boolean(m.authConfigured) && !m.account);
+        setBalanceCents(m.profiles?.listener?.balanceCents ?? 0);
+      })
+      .finally(() => setBalanceReady(true));
   }, []);
 
   useEffect(() => { loadMe(); }, [loadMe]);
@@ -267,6 +273,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       cur,
       dur,
       balanceCents,
+      balanceReady,
       needsAuth,
       play,
       toggle,
@@ -278,7 +285,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       openTopUp: () => setTopup(true),
       refresh: loadMe,
     }),
-    [current, playing, billedSec, cur, dur, balanceCents, needsAuth, play, toggle, seek, next, prev, queuePos, loadMe],
+    [current, playing, billedSec, cur, dur, balanceCents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, loadMe],
   );
 
   return (
