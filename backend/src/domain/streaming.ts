@@ -9,10 +9,38 @@
 // FALLBACK (local dev): when no CDN is configured, the stream handler proxies the
 // bytes itself via domain/media.ts. The billing gate applies in both modes.
 import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
+import { createPrivateKey } from "node:crypto";
 
 const CDN_DOMAIN = process.env.TOLLROAD_CDN_DOMAIN; // e.g. d111.cloudfront.net
 const KEY_PAIR_ID = process.env.TOLLROAD_CF_KEY_PAIR_ID;
-const PRIVATE_KEY = process.env.TOLLROAD_CF_PRIVATE_KEY; // PEM
+// PEM. Env-var pipelines (CDK, console, shell) routinely flatten real newlines
+// into the literal two-character sequence "\n" or wrap the value in quotes;
+// OpenSSL then rejects it with ERR_OSSL_UNSUPPORTED. Normalise both so a valid
+// key survives the round-trip. (A truncated/placeholder value still won't
+// decode — see cdnSigningHealthy().)
+const PRIVATE_KEY = normalizePem(process.env.TOLLROAD_CF_PRIVATE_KEY);
+
+function normalizePem(raw: string | undefined): string | undefined {
+  if (!raw) return raw;
+  let s = raw.trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1);
+  }
+  return s.replace(/\\n/g, "\n");
+}
+
+/** True only when the CDN is configured AND the private key actually decodes as
+ *  a usable signing key. Guards against a dropped/truncated key (e.g. a `cdk
+ *  deploy` reverting an out-of-band env var) turning every stream into a 500. */
+export function cdnSigningHealthy(): boolean {
+  if (!cdnConfigured()) return false;
+  try {
+    createPrivateKey(PRIVATE_KEY!);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** Seconds a stream grant is valid — comfortably longer than the ~45s renew
  *  cadence so playback never stalls mid-minute, short enough to be a real gate. */

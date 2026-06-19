@@ -10,7 +10,7 @@ import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import { getTrackBilling } from "../domain/tracks.ts";
 import { hasRecentCharge } from "../domain/billing.ts";
-import { signedStreamUrl, GRANT_TTL_SECONDS } from "../domain/streaming.ts";
+import { signedStreamUrl, cdnConfigured, cdnSigningHealthy, GRANT_TTL_SECONDS } from "../domain/streaming.ts";
 import { loadAudio } from "../domain/media.ts";
 
 const API_BASE = process.env.TOLLROAD_API_BASE ?? ""; // e.g. https://api…/v1 ; "" => relative
@@ -32,6 +32,15 @@ export const streamGrant: Handler = async (req) => {
       trackId,
       pricePerMinuteCents: track.pricePerMinuteCents,
     });
+  }
+
+  // CDN is configured but its signing key won't decode (e.g. a deploy dropped
+  // or truncated TOLLROAD_CF_PRIVATE_KEY). Falling through to proxy mode is
+  // useless in prod (the bytes aren't on the Lambda's disk), so fail loudly and
+  // clearly instead of throwing an opaque 500 from the signer.
+  if (cdnConfigured() && !cdnSigningHealthy()) {
+    console.error("stream: CDN configured but signing key is invalid — check TOLLROAD_CF_PRIVATE_KEY");
+    return error(503, "streaming temporarily unavailable");
   }
 
   const signed = signedStreamUrl(track.audioKey);
