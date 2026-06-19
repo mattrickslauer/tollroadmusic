@@ -1,22 +1,39 @@
 "use client";
 
+import { useState } from "react";
 import { usePlayer } from "@/context/PlayerProvider";
 import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
+import FullscreenPlayer from "./FullscreenPlayer";
 
 /** The persistent now-playing bar, lifted out of Catalog into the (listen)
  *  layout. It consumes the global player, so it stays live and docked across
- *  navigation. Shows the live meter: balance + this-session cost. */
+ *  navigation. Shows the live meter: balance + this-session cost.
+ *  On phones, tapping the track info expands into the full-screen player. */
 export default function PlayerBar() {
   const { current, playing, cur, dur, billedSec, balanceCents, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
   const cost = current ? (billedSec / 60) * current.pricePerMinuteCents / 100 : 0;
 
+  // Tapping the track info opens the full-screen view — phones only; on wider
+  // screens the bar already shows everything, so the gesture is a no-op there.
+  const expand = () => {
+    if (current && window.matchMedia("(max-width: 640px)").matches) setExpanded(true);
+  };
+
   return (
     <footer className="lx-player" data-empty={!current}>
-      <div className="lx-player-left">
+      <div
+        className="lx-player-left"
+        onClick={expand}
+        role={current ? "button" : undefined}
+        tabIndex={current ? 0 : undefined}
+        aria-label={current ? "Open full-screen player" : undefined}
+        onKeyDown={(e) => { if (current && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); expand(); } }}
+      >
         {current ? (
           <>
             <CoverImage className="lx-player-cover" coverKey={current.coverImageKey} loading="eager" />
@@ -73,6 +90,8 @@ export default function PlayerBar() {
           <span className="lx-meter-cost">${cost.toFixed(4)}<small>session</small></span>
         </button>
       </div>
+
+      <FullscreenPlayer open={expanded} onClose={() => setExpanded(false)} />
     </footer>
   );
 }
