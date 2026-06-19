@@ -1,48 +1,73 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from "react";
+import { createPortal } from "react-dom";
 import { useLibrary } from "@/context/LibraryProvider";
 
+const MENU_W = 220;
+const MENU_H = 320; // upper bound used only to decide up/down placement
+const GUTTER = 8; // keep this far from any viewport edge
+const PLAYER_BAR = 96; // reserve room for the fixed player bar at the bottom
+
 /** A "⋯" affordance that opens a small menu to add this track to a playlist
- *  (or create a new one). Reads the playlist list from shared library state. */
+ *  (or create a new one). The menu is rendered in a portal with fixed
+ *  positioning so it can never be clipped by, or painted under, the card /
+ *  row it lives in — it's anchored to the trigger and clamped on screen. */
 export default function AddToPlaylist({ trackId }: { trackId: string }) {
   const { playlists, addToPlaylist, createPlaylist } = useLibrary();
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [done, setDone] = useState<string | null>(null);
-  // Where the menu opens relative to its trigger, picked so it always stays
-  // on screen (left-column cards would otherwise slide off the left edge,
-  // top rows off the top). Recomputed each time the menu is opened.
-  const [place, setPlace] = useState<{ h: "left" | "right"; v: "up" | "down" }>({ h: "left", v: "down" });
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<CSSProperties | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    window.addEventListener("mousedown", onDoc);
-    window.addEventListener("keydown", onKey);
-    return () => { window.removeEventListener("mousedown", onDoc); window.removeEventListener("keydown", onKey); };
-  }, [open]);
+  function place() {
+    const r = btnRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // Horizontal: prefer aligning the menu's left edge to the trigger, flip to
+    // right-aligned near the right edge, then clamp inside the viewport.
+    let left = r.left + MENU_W <= vw - GUTTER ? r.left : r.right - MENU_W;
+    left = Math.min(Math.max(left, GUTTER), vw - MENU_W - GUTTER);
+    // Vertical: open downward if it fits above the player bar, else upward.
+    const down = r.bottom + MENU_H <= vh - PLAYER_BAR;
+    const style: CSSProperties = { position: "fixed", left };
+    if (down) style.top = r.bottom + 6;
+    else style.bottom = vh - r.top + 6;
+    setPos(style);
+  }
 
   function toggle(e: ReactMouseEvent) {
     e.stopPropagation();
-    setOpen((v) => {
-      if (!v) {
-        const r = btnRef.current?.getBoundingClientRect();
-        if (r) {
-          const MENU_W = 220, MENU_H = 320, BAR = 96; // approx menu size + reserved player-bar gutter
-          setPlace({
-            h: r.left + MENU_W <= window.innerWidth ? "left" : "right",
-            v: r.bottom + MENU_H <= window.innerHeight - BAR ? "down" : "up",
-          });
-        }
-      }
-      return !v;
-    });
+    if (!open) place();
+    setOpen((v) => !v);
   }
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    // Fixed positioning is relative to the viewport, so reposition-or-close
+    // when the page scrolls or resizes underneath the open menu.
+    window.addEventListener("mousedown", onDoc);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("mousedown", onDoc);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [open]);
 
   async function add(id: string) {
     await addToPlaylist(id, trackId);
@@ -60,7 +85,7 @@ export default function AddToPlaylist({ trackId }: { trackId: string }) {
   }
 
   return (
-    <div className="lx-menu-wrap" ref={ref}>
+    <div className="lx-menu-wrap">
       <button
         ref={btnRef}
         className="lx-menu-btn"
@@ -74,8 +99,8 @@ export default function AddToPlaylist({ trackId }: { trackId: string }) {
           <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
         </svg>
       </button>
-      {open && (
-        <div className="lx-menu" role="menu" data-h={place.h} data-v={place.v} onClick={(e) => e.stopPropagation()}>
+      {open && pos && typeof document !== "undefined" && createPortal(
+        <div ref={menuRef} className="lx-menu" role="menu" style={pos} onClick={(e) => e.stopPropagation()}>
           <div className="lx-menu-head">Add to playlist</div>
           <div className="lx-menu-list">
             {playlists.map((p) => (
@@ -100,7 +125,8 @@ export default function AddToPlaylist({ trackId }: { trackId: string }) {
           ) : (
             <button className="lx-menu-item lx-menu-new" onClick={() => setCreating(true)}>+ New playlist</button>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
