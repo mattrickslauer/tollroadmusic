@@ -75,6 +75,11 @@ const STATEMENTS = [
   `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS auth_method   TEXT`,
   `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS claimed_at    TIMESTAMPTZ`,
   `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ`,
+  // Referral attribution — the account whose share link brought this listener in
+  // (resolved from ?r=<handle> on a shared playlist at sign-up). Nullable; set
+  // once, on the claim that creates the account. No wallet credit yet.
+  `ALTER TABLE accounts ADD COLUMN IF NOT EXISTS referred_by   UUID`,
+  `CREATE INDEX ASYNC IF NOT EXISTS accounts_by_handle ON accounts (handle)`,
   `CREATE INDEX ASYNC IF NOT EXISTS accounts_by_email ON accounts (email)`,
   // An account can hold BOTH profiles at once. Artist profile = an artists row
   // linked back to its account (demo-seeded artists leave account_id null).
@@ -164,6 +169,9 @@ const STATEMENTS = [
      created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
   `CREATE INDEX ASYNC IF NOT EXISTS playlists_by_account ON playlists (account_id, created_at)`,
+  // Playlist visibility — NULL/absent is treated as 'private' (DSQL ADD COLUMN
+  // cannot carry a DEFAULT). 'public' playlists are readable unauthenticated.
+  `ALTER TABLE playlists ADD COLUMN IF NOT EXISTS visibility TEXT`,
   // Playlist membership — ordered tracks within a playlist.
   `CREATE TABLE IF NOT EXISTS playlist_tracks (
      playlist_id UUID NOT NULL,

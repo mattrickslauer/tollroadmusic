@@ -9,6 +9,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export interface Account {
   id: string;
   displayName: string;
+  handle?: string | null;
 }
 export interface Profiles {
   artist: { id: string; name: string; genre: string | null } | null;
@@ -67,15 +68,27 @@ export async function verifyOtp(
   email: string,
   code: string,
   anonId: string,
+  ref?: string,
 ): Promise<{ account: Account; profiles: Profiles; claimed: boolean } | { error: string }> {
   const res = await fetch("/api/v1/auth/otp/verify", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, code, anonId }),
+    body: JSON.stringify({ email, code, anonId, ref }),
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) return { error: data?.error ?? `error ${res.status}` };
   return data as { account: Account; profiles: Profiles; claimed: boolean };
+}
+
+const REF_KEY = "tollroad_ref";
+export function saveRef(ref: string): void {
+  try { if (ref) localStorage.setItem(REF_KEY, ref); } catch {}
+}
+export function loadRef(): string {
+  try { return localStorage.getItem(REF_KEY) ?? ""; } catch { return ""; }
+}
+export function clearRef(): void {
+  try { localStorage.removeItem(REF_KEY); } catch {}
 }
 
 /** Clear the session. */

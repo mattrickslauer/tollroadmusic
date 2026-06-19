@@ -7,6 +7,7 @@ import type {
   LibraryTrack,
   PlaylistDetail,
   PlaylistSummary,
+  PublicPlaylist,
   HistoryRow,
   StreamGrant,
 } from "./types";
@@ -82,6 +83,9 @@ export const toggleLike = (trackId: string) => req<{ liked: boolean }>("/library
 export const getPlaylists = () => req<{ playlists: PlaylistSummary[] }>("/playlists");
 export const createPlaylist = (name: string) => req<PlaylistSummary>("/playlists", body({ name }));
 export const getPlaylist = (id: string) => req<PlaylistDetail>(`/playlists/${encodeURIComponent(id)}`);
+export const setPlaylistVisibility = (id: string, visibility: "public" | "private") =>
+  req<{ visibility: "public" | "private" }>(`/playlists/${encodeURIComponent(id)}/visibility`, body({ visibility }));
+export const getPublicPlaylist = (id: string) => req<PublicPlaylist>(`/playlists/${encodeURIComponent(id)}/public`);
 export const deletePlaylist = (id: string) => req<{ deleted: boolean }>(`/playlists/${encodeURIComponent(id)}`, { method: "DELETE" });
 export const addToPlaylist = (id: string, trackId: string) => req<{ added: boolean }>(`/playlists/${encodeURIComponent(id)}/tracks`, body({ trackId }));
 export const removeFromPlaylist = (id: string, trackId: string) =>
@@ -92,4 +96,4 @@ export const recordPlay = (trackId: string) => req<{ ok: boolean }>("/recents", 
 // --- Artist ----------------------------------------------------------------
 export const createArtist = (fields: Record<string, unknown>) => req<{ id: string; name: string }>("/artists", body(fields));
 
-export type { Catalog, CatalogTrack, LibraryTrack, PlaylistSummary, PlaylistDetail, HistoryRow, StreamGrant };
+export type { Catalog, CatalogTrack, LibraryTrack, PlaylistSummary, PlaylistDetail, PublicPlaylist, HistoryRow, StreamGrant };

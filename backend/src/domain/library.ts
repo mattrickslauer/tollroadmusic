@@ -93,6 +93,11 @@ export interface PlaylistSummary {
   coverTrackId: string | null;
   trackCount: number;
   createdAt: string;
+  visibility: "public" | "private";
+}
+
+function asVisibility(v: unknown): "public" | "private" {
+  return v === "public" ? "public" : "private";
 }
 
 export async function listPlaylists(accountId: string): Promise<PlaylistSummary[]> {
@@ -101,9 +106,10 @@ export async function listPlaylists(accountId: string): Promise<PlaylistSummary[
     name: string;
     cover_track_id: string | null;
     created_at: string;
+    visibility: string | null;
     n: string;
   }>(
-    `SELECT p.id, p.name, p.cover_track_id, p.created_at,
+    `SELECT p.id, p.name, p.cover_track_id, p.created_at, p.visibility,
             (SELECT COUNT(*) FROM playlist_tracks pt WHERE pt.playlist_id = p.id) AS n
        FROM playlists p
       WHERE p.account_id = $1
@@ -116,6 +122,7 @@ export async function listPlaylists(accountId: string): Promise<PlaylistSummary[
     coverTrackId: r.cover_track_id,
     trackCount: Number(r.n),
     createdAt: r.created_at,
+    visibility: asVisibility(r.visibility),
   }));
 }
 
@@ -126,7 +133,7 @@ export async function createPlaylist(accountId: string, name: string): Promise<P
     `INSERT INTO playlists (id, account_id, name) VALUES ($1, $2, $3) RETURNING created_at`,
     [id, accountId, clean],
   );
-  return { id, name: clean, coverTrackId: null, trackCount: 0, createdAt: res.rows[0]!.created_at };
+  return { id, name: clean, coverTrackId: null, trackCount: 0, createdAt: res.rows[0]!.created_at, visibility: "private" };
 }
 
 export async function deletePlaylist(accountId: string, playlistId: string): Promise<boolean> {
@@ -145,8 +152,8 @@ export interface PlaylistDetail extends PlaylistSummary {
 }
 
 export async function getPlaylist(accountId: string, playlistId: string): Promise<PlaylistDetail | null> {
-  const head = await query<{ name: string; cover_track_id: string | null; created_at: string }>(
-    `SELECT name, cover_track_id, created_at FROM playlists WHERE id = $1 AND account_id = $2`,
+  const head = await query<{ name: string; cover_track_id: string | null; created_at: string; visibility: string | null }>(
+    `SELECT name, cover_track_id, created_at, visibility FROM playlists WHERE id = $1 AND account_id = $2`,
     [playlistId, accountId],
   );
   const h = head.rows[0];
@@ -166,7 +173,69 @@ export async function getPlaylist(accountId: string, playlistId: string): Promis
     coverTrackId: h.cover_track_id,
     trackCount: tracksR.rowCount ?? 0,
     createdAt: h.created_at,
+    visibility: asVisibility(h.visibility),
     tracks: tracksR.rows.map(mapTrack),
+  };
+}
+
+export async function setPlaylistVisibility(
+  accountId: string,
+  playlistId: string,
+  visibility: "public" | "private",
+): Promise<boolean> {
+  // Ownership enforced in the WHERE clause.
+  const upd = await query(`UPDATE playlists SET visibility = $3 WHERE id = $1 AND account_id = $2`, [
+    playlistId,
+    accountId,
+    visibility,
+  ]);
+  return !!upd.rowCount;
+}
+
+export interface PublicPlaylist extends PlaylistDetail {
+  ownerHandle: string | null;
+  ownerName: string;
+}
+
+/** Read a playlist with NO account scoping — only succeeds if it is public.
+ *  Returns the owner's handle (the referral code) and display name. */
+export async function getPublicPlaylist(playlistId: string): Promise<PublicPlaylist | null> {
+  const head = await query<{
+    name: string;
+    cover_track_id: string | null;
+    created_at: string;
+    owner_handle: string | null;
+    owner_name: string;
+  }>(
+    `SELECT p.name, p.cover_track_id, p.created_at,
+            acc.handle AS owner_handle,
+            COALESCE(acc.display_name, 'A listener') AS owner_name
+       FROM playlists p
+       JOIN accounts acc ON acc.user_id = p.account_id
+      WHERE p.id = $1 AND p.visibility = 'public'`,
+    [playlistId],
+  );
+  const h = head.rows[0];
+  if (!h) return null;
+  const tracksR = await query(
+    `SELECT ${TRACK_COLS}, pt.position
+       FROM playlist_tracks pt
+       JOIN tracks t  ON t.id = pt.track_id
+       JOIN artists a ON a.id = t.artist_id
+      WHERE pt.playlist_id = $1
+      ORDER BY pt.position ASC, pt.added_at ASC`,
+    [playlistId],
+  );
+  return {
+    id: playlistId,
+    name: h.name,
+    coverTrackId: h.cover_track_id,
+    trackCount: tracksR.rowCount ?? 0,
+    createdAt: h.created_at,
+    visibility: "public",
+    tracks: tracksR.rows.map(mapTrack),
+    ownerHandle: h.owner_handle,
+    ownerName: h.owner_name,
   };
 }
 

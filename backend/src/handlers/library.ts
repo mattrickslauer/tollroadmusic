@@ -87,6 +87,27 @@ export const removePlaylistTrack: Handler = async (req) => {
   return okd ? ok({ removed: true }) : error(404, "no such playlist");
 };
 
+export const postPlaylistVisibility: Handler = async (req) => {
+  const s = await guard(req);
+  const id = req.params.playlistId;
+  if (!id) return error(400, "playlistId required");
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const visibility = b.visibility === "public" ? "public" : b.visibility === "private" ? "private" : null;
+  if (!visibility) return error(400, "visibility must be 'public' or 'private'");
+  const okd = await lib.setPlaylistVisibility(s.sub, id, visibility);
+  return okd ? ok({ visibility }) : error(404, "no such playlist");
+};
+
+// Public, unauthenticated read — only returns playlists marked public.
+export const getPublicPlaylist: Handler = async (req) => {
+  if (!dsqlConfigured()) throw new HttpError(503, "library not configured");
+  const id = req.params.playlistId;
+  if (!id) return error(400, "playlistId required");
+  const pl = await lib.getPublicPlaylist(id);
+  if (!pl) return error(404, "no such playlist");
+  return ok(pl);
+};
+
 // --- Recently played -------------------------------------------------------
 
 export const getRecents: Handler = async (req) => {

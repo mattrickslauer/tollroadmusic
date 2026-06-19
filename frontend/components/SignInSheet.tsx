@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { startOtp, verifyOtp, loadAnonId, type Me } from "@/lib/auth";
+import { startOtp, verifyOtp, loadAnonId, loadRef, clearRef, type Me } from "@/lib/auth";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RESEND_COOLDOWN = 30; // seconds
@@ -65,7 +65,7 @@ export default function SignInSheet({ reason, onClose, onSignedIn }: Props) {
     if (!codeValid || pending) return;
     setPending(true);
     setError(null);
-    const res = await verifyOtp(email.trim(), code, loadAnonId());
+    const res = await verifyOtp(email.trim(), code, loadAnonId(), loadRef());
     setPending(false);
     if ("error" in res) {
       setError(res.error);
@@ -76,6 +76,7 @@ export default function SignInSheet({ reason, onClose, onSignedIn }: Props) {
     // matter which sheet triggered the sign-in. `claimed` is true on a brand-new
     // account — i.e. a first sign-up.
     window.dispatchEvent(new CustomEvent("tollroad:signedin", { detail: res }));
+    clearRef();
     onSignedIn({ account: res.account, profiles: res.profiles });
   }
 

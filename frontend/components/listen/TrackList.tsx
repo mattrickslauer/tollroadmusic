@@ -12,15 +12,19 @@ interface Props {
   /** Optional per-row remove action (e.g. remove from playlist / unlike list). */
   onRemove?: (trackId: string) => void;
   removeLabel?: string;
+  /** Optional play override — when set, row clicks call this instead of the
+   *  global player (e.g. a logged-out public view that opens the sign-in sheet). */
+  onPlay?: (track: CatalogTrack, queue: CatalogTrack[]) => void;
 }
 
 /** A dense, numbered list of tracks (Liked Songs, playlists). Rows dispatch
  *  play into the global player with the list as the queue. */
-export default function TrackList({ tracks, onRemove, removeLabel = "Remove" }: Props) {
-  const { current, playing, play } = usePlayer();
+export default function TrackList({ tracks, onRemove, removeLabel = "Remove", onPlay }: Props) {
+  const { current, playing, play: playerPlay } = usePlayer();
   if (tracks.length === 0) return <p className="lx-empty">Nothing here yet.</p>;
 
   const queue: CatalogTrack[] = tracks;
+  const play = onPlay ?? playerPlay;
 
   return (
     <div className="lx-rows" role="list">

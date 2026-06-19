@@ -6,7 +6,7 @@ import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured, createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from "../lib/jwt.ts";
 import { startOtp, verifyOtp } from "../domain/otp.ts";
 import { sendOtpEmail } from "../domain/email.ts";
-import { claimOrSignIn, ensureListenerProfile, getProfiles } from "../domain/accounts.ts";
+import { claimOrSignIn, ensureListenerProfile, getProfiles, getAccountById, recordReferral } from "../domain/accounts.ts";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CODE_RE = /^\d{6}$/;
@@ -39,6 +39,7 @@ export const otpVerify: Handler = async (req) => {
   const code = asString(b.code);
   const anonId = typeof b.anonId === "string" ? b.anonId : undefined;
   const displayName = typeof b.displayName === "string" ? b.displayName : undefined;
+  const ref = typeof b.ref === "string" ? b.ref : undefined;
 
   if (!EMAIL_RE.test(email)) return error(400, "valid email required");
   if (!CODE_RE.test(code)) return error(400, "6-digit code required");
@@ -48,6 +49,7 @@ export const otpVerify: Handler = async (req) => {
 
   const { account, claimed } = await claimOrSignIn(anonId ?? "", { email, displayName, authMethod: "email_otp" });
   await ensureListenerProfile(account.id);
+  if (claimed && ref) await recordReferral(account.id, ref);
   const profiles = await getProfiles(account.id);
   const token = await createSessionToken(account);
 
@@ -63,12 +65,15 @@ export const me: Handler = async (req) => {
   const session = authConfigured ? await getSession(req) : null;
   if (!session) return ok({ account: null, profiles: null, authConfigured });
   let profiles = null;
+  let handle: string | null = null;
   try {
-    profiles = await getProfiles(session.sub);
+    const [p, acc] = await Promise.all([getProfiles(session.sub), getAccountById(session.sub)]);
+    profiles = p;
+    handle = acc?.handle ?? null;
   } catch (err) {
     console.error("me: profiles read failed", err);
   }
-  return ok({ account: { id: session.sub, displayName: session.name }, profiles, authConfigured });
+  return ok({ account: { id: session.sub, displayName: session.name, handle }, profiles, authConfigured });
 };
 
 export const logout: Handler = async () => ({

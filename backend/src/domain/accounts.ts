@@ -66,6 +66,22 @@ export function getAccountById(id: string): Promise<Account | null> {
 export function getAccountByEmail(email: string): Promise<Account | null> {
   return fetchOne("email = $1", [email.toLowerCase()]);
 }
+export function getAccountByHandle(handle: string): Promise<Account | null> {
+  return fetchOne("handle = $1", [handle]);
+}
+
+/** Record who referred a freshly-created account. Resolves the referrer's handle
+ *  → account; no-op if unknown, self, or already set. Attribution only. */
+export async function recordReferral(newAccountId: string, referrerHandle: string): Promise<void> {
+  const ref = referrerHandle.trim();
+  if (!ref) return;
+  const referrer = await getAccountByHandle(ref);
+  if (!referrer || referrer.id === newAccountId) return;
+  await query(`UPDATE accounts SET referred_by = $2 WHERE user_id = $1 AND referred_by IS NULL`, [
+    newAccountId,
+    referrer.id,
+  ]).catch(() => {});
+}
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastErr: unknown;

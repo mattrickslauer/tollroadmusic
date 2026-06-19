@@ -227,6 +227,20 @@
   font-size: 0.86rem;
 }
 .lx-delete:hover { color: #ff8a8a; border-color: rgba(255, 138, 138, 0.4); }
+.lx-vis,
+.lx-share {
+  border: 1px solid var(--app-line);
+  background: transparent;
+  color: var(--app-text-dim);
+  padding: 10px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+.lx-vis:hover,
+.lx-share:hover { color: var(--app-text); border-color: var(--app-accent); }
+.lx-pub-badge { margin-left: 6px; font-size: 0.78em; opacity: 0.7; }
 
 /* ---------- filters ---------- */
 .lx-filters { display: flex; flex-direction: column; gap: 14px; margin-bottom: 22px; }

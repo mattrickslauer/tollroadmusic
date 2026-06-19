@@ -40,9 +40,12 @@ export type PlaylistSummary = {
   coverTrackId: string | null;
   trackCount: number;
   createdAt: string;
+  visibility: "public" | "private";
 };
 
 export type PlaylistDetail = PlaylistSummary & { tracks: LibraryTrack[] };
+
+export type PublicPlaylist = PlaylistDetail & { ownerHandle: string | null; ownerName: string };
 
 export type HistoryRow = {
   trackId: string;

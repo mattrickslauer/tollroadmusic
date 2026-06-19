@@ -60,6 +60,8 @@ const ROUTES: Route[] = [
   compile("GET", "/playlists", library.getPlaylists),
   compile("POST", "/playlists", library.postPlaylist),
   compile("GET", "/playlists/{playlistId}", library.getPlaylist),
+  compile("GET", "/playlists/{playlistId}/public", library.getPublicPlaylist),
+  compile("POST", "/playlists/{playlistId}/visibility", library.postPlaylistVisibility),
   compile("DELETE", "/playlists/{playlistId}", library.deletePlaylist),
   compile("POST", "/playlists/{playlistId}/tracks", library.addPlaylistTrack),
   compile("DELETE", "/playlists/{playlistId}/tracks", library.removePlaylistTrack),
