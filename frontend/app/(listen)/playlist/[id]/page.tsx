@@ -8,6 +8,7 @@ import type { PlaylistDetail } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
 import { useLibrary } from "@/context/LibraryProvider";
 import TrackList from "@/components/listen/TrackList";
+import { SkeletonHero, SkeletonTrackList } from "@/components/listen/Skeleton";
 import * as api from "@/lib/api/client";
 
 export default function PlaylistPage() {
@@ -36,7 +37,14 @@ export default function PlaylistPage() {
   }
 
   if (missing) return <p className="lx-empty">That playlist doesn&apos;t exist.</p>;
-  if (!pl) return <p className="lx-empty">Loading…</p>;
+  if (!pl) {
+    return (
+      <>
+        <SkeletonHero />
+        <SkeletonTrackList />
+      </>
+    );
+  }
 
   return (
     <>

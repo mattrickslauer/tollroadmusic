@@ -7,6 +7,7 @@ import type { LibraryTrack } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
 import { useLibrary } from "@/context/LibraryProvider";
 import TrackList from "@/components/listen/TrackList";
+import { SkeletonHero, SkeletonTrackList } from "@/components/listen/Skeleton";
 import * as api from "@/lib/api/client";
 
 export default function LikedPage() {
@@ -23,6 +24,16 @@ export default function LikedPage() {
     setTracks((prev) => (prev ? prev.filter((t) => t.id !== trackId) : prev));
   }
 
+  // Still loading: show the page shell (hero + list) rather than real or fake data.
+  if (tracks === null) {
+    return (
+      <>
+        <SkeletonHero liked />
+        <SkeletonTrackList />
+      </>
+    );
+  }
+
   return (
     <>
       <header className="lx-head lx-head-hero">
@@ -32,17 +43,17 @@ export default function LikedPage() {
         <div>
           <span className="lx-eyebrow">Playlist</span>
           <h1 className="lx-h1">Liked Songs</h1>
-          <p className="lx-sub">{tracks ? `${tracks.length} song${tracks.length === 1 ? "" : "s"}` : "Loading…"}</p>
-          {tracks && tracks.length > 0 && (
+          <p className="lx-sub">{tracks.length} song{tracks.length === 1 ? "" : "s"}</p>
+          {tracks.length > 0 && (
             <button className="lx-playall" onClick={() => play(tracks[0], tracks)}>▶ Play all</button>
           )}
         </div>
       </header>
 
-      {tracks && tracks.length === 0 ? (
+      {tracks.length === 0 ? (
         <p className="lx-empty">No liked songs yet — tap the heart on any track.</p>
       ) : (
-        tracks && <TrackList tracks={tracks} onRemove={unlike} removeLabel="Remove from Liked Songs" />
+        <TrackList tracks={tracks} onRemove={unlike} removeLabel="Remove from Liked Songs" />
       )}
     </>
   );

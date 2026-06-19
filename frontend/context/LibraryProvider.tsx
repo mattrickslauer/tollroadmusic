@@ -15,6 +15,9 @@ interface LibraryState {
   /** Optimistically toggle a like; reconciles with the server response. */
   toggleLike: (trackId: string) => Promise<void>;
   playlists: PlaylistSummary[];
+  /** False until the initial likes + playlists load settles, so consumers can
+   *  show a loading shell instead of an empty grid. */
+  ready: boolean;
   refreshPlaylists: () => void;
   createPlaylist: (name: string) => Promise<PlaylistSummary | null>;
   addToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
@@ -31,10 +34,12 @@ export function useLibrary(): LibraryState {
 export default function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    api.getLikes().then((r) => setLikedIds(new Set(r.likedIds))).catch(() => {});
-    api.getPlaylists().then((r) => setPlaylists(r.playlists)).catch(() => {});
+    const likes = api.getLikes().then((r) => setLikedIds(new Set(r.likedIds))).catch(() => {});
+    const pls = api.getPlaylists().then((r) => setPlaylists(r.playlists)).catch(() => {});
+    Promise.allSettled([likes, pls]).then(() => setReady(true));
   }, []);
 
   const isLiked = useCallback((id: string) => likedIds.has(id), [likedIds]);
@@ -90,8 +95,8 @@ export default function LibraryProvider({ children }: { children: React.ReactNod
   }, [refreshPlaylists]);
 
   const value = useMemo<LibraryState>(
-    () => ({ likedIds, isLiked, toggleLike, playlists, refreshPlaylists, createPlaylist, addToPlaylist }),
-    [likedIds, isLiked, toggleLike, playlists, refreshPlaylists, createPlaylist, addToPlaylist],
+    () => ({ likedIds, isLiked, toggleLike, playlists, ready, refreshPlaylists, createPlaylist, addToPlaylist }),
+    [likedIds, isLiked, toggleLike, playlists, ready, refreshPlaylists, createPlaylist, addToPlaylist],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

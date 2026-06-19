@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLibrary } from "@/context/LibraryProvider";
 import PlaylistCard from "@/components/listen/PlaylistCard";
+import { Sk, SkeletonPlaylistCard } from "@/components/listen/Skeleton";
 import * as api from "@/lib/api/client";
 
 export default function LibraryPage() {
-  const { playlists, createPlaylist } = useLibrary();
+  const { playlists, ready, createPlaylist } = useLibrary();
   const [likedCount, setLikedCount] = useState<number | null>(null);
   const [name, setName] = useState("");
 
@@ -49,12 +50,18 @@ export default function LibraryPage() {
           </span>
           <div className="lx-card-meta">
             <div className="lx-card-title">Liked Songs</div>
-            <div className="lx-card-artist">{likedCount ?? "—"} song{likedCount === 1 ? "" : "s"}</div>
+            <div className="lx-card-artist">
+              {likedCount === null ? (
+                <Sk h={11} w={56} radius={4} style={{ display: "inline-block", verticalAlign: "middle" }} />
+              ) : (
+                <>{likedCount} song{likedCount === 1 ? "" : "s"}</>
+              )}
+            </div>
           </div>
         </Link>
-        {playlists.map((p) => (
-          <PlaylistCard key={p.id} playlist={p} />
-        ))}
+        {ready
+          ? playlists.map((p) => <PlaylistCard key={p.id} playlist={p} />)
+          : Array.from({ length: 5 }).map((_, i) => <SkeletonPlaylistCard key={i} />)}
       </div>
     </>
   );

@@ -5,17 +5,20 @@ import type { CatalogTrack, LibraryTrack } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
 import * as api from "@/lib/api/client";
 import CoverImage from "./CoverImage";
+import { SkeletonRail } from "./Skeleton";
 
 /** A horizontal rail of the listener's recently-played tracks, shown atop
  *  /browse. Refreshes when a new track starts so it stays current. */
 export default function RecentlyPlayedRail() {
   const { current, play } = usePlayer();
-  const [tracks, setTracks] = useState<LibraryTrack[]>([]);
+  // null = still loading; [] = loaded but nothing to show.
+  const [tracks, setTracks] = useState<LibraryTrack[] | null>(null);
 
   useEffect(() => {
-    api.getRecents().then((r) => setTracks(r.tracks)).catch(() => {});
+    api.getRecents().then((r) => setTracks(r.tracks)).catch(() => setTracks([]));
   }, [current?.id]);
 
+  if (tracks === null) return <SkeletonRail />;
   if (tracks.length === 0) return null;
   const queue: CatalogTrack[] = tracks;
 

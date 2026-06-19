@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
 import { useLibrary } from "@/context/LibraryProvider";
+import { Sk } from "./Skeleton";
 
 const NAV = [
   { href: "/browse", label: "Browse", icon: "home" },
@@ -31,7 +32,7 @@ function Icon({ name }: { name: string }) {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { playlists, createPlaylist } = useLibrary();
+  const { playlists, ready, createPlaylist } = useLibrary();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
@@ -98,16 +99,26 @@ export default function Sidebar() {
             </div>
           )}
           <div className="lx-pl-list">
-            {playlists.map((p) => {
-              const href = `/playlist/${p.id}`;
-              return (
-                <Link key={p.id} href={href} className="lx-pl-item" data-on={pathname === href} onClick={close}>
-                  {p.name}
-                  <span className="lx-pl-count">{p.trackCount}</span>
-                </Link>
-              );
-            })}
-            {playlists.length === 0 && !creating && <p className="lx-pl-empty">Create your first playlist.</p>}
+            {!ready ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="lx-pl-item lx-sk-pl">
+                  <Sk h={12} w={`${70 - i * 8}%`} radius={4} />
+                </div>
+              ))
+            ) : (
+              <>
+                {playlists.map((p) => {
+                  const href = `/playlist/${p.id}`;
+                  return (
+                    <Link key={p.id} href={href} className="lx-pl-item" data-on={pathname === href} onClick={close}>
+                      {p.name}
+                      <span className="lx-pl-count">{p.trackCount}</span>
+                    </Link>
+                  );
+                })}
+                {playlists.length === 0 && !creating && <p className="lx-pl-empty">Create your first playlist.</p>}
+              </>
+            )}
           </div>
         </div>
       </aside>

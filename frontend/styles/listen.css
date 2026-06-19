@@ -748,3 +748,64 @@
 .lx-full-play svg { width: 30px !important; height: 30px !important; }
 
 .lx-full-meter { align-self: center; }
+
+/* ---------- loading shells (skeletons) ----------------------------------- */
+/* A shimmering block used to stand in for any not-yet-loaded value. Shows no
+   data — only motion — so a listener never sees a fake/placeholder value. */
+.lx-sk {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: var(--app-elev);
+  border-radius: 6px;
+}
+.lx-sk::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--app-elev-hi) 50%,
+    transparent 100%
+  );
+  animation: lx-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes lx-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* A square that fills its card/rail slot (cover art stand-in). */
+.lx-sk-square { width: 100%; aspect-ratio: 1; }
+
+/* Skeleton cards/rows are inert: kill the hover lift + pointer affordances. */
+.lx-sk-card:hover { background: var(--app-surface); transform: none; }
+.lx-sk-row:hover { background: transparent; }
+.lx-sk-card, .lx-sk-row, .lx-sk-item { cursor: default; pointer-events: none; }
+
+/* Rail item is normally a <button>; as a <div> it needs the same inner gap. */
+.lx-sk-item { gap: 8px; }
+
+/* Hero art stand-in: same footprint as .lx-hero-art but flat (no gradient). */
+.lx-sk-hero-art { background: var(--app-elev); box-shadow: none; }
+.lx-sk-hero-lines { display: flex; flex-direction: column; }
+
+/* Accessible label that's visually hidden but read by screen readers. */
+.lx-sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Respect reduced-motion: hold a static block instead of shimmering. */
+@media (prefers-reduced-motion: reduce) {
+  .lx-sk::after { animation: none; }
+}
+
+/* Sidebar playlist list, loading state. */
+.lx-sk-pl { pointer-events: none; display: flex; align-items: center; }
