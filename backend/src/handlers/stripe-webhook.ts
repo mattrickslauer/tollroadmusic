@@ -5,6 +5,7 @@ import { type Handler, header } from "../lib/http.ts";
 import { dsqlConfigured } from "../lib/dsql.ts";
 import { stripe, stripeConfigured, webhookSecret } from "../domain/stripe.ts";
 import { creditTopup } from "../domain/billing.ts";
+import { notifyPayment } from "../domain/notify.ts";
 import type Stripe from "stripe";
 
 export const webhook: Handler = async (req) => {
@@ -29,18 +30,34 @@ export const webhook: Handler = async (req) => {
     const pi = event.data.object as Stripe.PaymentIntent;
     const meta = pi.metadata ?? {};
     if (meta.purpose === "wallet_topup" && meta.accountId) {
+      const method = meta.method === "card" ? "card" : "ach";
+      let result;
       try {
-        await creditTopup({
+        result = await creditTopup({
           accountId: meta.accountId,
           paymentRef: pi.id,
           amountCents: Number(meta.creditCents) || 0,
           feeCents: Number(meta.feeCents) || 0,
-          method: meta.method === "card" ? "card" : "ach",
+          method,
           status: pi.status,
         });
       } catch (err) {
         console.error("webhook credit failed", err);
         return { status: 500, raw: { contentType: "text/plain", data: "credit failed" } };
+      }
+      // Ping the Telegram group only on a fresh credit (creditTopup is
+      // idempotent on pi.id, so webhook redelivery / the ACH succeeded-after-
+      // processing event won't double-notify). Never throws — can't 500 the
+      // webhook and trigger a Stripe retry.
+      if (result.credited) {
+        await notifyPayment({
+          amount: `$${((Number(meta.creditCents) || 0) / 100).toFixed(2)}`,
+          method,
+          status: pi.status,
+          account: meta.accountId,
+          "new balance": `$${(result.balanceCents / 100).toFixed(2)}`,
+          ref: pi.id,
+        });
       }
     }
   }

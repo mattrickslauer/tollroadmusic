@@ -294,6 +294,12 @@ export class TollroadStack extends cdk.Stack {
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
       "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+      // Telegram sign-up notifications (backend/src/domain/notify.ts). No IAM
+      // needed — the bot is reached over plain HTTPS. Like the other secrets,
+      // supplied at deploy via -c and dropped on a plain redeploy, so keep them
+      // in backend/.env as the restore source.
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_CHAT_ID",
     ]) {
       const v = ctx(k);
       if (v) apiEnv[k] = v;

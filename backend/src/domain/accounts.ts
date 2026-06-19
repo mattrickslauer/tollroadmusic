@@ -5,6 +5,7 @@
 // `listener_profiles`).
 import { randomUUID } from "node:crypto";
 import { query } from "../lib/dsql.ts";
+import { notifySignup } from "./notify.ts";
 
 export interface Account {
   id: string;
@@ -129,7 +130,7 @@ export async function claimOrSignIn(
   const email = identity.email.toLowerCase();
   const { authMethod } = identity;
 
-  return withRetry(async () => {
+  const result = await withRetry(async () => {
     const existing = await getAccountByEmail(email);
     if (existing) {
       await query(`UPDATE accounts SET last_login_at = now() WHERE user_id = $1`, [existing.id]);
@@ -166,6 +167,18 @@ export async function claimOrSignIn(
     if (!winner) throw new Error("claim failed and no existing account found");
     return { account: winner, claimed: false };
   });
+
+  // New listener account claimed for the first time — ping the Telegram group.
+  // Awaited (Lambda freezes the event loop after the handler returns) but never
+  // throws, so a notification failure can't break sign-in.
+  if (result.claimed) {
+    await notifySignup("user", {
+      email: result.account.email,
+      name: result.account.displayName,
+      id: result.account.id,
+    });
+  }
+  return result;
 }
 
 // --- Profiles --------------------------------------------------------------
@@ -215,5 +228,12 @@ export async function createArtistProfile(
      RETURNING id, name, genre`,
     [id, accountId, fields.name, fields.email, fields.genre, fields.location, fields.website, fields.bio],
   );
+  await notifySignup("artist", {
+    name: fields.name,
+    email: fields.email,
+    genre: fields.genre,
+    location: fields.location,
+    accountId,
+  });
   return res.rows[0]!;
 }
