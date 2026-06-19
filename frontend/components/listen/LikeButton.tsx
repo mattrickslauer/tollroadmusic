@@ -16,7 +16,7 @@ export default function LikeButton({ trackId, size = 18 }: { trackId: string; si
       aria-pressed={liked}
       title={liked ? "Liked" : "Like"}
     >
-      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <svg width={size} height={size} viewBox="-2 -2 28 28" aria-hidden="true">
         <path
           d="M12 21s-7.5-4.6-10-9.2C.6 9.2 1.6 5.5 5 4.6c2-.5 3.8.5 5 2 .9-1.4 2.8-2.5 4.8-2 3.4.9 4.4 4.6 3 7.2C19.5 16.4 12 21 12 21z"
           fill={liked ? "currentColor" : "none"}

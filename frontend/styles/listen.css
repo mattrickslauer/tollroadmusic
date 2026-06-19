@@ -369,18 +369,17 @@
 .lx-eq i:nth-child(3) { animation-delay: -0.8s; }
 @keyframes lxEq { 0%, 100% { height: 5px; } 50% { height: 16px; } }
 
-/* like + menu controls */
-.lx-like { border: none; background: none; color: var(--app-text-faint); cursor: pointer; padding: 2px; line-height: 0; transition: color 0.15s, transform 0.12s; }
-.lx-like:hover { color: var(--app-text); transform: scale(1.1); }
+/* like + menu controls — sized for a comfortable tap target (>=30px) while
+   the icon itself stays small; the extra padding is centered via flex. */
+.lx-like { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 30px; border: none; background: none; color: var(--app-text-faint); cursor: pointer; padding: 4px; border-radius: 50%; line-height: 0; transition: color 0.15s, transform 0.12s, background 0.15s; }
+.lx-like:hover { color: var(--app-text); background: var(--app-surface-2); transform: scale(1.1); }
 .lx-like[data-on="true"] { color: #ff5a9e; }
 
 .lx-menu-wrap { position: relative; line-height: 0; }
-.lx-menu-btn { border: none; background: none; color: var(--app-text-faint); cursor: pointer; padding: 2px; line-height: 0; }
-.lx-menu-btn:hover { color: var(--app-text); }
+.lx-menu-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 30px; border: none; background: none; color: var(--app-text-faint); cursor: pointer; padding: 4px; border-radius: 50%; line-height: 0; transition: color 0.15s, background 0.15s; }
+.lx-menu-btn:hover { color: var(--app-text); background: var(--app-surface-2); }
 .lx-menu {
   position: absolute;
-  right: 0;
-  bottom: calc(100% + 6px);
   z-index: 50;
   width: 220px;
   background: var(--app-elev);
@@ -389,6 +388,11 @@
   padding: 8px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
+/* Placement chosen at open time so the menu never leaves the viewport. */
+.lx-menu[data-h="left"] { left: 0; right: auto; }
+.lx-menu[data-h="right"] { right: 0; left: auto; }
+.lx-menu[data-v="down"] { top: calc(100% + 6px); bottom: auto; }
+.lx-menu[data-v="up"] { bottom: calc(100% + 6px); top: auto; }
 .lx-menu-head { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--app-text-faint); padding: 4px 8px; }
 .lx-menu-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; }
 .lx-menu-item { text-align: left; border: none; background: none; color: var(--app-text); padding: 8px; border-radius: 8px; cursor: pointer; font-size: 0.88rem; }
@@ -438,9 +442,9 @@
 .lx-row-artist { color: var(--app-text-dim); font-size: 0.84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lx-row-rate { color: var(--app-accent); font-family: var(--font-mono); font-size: 0.78rem; }
 .lx-row-dur { color: var(--app-text-faint); font-family: var(--font-mono); font-size: 0.82rem; }
-.lx-row-actions { display: flex; align-items: center; gap: 10px; }
-.lx-row-remove { border: none; background: none; color: var(--app-text-faint); font-size: 1.2rem; line-height: 1; cursor: pointer; }
-.lx-row-remove:hover { color: #ff8a8a; }
+.lx-row-actions { display: flex; align-items: center; gap: 6px; }
+.lx-row-remove { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 30px; border: none; background: none; color: var(--app-text-faint); font-size: 1.2rem; line-height: 1; border-radius: 50%; cursor: pointer; transition: color 0.15s, background 0.15s; }
+.lx-row-remove:hover { color: #ff8a8a; background: var(--app-surface-2); }
 
 /* ---------- recently-played rail ---------- */
 .lx-rail { margin-bottom: 30px; }
@@ -555,4 +559,11 @@
   .lx-main { margin-left: 72px; }
   .lx-player { left: 72px; grid-template-columns: 1fr 1.4fr auto; gap: 12px; padding: 0 12px; }
   .lx-content { padding: 20px 16px 0; }
+}
+
+/* very narrow: the per-minute rate is the first thing to drop so the title,
+   duration, and row actions keep room to breathe instead of overlapping. */
+@media (max-width: 560px) {
+  .lx-row { grid-template-columns: 32px 1fr auto auto; gap: 10px; }
+  .lx-row-rate { display: none; }
 }

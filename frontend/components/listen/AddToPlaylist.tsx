@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useLibrary } from "@/context/LibraryProvider";
 
 /** A "⋯" affordance that opens a small menu to add this track to a playlist
@@ -11,14 +11,38 @@ export default function AddToPlaylist({ trackId }: { trackId: string }) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [done, setDone] = useState<string | null>(null);
+  // Where the menu opens relative to its trigger, picked so it always stays
+  // on screen (left-column cards would otherwise slide off the left edge,
+  // top rows off the top). Recomputed each time the menu is opened.
+  const [place, setPlace] = useState<{ h: "left" | "right"; v: "up" | "down" }>({ h: "left", v: "down" });
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     window.addEventListener("mousedown", onDoc);
-    return () => window.removeEventListener("mousedown", onDoc);
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("mousedown", onDoc); window.removeEventListener("keydown", onKey); };
   }, [open]);
+
+  function toggle(e: ReactMouseEvent) {
+    e.stopPropagation();
+    setOpen((v) => {
+      if (!v) {
+        const r = btnRef.current?.getBoundingClientRect();
+        if (r) {
+          const MENU_W = 220, MENU_H = 320, BAR = 96; // approx menu size + reserved player-bar gutter
+          setPlace({
+            h: r.left + MENU_W <= window.innerWidth ? "left" : "right",
+            v: r.bottom + MENU_H <= window.innerHeight - BAR ? "down" : "up",
+          });
+        }
+      }
+      return !v;
+    });
+  }
 
   async function add(id: string) {
     await addToPlaylist(id, trackId);
@@ -38,17 +62,20 @@ export default function AddToPlaylist({ trackId }: { trackId: string }) {
   return (
     <div className="lx-menu-wrap" ref={ref}>
       <button
+        ref={btnRef}
         className="lx-menu-btn"
-        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        onClick={toggle}
         aria-label="Add to playlist"
         title="Add to playlist"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
           <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
         </svg>
       </button>
       {open && (
-        <div className="lx-menu" onClick={(e) => e.stopPropagation()}>
+        <div className="lx-menu" role="menu" data-h={place.h} data-v={place.v} onClick={(e) => e.stopPropagation()}>
           <div className="lx-menu-head">Add to playlist</div>
           <div className="lx-menu-list">
             {playlists.map((p) => (
