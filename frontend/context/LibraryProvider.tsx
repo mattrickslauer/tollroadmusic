@@ -44,12 +44,20 @@ export default function LibraryProvider({ children }: { children: React.ReactNod
 
   useEffect(() => { loadLibrary(); }, [loadLibrary]);
 
-  // Sign-out clears the previous user's liked tracks + playlists from context.
+  // Keep the library in sync with auth changes. Sign-in re-fetches the new
+  // listener's likes + playlists (otherwise the context keeps whatever loaded at
+  // mount — empty for a fresh visitor, or stale from a prior session). Sign-out
+  // clears the previous user's data immediately.
   useEffect(() => {
+    const onSignedIn = () => loadLibrary();
     const onSignedOut = () => { setLikedIds(new Set()); setPlaylists([]); };
+    window.addEventListener("tollroad:signedin", onSignedIn);
     window.addEventListener("tollroad:signedout", onSignedOut);
-    return () => window.removeEventListener("tollroad:signedout", onSignedOut);
-  }, []);
+    return () => {
+      window.removeEventListener("tollroad:signedin", onSignedIn);
+      window.removeEventListener("tollroad:signedout", onSignedOut);
+    };
+  }, [loadLibrary]);
 
   const isLiked = useCallback((id: string) => likedIds.has(id), [likedIds]);
 

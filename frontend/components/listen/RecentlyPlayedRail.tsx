@@ -15,7 +15,18 @@ export default function RecentlyPlayedRail() {
   const [tracks, setTracks] = useState<LibraryTrack[] | null>(null);
 
   useEffect(() => {
-    api.getRecents().then((r) => setTracks(r.tracks)).catch(() => setTracks([]));
+    const load = () => api.getRecents().then((r) => setTracks(r.tracks)).catch(() => setTracks([]));
+    load();
+    // Refresh when auth changes: a new sign-in has a different recents list, and
+    // sign-out should drop the prior listener's history.
+    const onSignedIn = () => load();
+    const onSignedOut = () => setTracks([]);
+    window.addEventListener("tollroad:signedin", onSignedIn);
+    window.addEventListener("tollroad:signedout", onSignedOut);
+    return () => {
+      window.removeEventListener("tollroad:signedin", onSignedIn);
+      window.removeEventListener("tollroad:signedout", onSignedOut);
+    };
   }, [current?.id]);
 
   if (tracks === null) return <SkeletonRail />;
