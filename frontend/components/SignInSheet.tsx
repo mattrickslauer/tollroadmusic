@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { startOtp, verifyOtp, loadAnonId, loadRef, clearRef, type Me } from "@/lib/auth";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,6 +20,7 @@ interface Props {
  * verify; this just surfaces the result.
  */
 export default function SignInSheet({ reason, onClose, onSignedIn }: Props) {
+  const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -78,6 +80,7 @@ export default function SignInSheet({ reason, onClose, onSignedIn }: Props) {
     window.dispatchEvent(new CustomEvent("tollroad:signedin", { detail: res }));
     clearRef();
     onSignedIn({ account: res.account, profiles: res.profiles });
+    router.push("/browse");
   }
 
   return (
