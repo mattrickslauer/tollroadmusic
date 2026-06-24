@@ -217,6 +217,7 @@ export interface HistoryRow {
   trackId: string;
   title: string;
   artistName: string;
+  artistId: string;
   coverImageKey: string | null;
   minutes: number;
   amountCents: number;
@@ -228,6 +229,7 @@ export async function getListeningHistory(accountId: string, limit = 100): Promi
     track_id: string;
     title: string | null;
     artist_name: string | null;
+    artist_id: string | null;
     cover_image_key: string | null;
     minutes: string;
     amount_cents: string;
@@ -236,6 +238,7 @@ export async function getListeningHistory(accountId: string, limit = 100): Promi
     `SELECT l.track_id,
             t.title           AS title,
             a.name            AS artist_name,
+            l.artist_id       AS artist_id,
             t.cover_image_key AS cover_image_key,
             COUNT(*)              AS minutes,
             SUM(l.amount_cents)  AS amount_cents,
@@ -244,7 +247,7 @@ export async function getListeningHistory(accountId: string, limit = 100): Promi
        LEFT JOIN tracks  t ON t.id = l.track_id
        LEFT JOIN artists a ON a.id = l.artist_id
       WHERE l.user_id = $1
-      GROUP BY l.track_id, t.title, a.name, t.cover_image_key
+      GROUP BY l.track_id, t.title, a.name, l.artist_id, t.cover_image_key
       ORDER BY last_epoch DESC
       LIMIT $2`,
     [accountId, limit],
@@ -253,6 +256,7 @@ export async function getListeningHistory(accountId: string, limit = 100): Promi
     trackId: r.track_id,
     title: r.title ?? "Unknown track",
     artistName: r.artist_name ?? "Unknown artist",
+    artistId: r.artist_id ?? "",
     coverImageKey: r.cover_image_key,
     minutes: Number(r.minutes),
     amountCents: Number(r.amount_cents),

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import ArtistLink from "./ArtistLink";
 import { usePlayer } from "@/context/PlayerProvider";
-import { ROUTES } from "@/lib/routes";
 import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
@@ -42,7 +41,7 @@ export default function PlayerBar() {
             <CoverImage className="lx-player-cover" coverKey={current.coverImageKey} loading="eager" />
             <div className="lx-player-meta">
               <span className="lx-player-title" title={current.title}>{current.title}</span>
-              <Link className="lx-player-artist" href={ROUTES.artistProfile(current.artistId)} onClick={(e) => e.stopPropagation()}>{current.artistName}</Link>
+              <ArtistLink id={current.artistId} name={current.artistName} className="lx-player-artist" />
             </div>
             <LikeButton trackId={current.id} size={16} />
           </>

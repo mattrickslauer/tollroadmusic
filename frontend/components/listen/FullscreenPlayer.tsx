@@ -2,9 +2,8 @@
 
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
+import ArtistLink from "./ArtistLink";
 import { usePlayer } from "@/context/PlayerProvider";
-import { ROUTES } from "@/lib/routes";
 import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
@@ -60,7 +59,7 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
         <div className="lx-full-head">
           <div className="lx-full-meta">
             <h2 className="lx-full-title" title={current.title}>{current.title}</h2>
-            <Link className="lx-full-artist" href={ROUTES.artistProfile(current.artistId)}>{current.artistName}</Link>
+            <ArtistLink id={current.artistId} name={current.artistName} className="lx-full-artist" />
           </div>
           <LikeButton trackId={current.id} size={26} />
         </div>

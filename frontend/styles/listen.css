@@ -866,3 +866,16 @@
    not --playerbar-h, since <body> is outside the .app-dark token scope. */
 body.gp-pad { padding-bottom: 92px; }
 @media (max-width: 640px) { body.gp-pad { padding-bottom: 134px; } }
+
+/* Shared affordance for every artist name (rendered via <ArtistLink>): inherits
+   the surrounding color/size so layouts are unchanged, but reads as clickable. */
+.lx-artist-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.lx-artist-link:hover,
+.lx-artist-link:focus-visible {
+  text-decoration: underline;
+  opacity: 0.85;
+}

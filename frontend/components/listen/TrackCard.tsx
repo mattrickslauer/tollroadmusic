@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import ArtistLink from "./ArtistLink";
 import type { CatalogTrack } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
-import { ROUTES } from "@/lib/routes";
 import { clock } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
@@ -31,7 +30,7 @@ export default function TrackCard({ track, queue }: { track: CatalogTrack; queue
       </button>
       <div className="lx-card-meta">
         <div className="lx-card-title" title={track.title}>{track.title}</div>
-        <Link className="lx-card-artist" href={ROUTES.artistProfile(track.artistId)}>{track.artistName}</Link>
+        <ArtistLink id={track.artistId} name={track.artistName} className="lx-card-artist" />
       </div>
       <div className="lx-card-foot">
         <LikeButton trackId={track.id} />

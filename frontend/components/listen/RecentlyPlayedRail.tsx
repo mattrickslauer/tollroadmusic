@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import ArtistLink from "./ArtistLink";
 import type { CatalogTrack, LibraryTrack } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
-import { ROUTES } from "@/lib/routes";
 import * as api from "@/lib/api/client";
 import CoverImage from "./CoverImage";
 import { SkeletonRail } from "./Skeleton";
@@ -43,7 +42,7 @@ export default function RecentlyPlayedRail() {
           <div key={t.id} className="lx-rail-item" role="button" tabIndex={0} onClick={() => play(t, queue)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(t, queue); } }} title={`${t.title} — ${t.artistName}`}>
             <CoverImage coverKey={t.coverImageKey} />
             <span className="lx-rail-name">{t.title}</span>
-            <Link className="lx-rail-artist" href={ROUTES.artistProfile(t.artistId)} onClick={(e) => e.stopPropagation()}>{t.artistName}</Link>
+            <ArtistLink id={t.artistId} name={t.artistName} className="lx-rail-artist" />
           </div>
         ))}
       </div>

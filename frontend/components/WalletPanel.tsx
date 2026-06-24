@@ -4,11 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import TopUpSheet from "@/components/TopUpSheet";
 import CoverImage from "./listen/CoverImage";
+import ArtistLink from "./listen/ArtistLink";
 
 export interface HistoryItem {
   trackId: string;
   title: string;
   artistName: string;
+  artistId: string;
   coverImageKey: string | null;
   minutes: number;
   amountCents: number;
@@ -66,7 +68,7 @@ export default function WalletPanel({ initialBalanceCents, history }: Props) {
               <CoverImage className="wallet-row-cover" coverKey={h.coverImageKey} />
               <div className="wallet-row-main">
                 <div className="wallet-row-title">{h.title}</div>
-                <div className="wallet-row-artist">{h.artistName}</div>
+                <ArtistLink id={h.artistId} name={h.artistName} className="wallet-row-artist" />
               </div>
               <div className="wallet-row-meta">
                 <span className="wallet-row-min">{h.minutes} min</span>

@@ -51,6 +51,7 @@ export type HistoryRow = {
   trackId: string;
   title: string;
   artistName: string;
+  artistId: string;
   coverImageKey: string | null;
   minutes: number;
   amountCents: number;
