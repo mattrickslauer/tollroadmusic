@@ -47,7 +47,8 @@ export default async function ArtistDashboardPage() {
 
       {summary && (
         <>
-          <ProfileEditor artist={summary.artist} tracks={summary.tracks} />
+          {/* Only an explicit false disables uploads — tolerates a backend that predates the flag. */}
+          <ProfileEditor artist={summary.artist} tracks={summary.tracks} uploadsConfigured={summary.uploadsConfigured !== false} />
 
           <div className="az-stats">
             <Stat k="Total earned" v={usd(summary.earningsCents)} green />

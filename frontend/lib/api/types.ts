@@ -91,4 +91,7 @@ export type ArtistSummary = {
   trackCount: number;
   byDay: { day: string; minutes: number; amountCents: number }[];
   tracks: ArtistTrack[];
+  /** False when the backend has no images bucket configured — image uploads will 503.
+   *  Optional: a backend predating this flag omits it, which callers treat as enabled. */
+  uploadsConfigured?: boolean;
 };

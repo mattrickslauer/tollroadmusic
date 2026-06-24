@@ -137,5 +137,6 @@
 
 .az-file-input { display: none; }
 .az-upload-btn { cursor: pointer; }
+.az-upload-btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 .az-save-ok { font-size: 0.85rem; color: var(--meter-green); }
 .az-field-error { font-size: 0.82rem; color: #e05c5c; margin: 0; }

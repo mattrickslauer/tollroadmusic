@@ -26,9 +26,13 @@ type ArtistInfo = {
 type Props = {
   artist: ArtistInfo;
   tracks: ArtistTrack[];
+  /** When false, the backend has no images bucket — hide/disable upload controls. */
+  uploadsConfigured: boolean;
 };
 
-export default function ProfileEditor({ artist, tracks }: Props) {
+const UPLOADS_OFF_MSG = "Image uploads aren't enabled in this environment.";
+
+export default function ProfileEditor({ artist, tracks, uploadsConfigured }: Props) {
   // --- Avatar state ---
   const [avatarKey, setAvatarKey] = useState<string | null>(artist.avatarKey ?? null);
   const [avatarStatus, setAvatarStatus] = useState<"idle" | "uploading" | "error">("idle");
@@ -130,12 +134,17 @@ export default function ProfileEditor({ artist, tracks }: Props) {
               className="az-file-input"
               id="avatar-upload"
               onChange={handleAvatarChange}
-              disabled={avatarStatus === "uploading"}
+              disabled={!uploadsConfigured || avatarStatus === "uploading"}
             />
-            <label htmlFor="avatar-upload" className="btn btn-secondary az-upload-btn">
+            <label
+              htmlFor="avatar-upload"
+              className="btn btn-secondary az-upload-btn"
+              aria-disabled={!uploadsConfigured}
+            >
               {avatarStatus === "uploading" ? "Uploading…" : "Change photo"}
             </label>
-            {avatarStatus === "error" && avatarError && (
+            {!uploadsConfigured && <p className="az-empty">{UPLOADS_OFF_MSG}</p>}
+            {uploadsConfigured && avatarStatus === "error" && avatarError && (
               <p className="az-field-error">{avatarError}</p>
             )}
           </div>
@@ -214,6 +223,7 @@ export default function ProfileEditor({ artist, tracks }: Props) {
       {tracks.length > 0 && (
         <section className="az-editor-section">
           <h2 className="az-recent-h">Track covers</h2>
+          {!uploadsConfigured && <p className="az-empty">{UPLOADS_OFF_MSG}</p>}
           <div className="az-track-covers">
             {tracks.map((t) => (
               <div key={t.id} className="az-track-cover-row">
@@ -226,12 +236,16 @@ export default function ProfileEditor({ artist, tracks }: Props) {
                     className="az-file-input"
                     id={`cover-upload-${t.id}`}
                     onChange={(e) => handleCoverChange(t.id, e)}
-                    disabled={coverStatuses[t.id] === "uploading"}
+                    disabled={!uploadsConfigured || coverStatuses[t.id] === "uploading"}
                   />
-                  <label htmlFor={`cover-upload-${t.id}`} className="btn btn-secondary az-upload-btn">
+                  <label
+                    htmlFor={`cover-upload-${t.id}`}
+                    className="btn btn-secondary az-upload-btn"
+                    aria-disabled={!uploadsConfigured}
+                  >
                     {coverStatuses[t.id] === "uploading" ? "Uploading…" : "Change cover"}
                   </label>
-                  {coverStatuses[t.id] === "error" && coverErrors[t.id] && (
+                  {uploadsConfigured && coverStatuses[t.id] === "error" && coverErrors[t.id] && (
                     <p className="az-field-error">{coverErrors[t.id]}</p>
                   )}
                 </div>
