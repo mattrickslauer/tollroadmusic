@@ -98,4 +98,29 @@ export const recordPlay = (trackId: string) => req<{ ok: boolean }>("/recents", 
 export const createArtist = (fields: Record<string, unknown>) => req<{ id: string; name: string }>("/artists", body(fields));
 export const getArtist = (id: string) => req<ArtistProfile>(`/artists/${encodeURIComponent(id)}`);
 
+// --- Artist content / profile ----------------------------------------------
+export const presignAvatar = (contentType: string) =>
+  req<{ uploadUrl: string; key: string }>("/artist/avatar/presign", body({ contentType }));
+export const commitAvatar = (key: string) =>
+  req<{ ok: true; avatarKey: string }>("/artist/avatar/commit", body({ key }));
+export const presignCover = (trackId: string, contentType: string) =>
+  req<{ uploadUrl: string; key: string }>("/artist/cover/presign", body({ trackId, contentType }));
+export const commitCover = (trackId: string, key: string) =>
+  req<{ ok: true; coverImageKey: string }>("/artist/cover/commit", body({ trackId, key }));
+export const updateArtistProfile = (fields: Record<string, string>) =>
+  req<{ ok: true }>("/artist/profile", body(fields));
+
+// Presign -> PUT the bytes straight to S3 -> commit. Returns the stored key.
+export async function uploadImage(
+  file: File,
+  presign: (ct: string) => Promise<{ uploadUrl: string; key: string }>,
+  commit: (key: string) => Promise<unknown>,
+): Promise<string> {
+  const { uploadUrl, key } = await presign(file.type);
+  const put = await fetch(uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file });
+  if (!put.ok) throw new Error(`upload failed (${put.status})`);
+  await commit(key);
+  return key;
+}
+
 export type { ArtistProfile, Catalog, CatalogTrack, LibraryTrack, PlaylistSummary, PlaylistDetail, PublicPlaylist, HistoryRow, StreamGrant };
