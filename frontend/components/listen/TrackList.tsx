@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import type { CatalogTrack, LibraryTrack } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
+import { ROUTES } from "@/lib/routes";
 import { clock } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
@@ -54,7 +56,7 @@ export default function TrackList({ tracks, onRemove, removeLabel = "Remove", on
               <CoverImage className="lx-row-cover" coverKey={t.coverImageKey} />
               <span className="lx-row-text">
                 <span className="lx-row-name" title={t.title}>{t.title}</span>
-                <span className="lx-row-artist">{t.artistName}</span>
+                <Link className="lx-row-artist" href={ROUTES.artistProfile(t.artistId)} onClick={(e) => e.stopPropagation()}>{t.artistName}</Link>
               </span>
             </button>
             <span className="lx-row-rate">{t.pricePerMinuteCents}¢/min</span>
