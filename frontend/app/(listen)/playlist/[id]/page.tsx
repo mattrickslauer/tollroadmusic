@@ -104,13 +104,33 @@ export default function PlaylistPage() {
     const handle = me?.account?.handle;
     let url = `${window.location.origin}/playlist/${id}`;
     if (handle) url += `?r=${encodeURIComponent(handle)}`;
-    navigator.clipboard?.writeText(url).then(
-      () => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      },
-      () => {},
-    );
+
+    const confirm = () => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    };
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(confirm, fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+
+    // Older browsers / insecure contexts lack the async Clipboard API.
+    function fallbackCopy() {
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        if (document.execCommand("copy")) confirm();
+      } catch {
+        /* clipboard unavailable — leave the button label unchanged */
+      }
+      document.body.removeChild(ta);
+    }
   }
 
   if (missing) return <p className="lx-empty">That playlist doesn&apos;t exist.</p>;
@@ -154,8 +174,13 @@ export default function PlaylistPage() {
                   {visibility === "public" ? "🌐 Public" : "🔒 Private"}
                 </button>
                 {visibility === "public" && (
-                  <button className="lx-share" onClick={copyShareLink}>
-                    {copied ? "Copied!" : "Copy share link"}
+                  <button
+                    className="lx-share"
+                    data-copied={copied}
+                    onClick={copyShareLink}
+                    aria-live="polite"
+                  >
+                    {copied ? "✓ Link copied" : "Copy share link"}
                   </button>
                 )}
                 <button className="lx-delete" onClick={del}>Delete playlist</button>

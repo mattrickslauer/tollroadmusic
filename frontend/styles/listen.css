@@ -255,6 +255,18 @@
 }
 .lx-vis:hover,
 .lx-share:hover { color: var(--app-text); border-color: var(--app-accent); }
+/* Success confirmation after the share link is copied. */
+.lx-share[data-copied="true"],
+.lx-share[data-copied="true"]:hover {
+  color: var(--app-green);
+  border-color: var(--app-green);
+  animation: lxCopyPop 0.25s ease;
+}
+@keyframes lxCopyPop {
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 .lx-pub-badge { margin-left: 6px; font-size: 0.78em; opacity: 0.7; }
 
 /* ---------- filters ---------- */
