@@ -40,11 +40,11 @@ export default function RecentlyPlayedRail() {
       <h2 className="lx-section-h">Recently played</h2>
       <div className="lx-rail-track">
         {tracks.map((t) => (
-          <button key={t.id} className="lx-rail-item" onClick={() => play(t, queue)} title={`${t.title} — ${t.artistName}`}>
+          <div key={t.id} className="lx-rail-item" role="button" tabIndex={0} onClick={() => play(t, queue)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(t, queue); } }} title={`${t.title} — ${t.artistName}`}>
             <CoverImage coverKey={t.coverImageKey} />
             <span className="lx-rail-name">{t.title}</span>
             <Link className="lx-rail-artist" href={ROUTES.artistProfile(t.artistId)} onClick={(e) => e.stopPropagation()}>{t.artistName}</Link>
-          </button>
+          </div>
         ))}
       </div>
     </section>

@@ -52,13 +52,13 @@ export default function TrackList({ tracks, onRemove, removeLabel = "Remove", on
                 )}
               </span>
             </button>
-            <button className="lx-row-title" onClick={() => play(t, queue)}>
+            <div className="lx-row-title" role="button" tabIndex={0} onClick={() => play(t, queue)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(t, queue); } }}>
               <CoverImage className="lx-row-cover" coverKey={t.coverImageKey} />
               <span className="lx-row-text">
                 <span className="lx-row-name" title={t.title}>{t.title}</span>
                 <Link className="lx-row-artist" href={ROUTES.artistProfile(t.artistId)} onClick={(e) => e.stopPropagation()}>{t.artistName}</Link>
               </span>
-            </button>
+            </div>
             <span className="lx-row-rate">{t.pricePerMinuteCents}¢/min</span>
             <span className="lx-row-dur">{clock(t.durationSeconds)}</span>
             <span className="lx-row-actions">
