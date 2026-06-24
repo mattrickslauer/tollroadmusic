@@ -4,6 +4,7 @@ import { type Handler, ok, error } from "../lib/http.ts";
 import { dsqlConfigured } from "../lib/dsql.ts";
 import { getCatalog } from "../domain/catalog.ts";
 import { getTrackBilling } from "../domain/tracks.ts";
+import { getArtistProfile } from "../domain/artist-public.ts";
 
 export const catalog: Handler = async () => {
   if (!dsqlConfigured()) return error(503, "catalog not configured");
@@ -23,4 +24,13 @@ export const artists: Handler = async () => {
   if (!dsqlConfigured()) return error(503, "catalog not configured");
   const { artists } = await getCatalog();
   return ok({ artists });
+};
+
+export const artistById: Handler = async (req) => {
+  if (!dsqlConfigured()) return error(503, "catalog not configured");
+  const id = req.params.id;
+  if (!id) return error(400, "id required");
+  const profile = await getArtistProfile(id);
+  if (!profile) return error(404, "no such artist");
+  return ok(profile);
 };

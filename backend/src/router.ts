@@ -41,6 +41,7 @@ const ROUTES: Route[] = [
   compile("GET", "/catalog", catalog.catalog),
   compile("GET", "/tracks/{trackId}", catalog.track),
   compile("GET", "/artists", catalog.artists),
+  compile("GET", "/artists/{id}", catalog.artistById),
   compile("POST", "/artists", artistCreate),
 
   compile("POST", "/charge", charge),
