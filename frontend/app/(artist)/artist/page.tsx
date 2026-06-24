@@ -4,6 +4,7 @@
 // account → a prompt to create an artist profile.
 import Link from "next/link";
 import { serverArtistSummary, apiConfigured, hasSessionCookie } from "@/lib/api/server";
+import CoverImage from "@/components/listen/CoverImage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,6 +47,31 @@ export default async function ArtistDashboardPage() {
 
       {summary && (
         <>
+          <div className="az-profile">
+            <CoverImage coverKey={summary.artist.avatarKey} className="az-avatar" alt={summary.artist.name} />
+            <div className="az-profile-info">
+              <h2 className="az-profile-name">{summary.artist.name}</h2>
+              {(summary.artist.genre || summary.artist.location) && (
+                <p className="az-profile-meta">
+                  {[summary.artist.genre, summary.artist.location].filter(Boolean).join(" · ")}
+                </p>
+              )}
+              {summary.artist.bio && (
+                <p className="az-profile-bio">{summary.artist.bio}</p>
+              )}
+              {summary.artist.website && (
+                <a
+                  className="az-profile-website"
+                  href={summary.artist.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {summary.artist.website}
+                </a>
+              )}
+            </div>
+          </div>
+
           <div className="az-stats">
             <Stat k="Total earned" v={usd(summary.earningsCents)} green />
             <Stat k="Minutes played" v={summary.minutes.toLocaleString("en-US")} />

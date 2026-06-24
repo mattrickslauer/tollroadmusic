@@ -83,7 +83,7 @@ export type ArtistTrack = {
 };
 
 export type ArtistSummary = {
-  artist: { id: string; name: string; genre: string | null };
+  artist: { id: string; name: string; genre: string | null; location: string | null; bio: string | null; website: string | null; avatarKey: string | null };
   artistId: string;
   minutes: number;
   earningsCents: number;

@@ -22,6 +22,10 @@ export interface ArtistProfile {
   id: string;
   name: string;
   genre: string | null;
+  location: string | null;
+  bio: string | null;
+  website: string | null;
+  avatarKey: string | null;
 }
 export interface ListenerProfile {
   balanceCents: number;
@@ -192,7 +196,10 @@ export async function ensureListenerProfile(accountId: string): Promise<void> {
 
 export async function getProfiles(accountId: string): Promise<Profiles> {
   const [artistR, listenerR] = await Promise.all([
-    query<ArtistProfile>(`SELECT id, name, genre FROM artists WHERE account_id = $1 LIMIT 1`, [accountId]),
+    query<{ id: string; name: string; genre: string | null; location: string | null; bio: string | null; website: string | null; avatar_key: string | null }>(
+      `SELECT id, name, genre, location, bio, website, avatar_key FROM artists WHERE account_id = $1 LIMIT 1`,
+      [accountId],
+    ),
     query<{ balanceCents: number; giftClaimed: boolean }>(
       `SELECT balance_cents AS "balanceCents",
               (onboarding_gift_claimed_at IS NOT NULL) AS "giftClaimed"
@@ -200,8 +207,19 @@ export async function getProfiles(accountId: string): Promise<Profiles> {
       [accountId],
     ),
   ]);
+  const rawArtist = artistR.rows[0];
   return {
-    artist: artistR.rows[0] ?? null,
+    artist: rawArtist
+      ? {
+          id: rawArtist.id,
+          name: rawArtist.name,
+          genre: rawArtist.genre,
+          location: rawArtist.location,
+          bio: rawArtist.bio,
+          website: rawArtist.website,
+          avatarKey: rawArtist.avatar_key,
+        }
+      : null,
     listener: listenerR.rows[0]
       ? {
           balanceCents: Number(listenerR.rows[0].balanceCents),
