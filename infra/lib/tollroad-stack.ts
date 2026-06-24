@@ -157,6 +157,36 @@ export class TollroadStack extends cdk.Stack {
       comment: "TollRoad audio delivery (OAC + SSE-KMS, signed-cookie gated)",
     });
 
+    // ---------------------------------------------------------------------
+    // S3 + CloudFront — public images bucket (cover art + avatars)
+    // ---------------------------------------------------------------------
+    // Not sensitive: no KMS, no signed URLs. CloudFront (OAC) serves it
+    // publicly; the API presigns PUTs for browser uploads.
+    const imagesBucket = new s3.Bucket(this, "TollroadImagesBucket", {
+      bucketName: `tollroad-images-${cdk.Aws.ACCOUNT_ID}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL, // public read is via CloudFront OAC, not the bucket
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      cors: [{
+        allowedHeaders: ["*"],
+        allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET, s3.HttpMethods.HEAD],
+        allowedOrigins: ["http://localhost:3000", "https://www.tollroadmusic.xyz"],
+        exposedHeaders: ["ETag"],
+        maxAge: 3600,
+      }],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const imagesDistribution = new cloudfront.Distribution(this, "TollroadImagesCdn", {
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(imagesBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        // No trustedKeyGroups: images are public.
+      },
+      comment: "TollRoad images (cover art + avatars, public via OAC)",
+    });
+
     // CloudFront OAC must be able to decrypt with the audio CMK.
     // Scope by account (wildcard distribution id), NOT distribution.distributionId:
     // referencing the concrete id makes the KMS key depend on the distribution,
@@ -275,6 +305,7 @@ export class TollroadStack extends cdk.Stack {
       TOLLROAD_DSQL_ENDPOINT: dsqlEndpoint,
       TOLLROAD_DSQL_REGION: region,
       TOLLROAD_CDN_DOMAIN: distribution.distributionDomainName,
+      TOLLROAD_IMAGES_BUCKET: imagesBucket.bucketName,
       // The charge path mirrors each metered minute into the DynamoDB hot path so
       // the Streams → rollup pipeline fires (backend/src/domain/meter.ts).
       TOLLROAD_TABLE: table.tableName,
@@ -338,6 +369,8 @@ export class TollroadStack extends cdk.Stack {
     // The charge handler writes one METER item per metered minute into the table;
     // the stream then drives the rollup. Least-privilege: PutItem only.
     table.grant(apiFn, "dynamodb:PutItem");
+    // Grant the API Lambda write access to the images bucket for presigned PUTs.
+    imagesBucket.grantPut(apiFn);
 
     // REST API. Stage `v1` ⇒ invoke URL .../v1/<route>. The proxy ANY method
     // requires an API key (usage-plan attribution + throttling) — the metering/
@@ -428,6 +461,11 @@ export class TollroadStack extends cdk.Stack {
     });
     new cdk.CfnOutput(this, "CdnDistributionId", { value: distribution.distributionId });
     new cdk.CfnOutput(this, "CfKeyGroupId", { value: keyGroupId });
+    new cdk.CfnOutput(this, "ImagesCdnDomain", {
+      value: imagesDistribution.distributionDomainName,
+      description: "CloudFront domain for images (set frontend NEXT_PUBLIC_IMAGES_BASE = https://<this>)",
+    });
+    new cdk.CfnOutput(this, "ImagesBucketName", { value: imagesBucket.bucketName });
     new cdk.CfnOutput(this, "VercelUserPolicyJson", {
       value: cdk.Stack.of(this).toJsonString(vercelUserPolicy.toJSON()),
       description: "Least-privilege policy to attach to the tollroad-vercel IAM user",
