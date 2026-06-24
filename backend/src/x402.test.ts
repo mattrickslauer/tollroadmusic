@@ -40,3 +40,11 @@ test("router matches static and param routes", () => {
 test("router strips trailing slash", () => {
   assert.ok(match("GET", "/catalog/"));
 });
+
+test("router matches artist content routes", () => {
+  assert.ok(match("POST", "/artist/avatar/presign"));
+  assert.ok(match("POST", "/artist/avatar/commit"));
+  assert.ok(match("POST", "/artist/cover/presign"));
+  assert.ok(match("POST", "/artist/cover/commit"));
+  assert.ok(match("POST", "/artist/profile"));
+});

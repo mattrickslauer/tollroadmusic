@@ -11,6 +11,7 @@ import * as wallet from "./handlers/wallet.ts";
 import { webhook } from "./handlers/stripe-webhook.ts";
 import * as library from "./handlers/library.ts";
 import { summary as artistSummary, create as artistCreate } from "./handlers/artist.ts";
+import * as artistContent from "./handlers/artist-content.ts";
 
 interface Route {
   method: string;
@@ -70,6 +71,12 @@ const ROUTES: Route[] = [
   compile("POST", "/recents", library.postRecent),
 
   compile("GET", "/artist/summary", artistSummary),
+
+  compile("POST", "/artist/avatar/presign", artistContent.avatarPresign),
+  compile("POST", "/artist/avatar/commit", artistContent.avatarCommit),
+  compile("POST", "/artist/cover/presign", artistContent.coverPresign),
+  compile("POST", "/artist/cover/commit", artistContent.coverCommit),
+  compile("POST", "/artist/profile", artistContent.profileUpdate),
 ];
 
 export interface Match {
