@@ -163,6 +163,21 @@
 
 /* ---------- page headers ---------- */
 .lx-head { margin-bottom: 22px; }
+/* Artist avatar on the public artist profile page */
+.lx-artist-avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+  flex-shrink: 0;
+}
+.lx-artist-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .lx-eyebrow {
   font-family: var(--font-mono);
   font-size: 0.7rem;

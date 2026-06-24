@@ -152,6 +152,7 @@ export default function ProfileEditor({ artist, tracks }: Props) {
               id="profile-bio"
               className="az-input az-textarea"
               rows={4}
+              maxLength={600}
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell listeners about yourself…"
@@ -163,6 +164,7 @@ export default function ProfileEditor({ artist, tracks }: Props) {
               id="profile-location"
               className="az-input"
               type="text"
+              maxLength={120}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="City, Country"
@@ -174,6 +176,7 @@ export default function ProfileEditor({ artist, tracks }: Props) {
               id="profile-website"
               className="az-input"
               type="url"
+              maxLength={200}
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://yoursite.com"
@@ -185,6 +188,7 @@ export default function ProfileEditor({ artist, tracks }: Props) {
               id="profile-genre"
               className="az-input"
               type="text"
+              maxLength={40}
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
               placeholder="e.g. Electronic, Jazz, Hip-Hop"
