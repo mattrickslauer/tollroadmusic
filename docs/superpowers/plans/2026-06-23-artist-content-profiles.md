@@ -61,7 +61,7 @@
 
 # TIER A
 
-### Task A1: Public artist profile endpoint
+### Task 1: Public artist profile endpoint
 
 **Files:**
 - Create: `backend/src/domain/artist-public.ts`
@@ -213,7 +213,7 @@ git commit -m "feat(api): public artist profile endpoint GET /artists/:id"
 
 ---
 
-### Task A2: CoverImage images-base resolution
+### Task 2: CoverImage images-base resolution
 
 **Files:**
 - Create: `frontend/lib/coverSrc.ts`
@@ -300,7 +300,7 @@ git commit -m "feat(web): resolve cover keys against NEXT_PUBLIC_IMAGES_BASE"
 
 ---
 
-### Task A3: Public artist profile page
+### Task 3: Public artist profile page
 
 **Files:**
 - Modify: `frontend/lib/api/types.ts`
@@ -311,7 +311,7 @@ git commit -m "feat(web): resolve cover keys against NEXT_PUBLIC_IMAGES_BASE"
 - Create: `frontend/app/(listen)/artists/[id]/page.tsx`
 
 **Interfaces:**
-- Consumes: backend `GET /artists/{id}` → `{ artist: PublicArtist; tracks: CatalogTrack[] }` (Task A1).
+- Consumes: backend `GET /artists/{id}` → `{ artist: PublicArtist; tracks: CatalogTrack[] }` (Task 1).
 - Produces: `ArtistProfile` type; `serverArtistProfile(id)`, `getArtist(id)`; `ROUTES.artistProfile(id)`.
 
 - [ ] **Step 1: Add the type** (`frontend/lib/api/types.ts`)
@@ -384,7 +384,7 @@ git commit -m "feat(web): public artist profile page /artists/[id]"
 
 ---
 
-### Task A4: Clickable artist names
+### Task 4: Clickable artist names
 
 **Files:**
 - Modify: `frontend/components/listen/TrackCard.tsx`
@@ -418,7 +418,7 @@ git commit -m "feat(web): link artist names to their profile page"
 
 ---
 
-### Task A5: Artist dashboard profile block (read side)
+### Task 5: Artist dashboard profile block (read side)
 
 **Files:**
 - Modify: `backend/src/domain/accounts.ts`
@@ -446,7 +446,7 @@ Expected: PASS.
   artist: { id: string; name: string; genre: string | null; location: string | null; bio: string | null; website: string | null; avatarKey: string | null };
 ```
 
-- [ ] **Step 4: Render the profile block** (`frontend/app/(artist)/artist/page.tsx`) — between the `<header>` and the `<div className="az-stats">`, when `summary` exists, render a profile card: `<CoverImage coverKey={summary.artist.avatarKey} className="az-avatar" />`, name, genre · location, bio paragraph, website link (if present). Use existing `az-*` class conventions; add minimal classes if needed. (Read-only here; editing is Task B6.)
+- [ ] **Step 4: Render the profile block** (`frontend/app/(artist)/artist/page.tsx`) — between the `<header>` and the `<div className="az-stats">`, when `summary` exists, render a profile card: `<CoverImage coverKey={summary.artist.avatarKey} className="az-avatar" />`, name, genre · location, bio paragraph, website link (if present). Use existing `az-*` class conventions; add minimal classes if needed. (Read-only here; editing is Task 12.)
 
 - [ ] **Step 5: Verify build**
 
@@ -462,7 +462,7 @@ git commit -m "feat: surface artist bio/location/website/avatar on the dashboard
 
 ---
 
-### Task A6: Refresh catalog cover art
+### Task 6: Refresh catalog cover art
 
 **Files:**
 - Create: `infra/scripts/gen-catalog-covers.mjs`
@@ -581,7 +581,7 @@ git commit -m "feat(catalog): refreshed genre-aware cover art for the live catal
 
 # TIER B
 
-### Task B1: Add S3 deps + presign helper
+### Task 7: Add S3 deps + presign helper
 
 **Files:**
 - Modify: `backend/package.json`
@@ -668,7 +668,7 @@ git commit -m "feat(api): S3 image presign helper + content-type validation"
 
 ---
 
-### Task B2: Ownership + DB write helpers
+### Task 8: Ownership + DB write helpers
 
 **Files:**
 - Modify: `backend/src/domain/artist-content.ts`
@@ -758,7 +758,7 @@ git commit -m "feat(api): artist ownership checks + profile/cover/avatar DB writ
 
 ---
 
-### Task B3: Upload + profile handlers + routes
+### Task 9: Upload + profile handlers + routes
 
 **Files:**
 - Create: `backend/src/handlers/artist-content.ts`
@@ -766,7 +766,7 @@ git commit -m "feat(api): artist ownership checks + profile/cover/avatar DB writ
 - Modify: `backend/src/x402.test.ts` (add route-match assertions)
 
 **Interfaces:**
-- Consumes: everything from B1/B2; `requireSession` → `{ sub }`; `getSignedUrl`/presign.
+- Consumes: everything from 7/8; `requireSession` → `{ sub }`; `getSignedUrl`/presign.
 - Produces handlers: `avatarPresign, avatarCommit, coverPresign, coverCommit, profileUpdate`.
 
 - [ ] **Step 1: Add route-match tests** (`backend/src/x402.test.ts`, extend the existing "router matches" test)
@@ -884,7 +884,7 @@ git commit -m "feat(api): artist avatar/cover upload + profile update endpoints"
 
 ---
 
-### Task B4: Images bucket + CloudFront (infra code only)
+### Task 10: Images bucket + CloudFront (infra code only)
 
 **Files:**
 - Modify: `infra/lib/tollroad-stack.ts`
@@ -957,7 +957,7 @@ git commit -m "feat(infra): public images bucket + CloudFront for cover art/avat
 
 ---
 
-### Task B5: The one guarded deploy + verification (OPS — human-gated)
+### Task 11: The one guarded deploy + verification (OPS — human-gated)
 
 **Files:** none (deployment).
 
@@ -984,11 +984,11 @@ If either is 503, restore secrets and re-run `npm run deploy` (see the secret-dr
 aws lambda get-function-configuration --function-name tollroad-api --query "Environment.Variables.TOLLROAD_IMAGES_BUCKET" --output text   # expect tollroad-images-<acct>
 ```
 
-- [ ] **Step 6: Commit** any `frontend/.env.example` note (Task B7) separately; no code commit here.
+- [ ] **Step 6: Commit** any `frontend/.env.example` note (Task 13) separately; no code commit here.
 
 ---
 
-### Task B6: Dashboard upload + profile editor UI
+### Task 12: Dashboard upload + profile editor UI
 
 **Files:**
 - Modify: `frontend/lib/api/client.ts`
@@ -996,7 +996,7 @@ aws lambda get-function-configuration --function-name tollroad-api --query "Envi
 - Modify: `frontend/app/(artist)/artist/page.tsx`
 
 **Interfaces:**
-- Consumes backend B3 endpoints; `NEXT_PUBLIC_IMAGES_BASE` (for preview via `resolveCoverSrc`).
+- Consumes backend 9 endpoints; `NEXT_PUBLIC_IMAGES_BASE` (for preview via `resolveCoverSrc`).
 - Produces client methods: `presignAvatar, commitAvatar, presignCover, commitCover, updateArtistProfile, uploadImage`.
 
 - [ ] **Step 1: Add client methods** (`frontend/lib/api/client.ts`)
@@ -1033,7 +1033,7 @@ export async function uploadImage(
   - A per-track cover list: for each track, `<CoverImage coverKey={t.coverImageKey}>` + a file input; on change → `uploadImage(file, (ct)=>presignCover(t.id, ct), (key)=>commitCover(t.id, key))`, update that row's preview.
   - Use existing `az-*`/form classes; keep it simple and legible. After any commit, optimistically update local state (no full reload needed) and surface errors inline.
 
-- [ ] **Step 3: Mount it on the dashboard** (`frontend/app/(artist)/artist/page.tsx`) — when `summary` exists, render `<ProfileEditor artist={summary.artist} tracks={summary.tracks} />` (replacing/augmenting the read-only block from Task A5; the editor subsumes the display). The page stays a server component; `ProfileEditor` is the client island.
+- [ ] **Step 3: Mount it on the dashboard** (`frontend/app/(artist)/artist/page.tsx`) — when `summary` exists, render `<ProfileEditor artist={summary.artist} tracks={summary.tracks} />` (replacing/augmenting the read-only block from Task 5; the editor subsumes the display). The page stays a server component; `ProfileEditor` is the client island.
 
 - [ ] **Step 4: Verify build**
 
@@ -1049,7 +1049,7 @@ git commit -m "feat(web): artist dashboard profile editor + cover/avatar uploads
 
 ---
 
-### Task B7: Frontend env doc + end-to-end verification
+### Task 13: Frontend env doc + end-to-end verification
 
 **Files:**
 - Modify: `frontend/.env.example`
@@ -1061,13 +1061,13 @@ git commit -m "feat(web): artist dashboard profile editor + cover/avatar uploads
 NEXT_PUBLIC_IMAGES_BASE=
 ```
 
-- [ ] **Step 2: End-to-end manual verification** (after B5 deploy + frontend redeploy):
+- [ ] **Step 2: End-to-end manual verification** (after 11 deploy + frontend redeploy):
   - Sign in as an artist account; open the dashboard.
   - Edit bio/location/website/genre → Save → reload → persists.
   - Upload an avatar → it appears on the dashboard and on the public `/artists/[id]` page.
   - Upload a cover for one track → it appears on that track's card in `/browse` and on the artist page.
   - Confirm an unsigned/other-artist account cannot upload to a track it doesn't own (expect 403).
-  - Confirm streaming + auth still healthy (re-run B5 Step 3 curls).
+  - Confirm streaming + auth still healthy (re-run 11 Step 3 curls).
 
 - [ ] **Step 3: Commit**
 
