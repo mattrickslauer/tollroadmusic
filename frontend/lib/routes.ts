@@ -9,6 +9,8 @@ export const ROUTES = {
   /** Artist path — sign up to bring a catalog, then the royalty dashboard. */
   signup: "/artist/join",
   artist: "/artist",
+  /** Public artist profile page. */
+  artistProfile: (id: string) => `/artists/${encodeURIComponent(id)}`,
 } as const;
 
 /** In-page section anchors used by the nav + footer for scroll navigation. */

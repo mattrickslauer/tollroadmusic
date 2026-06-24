@@ -64,6 +64,14 @@ export type StreamGrant = {
   mode: "signed-url" | "proxy";
 };
 
+export type ArtistProfile = {
+  artist: {
+    id: string; name: string; genre: string | null; location: string | null;
+    bio: string | null; website: string | null; avatarKey: string | null; trackCount: number;
+  };
+  tracks: CatalogTrack[];
+};
+
 /** The signed-in artist's royalty summary (GET /v1/artist/summary). Read from
  *  the precomputed artist_daily_summary — never the raw ledger. */
 export type ArtistTrack = {

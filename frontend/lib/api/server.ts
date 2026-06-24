@@ -3,7 +3,7 @@
 // attaching the app's usage-plan key. The front-end server layer holds no DB
 // access — it's a thin client of the backend, same as the browser.
 import { cookies } from "next/headers";
-import type { ArtistSummary, Catalog, HistoryRow } from "./types";
+import type { ArtistProfile, ArtistSummary, Catalog, HistoryRow } from "./types";
 
 const BACKEND = (process.env.TOLLROAD_API_BASE ?? "http://localhost:8787/v1").replace(/\/$/, "");
 const APP_KEY = process.env.TOLLROAD_APP_API_KEY;
@@ -26,6 +26,18 @@ async function serverGet<T>(path: string, opts: { auth?: boolean } = {}): Promis
 }
 
 export const serverCatalog = () => serverGet<Catalog>("/catalog");
+
+/** Public artist profile (GET /artists/:id). Returns null when the artist is
+ *  not found (404); throws for other non-OK responses. */
+export async function serverArtistProfile(id: string): Promise<ArtistProfile | null> {
+  const path = `/artists/${encodeURIComponent(id)}`;
+  const headers: Record<string, string> = {};
+  if (APP_KEY) headers["x-api-key"] = APP_KEY;
+  const res = await fetch(`${BACKEND}${path}`, { headers, cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`backend ${path} -> ${res.status}`);
+  return (await res.json()) as ArtistProfile;
+}
 export const serverBalance = () => serverGet<{ balanceCents: number; history: HistoryRow[] }>("/balance", { auth: true });
 
 /** The signed-in artist's royalty summary, or null if the account has no artist

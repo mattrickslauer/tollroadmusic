@@ -2,6 +2,7 @@
 // which forwards to the backend with the session bearer + app key. The front-end
 // never talks to a database; this is its only data access.
 import type {
+  ArtistProfile,
   Catalog,
   CatalogTrack,
   LibraryTrack,
@@ -95,5 +96,6 @@ export const recordPlay = (trackId: string) => req<{ ok: boolean }>("/recents", 
 
 // --- Artist ----------------------------------------------------------------
 export const createArtist = (fields: Record<string, unknown>) => req<{ id: string; name: string }>("/artists", body(fields));
+export const getArtist = (id: string) => req<ArtistProfile>(`/artists/${encodeURIComponent(id)}`);
 
-export type { Catalog, CatalogTrack, LibraryTrack, PlaylistSummary, PlaylistDetail, PublicPlaylist, HistoryRow, StreamGrant };
+export type { ArtistProfile, Catalog, CatalogTrack, LibraryTrack, PlaylistSummary, PlaylistDetail, PublicPlaylist, HistoryRow, StreamGrant };
