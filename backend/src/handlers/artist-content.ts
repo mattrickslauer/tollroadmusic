@@ -38,6 +38,7 @@ export const avatarCommit: Handler = async (req) => {
   const s = await requireSession(req);
   const artistId = await requireArtist(s.sub);
   const key = String((req.body as any)?.key ?? "");
+  if (!key) return error(400, "key required");
   if (!key.startsWith(`artist-avatars/${artistId}-`)) return error(403, "bad key");
   await setArtistAvatar(artistId, key);
   return ok({ ok: true, avatarKey: key }, NO_STORE);
@@ -51,10 +52,11 @@ export const coverPresign: Handler = async (req) => {
   const trackId = String(b.trackId ?? "");
   if (!trackId) return error(400, "trackId required");
   if (!(await ownsTrack(artistId, trackId))) return error(403, "not your track");
-  const ext = extForContentType(String(b.contentType ?? ""));
+  const ct = String(b.contentType ?? "");
+  const ext = extForContentType(ct);
   if (!ext) return error(400, "unsupported image type");
   const key = buildImageKey("track-covers", trackId, ext, rand());
-  const uploadUrl = await presignImagePut(key, String(b.contentType));
+  const uploadUrl = await presignImagePut(key, ct);
   return ok({ uploadUrl, key }, NO_STORE);
 };
 
@@ -64,6 +66,7 @@ export const coverCommit: Handler = async (req) => {
   const artistId = await requireArtist(s.sub);
   const b = (req.body ?? {}) as any;
   const trackId = String(b.trackId ?? "");
+  if (!trackId) return error(400, "trackId required");
   const key = String(b.key ?? "");
   if (!key.startsWith(`track-covers/${trackId}-`)) return error(403, "bad key");
   const okUpd = await setTrackCover(artistId, trackId, key);
