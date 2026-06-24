@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-<defs><linearGradient id="g681" x1="0" y1="0" x2="1" y2="1">
-<stop offset="0" stop-color="hsl(80 65% 32%)"/><stop offset="1" stop-color="hsl(121 70% 18%)"/></linearGradient></defs>
-<rect width="400" height="400" fill="url(#g681)"/>
-<circle cx="320" cy="86" r="150" fill="hsl(121 80% 60%)" opacity="0.18"/>
-<circle cx="70" cy="330" r="110" fill="hsl(80 80% 70%)" opacity="0.14"/>
-<text x="200" y="200" font-family="Georgia, serif" font-size="150" font-weight="700" fill="#fff" fill-opacity="0.92" text-anchor="middle" dominant-baseline="central">KA</text>
+<defs><linearGradient id="g2303" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="hsl(329 60% 30%)"/><stop offset="1" stop-color="hsl(0 68% 16%)"/></linearGradient></defs>
+<rect width="400" height="400" fill="url(#g2303)"/>
+<circle cx="320" cy="90" r="150" fill="hsl(0 80% 62%)" opacity="0.16"/>
+<circle cx="70" cy="330" r="120" fill="hsl(329 80% 70%)" opacity="0.12"/>
+<text x="200" y="208" font-family="Georgia, serif" font-size="150" font-weight="700" fill="#fff" fill-opacity="0.92" text-anchor="middle" dominant-baseline="central">KA</text>
 </svg>

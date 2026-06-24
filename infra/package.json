@@ -15,7 +15,8 @@
     "migrate": "node scripts/migrate-dsql.mjs",
     "seed:assets": "node scripts/gen-demo-assets.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
-    "seed:reset": "node scripts/seed-demo.mjs --reset"
+    "seed:reset": "node scripts/seed-demo.mjs --reset",
+    "seed:catalog-covers": "node scripts/gen-catalog-covers.mjs"
   },
   "devDependencies": {
     "@types/node": "^20",
