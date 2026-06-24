@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { resolveCoverSrc } from "@/lib/coverSrc";
 
 const PLACEHOLDER = "/covers/placeholder.svg";
 
@@ -20,7 +21,8 @@ export default function CoverImage({
   loading?: "lazy" | "eager";
 }) {
   const [broken, setBroken] = useState(false);
-  const src = broken || !coverKey ? PLACEHOLDER : coverKey;
+  const resolved = resolveCoverSrc(coverKey);
+  const src = broken || !resolved ? PLACEHOLDER : resolved;
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img className={className} src={src} alt={alt} loading={loading} onError={() => setBroken(true)} />
