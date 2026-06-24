@@ -1,13 +1,25 @@
 // /artist/join — artist sign-up. (Was /signup; the old URL now redirects here.)
+// If the signed-in account already has an artist profile, skip the create-profile
+// form and send them straight to the dashboard.
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import SignupForm from "@/components/SignupForm";
+import { serverArtistSummary, apiConfigured, hasSessionCookie } from "@/lib/api/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "TollRoad — Artist sign-up",
   description: "Bring your catalog to TollRoad and get paid for every minute played.",
 };
 
-export default function ArtistJoinPage() {
+export default async function ArtistJoinPage() {
+  const session = apiConfigured() ? await hasSessionCookie() : false;
+  if (session && (await serverArtistSummary())) {
+    redirect("/artist");
+  }
+
   return (
     <main className="signup-page">
       <div className="hero-bg" />
