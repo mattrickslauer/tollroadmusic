@@ -27,3 +27,51 @@ export async function presignImagePut(key: string, contentType: string): Promise
   const cmd = new PutObjectCommand({ Bucket: IMAGES_BUCKET!, Key: key, ContentType: contentType });
   return getSignedUrl(client(), cmd, { expiresIn: 300 });
 }
+
+import { query } from "../lib/dsql.ts";
+import { HttpError } from "../lib/http.ts";
+
+const MAX = { bio: 600, location: 120, website: 200, genre: 40 };
+
+export function sanitizeProfile(
+  input: Record<string, unknown>,
+): { bio?: string; location?: string; website?: string; genre?: string } {
+  const out: Record<string, string> = {};
+  for (const k of ["bio", "location", "website", "genre"] as const) {
+    const v = input[k];
+    if (v == null) continue;
+    const s = String(v).trim();
+    if (!s) continue;
+    if (s.length > MAX[k]) throw new HttpError(400, `${k} too long`);
+    if (k === "website" && !/^https?:\/\//i.test(s)) throw new HttpError(400, "website must be http(s)");
+    out[k] = s;
+  }
+  return out;
+}
+
+export async function artistIdForAccount(accountId: string): Promise<string | null> {
+  const r = await query<{ id: string }>(`SELECT id FROM artists WHERE account_id = $1 LIMIT 1`, [accountId]);
+  return r.rows[0]?.id ?? null;
+}
+export async function ownsTrack(artistId: string, trackId: string): Promise<boolean> {
+  const r = await query(`SELECT 1 FROM tracks WHERE id = $1 AND artist_id = $2 LIMIT 1`, [trackId, artistId]);
+  return r.rows.length > 0;
+}
+export async function setTrackCover(artistId: string, trackId: string, key: string): Promise<boolean> {
+  const r = await query(
+    `UPDATE tracks SET cover_image_key = $1 WHERE id = $2 AND artist_id = $3`,
+    [key, trackId, artistId],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+export async function setArtistAvatar(artistId: string, key: string): Promise<void> {
+  await query(`UPDATE artists SET avatar_key = $1 WHERE id = $2`, [key, artistId]);
+}
+export async function updateArtistProfile(
+  artistId: string, fields: { bio?: string; location?: string; website?: string; genre?: string },
+): Promise<void> {
+  const cols = Object.keys(fields);
+  if (!cols.length) return;
+  const sets = cols.map((c, i) => `${c} = $${i + 1}`).join(", ");
+  await query(`UPDATE artists SET ${sets} WHERE id = $${cols.length + 1}`, [...cols.map((c) => (fields as any)[c]), artistId]);
+}
