@@ -190,7 +190,40 @@ const STATEMENTS = [
      PRIMARY KEY (account_id, track_id)
    )`,
   `CREATE INDEX ASYNC IF NOT EXISTS recents_by_account ON recently_played (account_id, played_at)`,
+
+  // ---------------------------------------------------------------------
+  // CQRS projector checkpoint — optional stream-progress observability. The
+  // projector Lambda upserts the last sequence number it processed per stream
+  // shard. Additive: nothing reads it on the hot path. (polyglot-cqrs migration)
+  // ---------------------------------------------------------------------
+  `CREATE TABLE IF NOT EXISTS projector_checkpoint (
+     shard_id    TEXT PRIMARY KEY,
+     last_seq    TEXT,
+     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
 ];
+
+// ---------------------------------------------------------------------
+// Optional: provision the least-privilege DML role the projector Lambda connects
+// as. The CDK grants that Lambda dsql:DbConnect (NOT DbConnectAdmin), so it must
+// authenticate as a dedicated non-admin role rather than `admin`. This block is
+// GATED on TOLLROAD_PROJECTOR_ROLE_ARN (the projector Lambda's execution-role ARN)
+// so the default migration stays a pure-additive no-op on the shared cluster; run
+// it once, post-deploy, with that ARN. Each statement is additive/idempotent — a
+// duplicate role on re-run is tolerated, GRANTs are no-ops when already held.
+// ---------------------------------------------------------------------
+const PROJECTOR_ROLE_ARN = process.env.TOLLROAD_PROJECTOR_ROLE_ARN;
+const PROJECTOR_DB_USER = process.env.TOLLROAD_PROJECTOR_DB_USER || "projector";
+const PROJECTOR_STATEMENTS = PROJECTOR_ROLE_ARN
+  ? [
+      `CREATE ROLE ${PROJECTOR_DB_USER} WITH LOGIN`,
+      // DML only — the projector inserts the ledger/top-ups, upserts summaries and
+      // the reconciliation balance, and writes its checkpoint. No DDL/admin.
+      `GRANT SELECT, INSERT, UPDATE ON royalty_ledger, artist_daily_summary, listener_profiles, wallet_topups, projector_checkpoint TO ${PROJECTOR_DB_USER}`,
+      // Bind the DSQL role to the Lambda's IAM execution role for IAM-token auth.
+      `AWS IAM GRANT ${PROJECTOR_DB_USER} TO '${PROJECTOR_ROLE_ARN}'`,
+    ]
+  : [];
 
 const signer = new DsqlSigner({ hostname: ENDPOINT, region: REGION });
 const token = await signer.getDbConnectAdminAuthToken();
@@ -209,5 +242,23 @@ for (const sql of STATEMENTS) {
   await client.query(sql);
   console.log("ok:", label);
 }
+
+// Gated, idempotent projector-role provisioning. A re-run hits "role already
+// exists" (SQLSTATE 42710 / duplicate_object) — tolerate it and move on; GRANTs
+// are naturally idempotent.
+for (const sql of PROJECTOR_STATEMENTS) {
+  const label = sql.split("\n")[0].slice(0, 60);
+  try {
+    await client.query(sql);
+    console.log("ok:", label);
+  } catch (err) {
+    if (err && (err.code === "42710" || /already exists|duplicate/i.test(err.message ?? ""))) {
+      console.log("skip (exists):", label);
+      continue;
+    }
+    throw err;
+  }
+}
+
 await client.end();
 console.log("DSQL schema applied.");

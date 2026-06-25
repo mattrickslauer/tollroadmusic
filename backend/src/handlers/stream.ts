@@ -10,10 +10,20 @@ import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import { getTrackBilling } from "../domain/tracks.ts";
 import { hasRecentCharge } from "../domain/billing.ts";
+import { walletStoreConfigured, hasRecentMeter } from "../domain/wallet-store.ts";
 import { signedStreamUrl, cdnConfigured, cdnSigningHealthy, GRANT_TTL_SECONDS } from "../domain/streaming.ts";
 import { loadAudio } from "../domain/media.ts";
 
 const API_BASE = process.env.TOLLROAD_API_BASE ?? ""; // e.g. https://api…/v1 ; "" => relative
+
+// Proof of payment for the x402 gate. Reads the REAL-TIME DynamoDB meter events
+// (design §2) when the wallet store is configured; only the laptop-demo fallback
+// reads the lagging DSQL ledger.
+async function paidRecently(accountId: string, trackId: string): Promise<boolean> {
+  return walletStoreConfigured()
+    ? hasRecentMeter(accountId, trackId)
+    : hasRecentCharge(accountId, trackId);
+}
 
 export const streamGrant: Handler = async (req) => {
   if (!sessionConfigured() || !dsqlConfigured()) return error(503, "streaming not configured");
@@ -25,7 +35,7 @@ export const streamGrant: Handler = async (req) => {
   if (!track) return error(404, "no such track");
 
   // Proof of payment — the meter must have billed this play already.
-  if (!(await hasRecentCharge(session.sub, trackId))) {
+  if (!(await paidRecently(session.sub, trackId))) {
     const { paymentRequired } = await import("../lib/x402.ts");
     return paymentRequired({
       resource: `/v1/stream/${trackId}`,
@@ -65,7 +75,7 @@ export const streamRaw: Handler = async (req) => {
 
   const track = await getTrackBilling(trackId);
   if (!track) return error(404, "no such track");
-  if (!(await hasRecentCharge(session.sub, trackId))) {
+  if (!(await paidRecently(session.sub, trackId))) {
     return { status: 402, raw: { contentType: "text/plain", data: "payment required" }, headers: { "Cache-Control": "no-store" } };
   }
 
