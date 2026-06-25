@@ -6,6 +6,7 @@ import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import { getProfiles, createArtistProfile } from "../domain/accounts.ts";
 import { getArtistSummary } from "../domain/catalog.ts";
+import { imagesConfigured } from "../domain/artist-content.ts";
 
 const MAX = { name: 120, email: 254, genre: 80, location: 120, website: 200, bio: 2000 };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,5 +49,5 @@ export const summary: Handler = async (req) => {
   const profiles = await getProfiles(session.sub);
   if (!profiles.artist) return error(403, "not an artist");
   const data = await getArtistSummary(profiles.artist.id);
-  return ok({ artist: profiles.artist, ...data });
+  return ok({ artist: profiles.artist, ...data, uploadsConfigured: imagesConfigured() });
 };

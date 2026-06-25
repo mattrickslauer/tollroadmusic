@@ -1,16 +1,41 @@
-// Send the OTP email via Amazon SES v2. Ported from the front-end's
-// lib/server/email.ts. When TOLLROAD_SES_SENDER is unset we log the code to the
-// console instead of failing, so local dev / unconfigured demos still work.
-const REGION = process.env.TOLLROAD_DSQL_REGION ?? process.env.AWS_REGION ?? "us-east-1";
-const SENDER = process.env.TOLLROAD_SES_SENDER;
+// Send the OTP email via SMTP (ZeptoMail / Zoho), using nodemailer. SES is
+// unusable while the account is stuck in the sandbox, so OTP mail goes out
+// through ZeptoMail's transactional relay from the verified agfarms.dev domain.
+//
+// Everything is env-driven; only TOLLROAD_SMTP_PASS (the ZeptoMail "Send Mail"
+// API token) is secret. When it's unset we log the code to the console instead
+// of failing, so local dev / unconfigured demos still work.
+import type { Transporter } from "nodemailer";
+
+const SMTP_HOST = process.env.TOLLROAD_SMTP_HOST ?? "smtp.zeptomail.com";
+const SMTP_PORT = Number(process.env.TOLLROAD_SMTP_PORT ?? "587");
+const SMTP_USER = process.env.TOLLROAD_SMTP_USER ?? "emailapikey";
+const SMTP_PASS = process.env.TOLLROAD_SMTP_PASS;
+const SENDER = process.env.TOLLROAD_SMTP_SENDER ?? "TollRoad <tollroad@agfarms.dev>";
+
+let transporter: Transporter | null = null;
+
+async function getTransport(): Promise<Transporter> {
+  if (!transporter) {
+    const { createTransport } = await import("nodemailer");
+    transporter = createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      // Port 465 is implicit TLS; 587 upgrades via STARTTLS (secure: false).
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+  }
+  return transporter;
+}
 
 export function emailConfigured(): boolean {
-  return Boolean(SENDER);
+  return Boolean(SMTP_PASS);
 }
 
 export async function sendOtpEmail(to: string, code: string): Promise<void> {
-  if (!SENDER) {
-    console.log(`[otp] code for ${to}: ${code} (TOLLROAD_SES_SENDER unset — not emailed)`);
+  if (!SMTP_PASS) {
+    console.log(`[otp] code for ${to}: ${code} (TOLLROAD_SMTP_PASS unset — not emailed)`);
     return;
   }
   const subject = `Your TollRoad sign-in code: ${code}`;
@@ -20,18 +45,6 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
     <p style="font-size:34px;letter-spacing:8px;font-weight:700;margin:8px 0">${code}</p>
     <p style="font-size:13px;color:#888">Expires in 10 minutes. If you didn't request this, ignore this email.</p>
   </div>`;
-  const { SESv2Client, SendEmailCommand } = await import("@aws-sdk/client-sesv2");
-  const client = new SESv2Client({ region: REGION });
-  await client.send(
-    new SendEmailCommand({
-      FromEmailAddress: SENDER,
-      Destination: { ToAddresses: [to] },
-      Content: {
-        Simple: {
-          Subject: { Data: subject, Charset: "UTF-8" },
-          Body: { Text: { Data: text, Charset: "UTF-8" }, Html: { Data: html, Charset: "UTF-8" } },
-        },
-      },
-    }),
-  );
+  const transport = await getTransport();
+  await transport.sendMail({ from: SENDER, to, subject, text, html });
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
+import { slugify } from "@/lib/slug";
 
 /**
  * The single way to render an artist's name anywhere in the app: a link to that
@@ -31,7 +32,7 @@ export default function ArtistLink({
   return (
     <Link
       className={cls}
-      href={ROUTES.artistProfile(id)}
+      href={ROUTES.artistProfile(slugify(name) || id)}
       onClick={stopPropagation ? (e) => e.stopPropagation() : undefined}
     >
       {name}
