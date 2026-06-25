@@ -3,6 +3,10 @@ import { Fraunces, JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import "@/styles/tokens.css";
 import "@/styles/listen.css";
+import "@/styles/bond/card.css";
+import "@/styles/bond/player.css";
+import "@/styles/bond/profile.css";
+import "@/styles/bond/rail.css";
 import GlobalPlayer from "@/components/GlobalPlayer";
 
 const fraunces = Fraunces({

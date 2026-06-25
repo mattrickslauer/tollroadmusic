@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import LibraryProvider from "@/context/LibraryProvider";
 import PlayerProvider, { usePlayer } from "@/context/PlayerProvider";
+import { BondProvider } from "@/context/BondProvider";
 import PlayerBar from "@/components/listen/PlayerBar";
 
 // The dark (listen) experience: there the bar is docked beside the sidebar and
@@ -24,8 +25,11 @@ export default function GlobalPlayer({ children }: { children: React.ReactNode }
   return (
     <LibraryProvider>
       <PlayerProvider>
-        {children}
-        <GlobalBar />
+        {/* Inside PlayerProvider so it can read the playing track + metered seconds. */}
+        <BondProvider>
+          {children}
+          <GlobalBar />
+        </BondProvider>
       </PlayerProvider>
     </LibraryProvider>
   );

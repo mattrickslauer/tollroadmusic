@@ -11,6 +11,10 @@ import type {
   PublicPlaylist,
   HistoryRow,
   StreamGrant,
+  Bond,
+  Leaderboard,
+  MyBonds,
+  ProfileBonds,
 } from "./types";
 
 const BASE = "/api/v1";
@@ -109,6 +113,13 @@ export const commitCover = (trackId: string, key: string) =>
   req<{ ok: true; coverImageKey: string }>("/artist/cover/commit", body({ trackId, key }));
 export const updateArtistProfile = (fields: Record<string, string>) =>
   req<{ ok: true }>("/artist/profile", body(fields));
+
+// --- Superfan Bond ----------------------------------------------------------
+export const getBond = (artistId: string) => req<Bond>(`/superfan/bond/${artistId}`);
+export const getLeaderboard = (artistId: string, limit = 50) =>
+  req<Leaderboard>(`/superfan/leaderboard/${artistId}?limit=${limit}`);
+export const getMyBonds = () => req<MyBonds>(`/superfan/my-bonds`);
+export const getProfileBonds = (handle: string) => req<ProfileBonds>(`/superfan/profile/${handle}`);
 
 // Presign -> PUT the bytes straight to S3 -> commit. Returns the stored key.
 export async function uploadImage(

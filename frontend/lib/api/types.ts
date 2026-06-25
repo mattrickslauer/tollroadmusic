@@ -95,3 +95,60 @@ export type ArtistSummary = {
    *  Optional: a backend predating this flag omits it, which callers treat as enabled. */
   uploadsConfigured?: boolean;
 };
+
+// --- Superfan Bond ----------------------------------------------------------
+// A listener's accrued relationship with one artist. `bondPoints` accrue at
+// BP_PER_MINUTE per metered minute heard; tiers/rank are derived server-side
+// (mirrored client-side in lib/bond/bondConfig.ts for optimistic UI).
+export interface Bond {
+  artistId: string;
+  artistName: string;
+  bondPoints: number;
+  minutes: number;
+  amountCents: number;
+  tier: string;
+  tierIndex: number;
+  nextTier: string | null;
+  nextTierAt: number | null;
+  progressToNext: number;
+  rank: number | null;
+  totalFans: number;
+  streakDays: number;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  handle: string;
+  displayName: string;
+  bondPoints: number;
+  tier: string;
+}
+
+export interface Leaderboard {
+  entries: LeaderboardEntry[];
+  totalFans: number;
+}
+
+export interface BondSummary {
+  artistId: string;
+  artistName: string;
+  bondPoints: number;
+  minutes: number;
+  tier: string;
+  tierIndex: number;
+  rank: number | null;
+  totalFans: number;
+}
+
+export interface MyBonds {
+  bonds: BondSummary[];
+  streakDays: number;
+  totalBondPoints: number;
+}
+
+export interface ProfileBonds {
+  handle: string;
+  displayName: string;
+  bonds: BondSummary[];
+  totalBondPoints: number;
+}
