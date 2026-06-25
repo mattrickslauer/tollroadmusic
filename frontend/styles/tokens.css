@@ -8,6 +8,24 @@
    without touching any component logic.
    ============================================================ */
 
+/* Canonical Superfan Bond tier ramp (cool -> hot toward Devotee).
+   Defined on :root so every bond surface — including the tier-up
+   celebration that mounts outside the .app-dark tree — resolves the
+   SAME five colors. All bond CSS (card/player/profile/rail) references
+   these; never hard-code tier hexes in a component stylesheet. */
+:root {
+  --bond-tier0: #7c8aa5; /* Listener */
+  --bond-tier1: #34cfe0; /* Regular  */
+  --bond-tier2: #66e6a6; /* Fan      */
+  --bond-tier3: #ffb02e; /* Superfan */
+  --bond-tier4: #ff4d72; /* Devotee  */
+  --bond-tier0-glow: rgba(124, 138, 165, 0.4);
+  --bond-tier1-glow: rgba(52, 207, 224, 0.4);
+  --bond-tier2-glow: rgba(102, 230, 166, 0.4);
+  --bond-tier3-glow: rgba(255, 176, 46, 0.42);
+  --bond-tier4-glow: rgba(255, 77, 114, 0.45);
+}
+
 .app-dark {
   /* surfaces — near-black, layered for depth */
   --app-bg: #060608;

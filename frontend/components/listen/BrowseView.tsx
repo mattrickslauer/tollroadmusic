@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Catalog } from "@/lib/api/types";
+import BondRail from "@/components/bond/BondRail";
 import RecentlyPlayedRail from "./RecentlyPlayedRail";
 import CatalogFilters from "./CatalogFilters";
 import TrackGrid from "./TrackGrid";
@@ -30,6 +31,7 @@ export default function BrowseView({ data }: { data: Catalog }) {
 
   return (
     <>
+      <BondRail />
       <RecentlyPlayedRail />
       <CatalogFilters genres={genres} genre={genre} onGenre={setGenre} q={q} onQuery={setQ} />
       <TrackGrid tracks={visible} />

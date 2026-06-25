@@ -1,0 +1,171 @@
+/* ============================================================
+   Superfan Bond — browse re-engagement rail. Owned by the Wave-2
+   "browse rail" agent. Mounts atop /browse via <BondRail/>.
+   Reads only the .app-dark tokens (styles/tokens.css). Class prefix: lx-.
+   Urgent-but-premium: tier-colored accents, near-full progress bars on
+   "almost there" cards, a flame motif for the account streak.
+   ============================================================ */
+
+/* Per-tier accent (index matches bondConfig.ts TIERS):
+   0 Listener · 1 Regular · 2 Fan · 3 Superfan · 4 Devotee.
+   A returning fan reads "how premium is this relationship" at a glance. */
+.lx-bond-rail {
+  --tier-accent: var(--app-text-faint);
+  --tier-glow: rgba(255, 255, 255, 0.06);
+  margin-bottom: 30px;
+}
+
+.lx-bond-rail-card[data-tier="0"] { --tier-accent: var(--bond-tier0); --tier-glow: var(--bond-tier0-glow); }
+.lx-bond-rail-card[data-tier="1"] { --tier-accent: var(--bond-tier1); --tier-glow: var(--bond-tier1-glow); }
+.lx-bond-rail-card[data-tier="2"] { --tier-accent: var(--bond-tier2); --tier-glow: var(--bond-tier2-glow); }
+.lx-bond-rail-card[data-tier="3"] { --tier-accent: var(--bond-tier3); --tier-glow: var(--bond-tier3-glow); }
+.lx-bond-rail-card[data-tier="4"] { --tier-accent: var(--bond-tier4); --tier-glow: var(--bond-tier4-glow); }
+
+/* ---------- header row: section title + streak flame ---------- */
+.lx-bond-rail-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.lx-bond-rail-head .lx-section-h { margin-bottom: 0; }
+
+/* The account-wide streak — a loss-aversion nudge. Warm ember pill. */
+.lx-bond-streak {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 120, 40, 0.16), rgba(255, 90, 30, 0.08));
+  border: 1px solid rgba(255, 140, 60, 0.32);
+  font-size: 0.82rem;
+  color: var(--app-text);
+}
+.lx-bond-flame {
+  font-size: 0.95rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 140, 50, 0.6));
+  animation: lxFlame 1.6s ease-in-out infinite;
+}
+@keyframes lxFlame {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1px) scale(1.12); }
+}
+.lx-bond-streak-n { font-weight: 800; color: #ffcf9a; letter-spacing: -0.01em; }
+.lx-bond-streak-cta { color: var(--app-text-dim); font-size: 0.78rem; }
+
+/* ---------- the scrolling rail ---------- */
+.lx-bond-rail-track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+/* ---------- a single nudge card ---------- */
+.lx-bond-rail-card {
+  position: relative;
+  flex: 0 0 226px;
+  width: 226px;
+  min-width: 0;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 15px 16px 16px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--app-text);
+  background:
+    radial-gradient(120% 90% at 0% 0%, var(--tier-glow), transparent 58%),
+    var(--app-surface);
+  border: 1px solid var(--app-line);
+  overflow: hidden;
+  transition: transform 0.18s, border-color 0.18s, background 0.18s;
+}
+.lx-bond-rail-card:hover,
+.lx-bond-rail-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--tier-accent);
+  outline: none;
+}
+/* A tier-colored signal stripe down the leading edge. */
+.lx-bond-rail-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--tier-accent);
+  opacity: 0.85;
+}
+
+.lx-bond-card-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tier-accent);
+}
+.lx-bond-card-line {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--app-text);
+}
+.lx-bond-card-bp {
+  font-weight: 800;
+  color: var(--tier-accent);
+}
+.lx-bond-card-goal { font-weight: 700; color: var(--app-text); }
+.lx-bond-card-artist {
+  font-size: 0.86rem;
+  color: var(--app-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lx-bond-card-foot {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+
+/* ---------- "almost there" progress bar ---------- */
+/* Visibly close to full — the whole point is the near-miss. */
+.lx-bond-progress {
+  display: block;
+  margin-top: 8px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--app-elev);
+  overflow: hidden;
+}
+.lx-bond-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--tier-accent), color-mix(in srgb, var(--tier-accent) 55%, #fff));
+  box-shadow: 0 0 12px var(--tier-glow);
+  transition: width 0.4s ease;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 640px) {
+  .lx-bond-rail-card { flex-basis: 200px; width: 200px; padding: 13px 14px 14px; }
+  .lx-bond-streak-cta { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lx-bond-flame { animation: none; }
+  .lx-bond-rail-card:hover,
+  .lx-bond-rail-card:focus-visible { transform: none; }
+}
