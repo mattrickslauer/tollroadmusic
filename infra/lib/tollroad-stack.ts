@@ -320,7 +320,15 @@ export class TollroadStack extends cdk.Stack {
     for (const k of [
       "TOLLROAD_SESSION_SECRET",
       "TOLLROAD_CF_PRIVATE_KEY",
-      "TOLLROAD_SES_SENDER",
+      // OTP email goes out via ZeptoMail SMTP (backend/src/domain/email.ts). Only
+      // the API token is secret; host/port/user/sender default in code. Supplied
+      // at deploy via -c and dropped on a plain redeploy, so keep them in
+      // backend/.env as the restore source.
+      "TOLLROAD_SMTP_PASS",
+      "TOLLROAD_SMTP_HOST",
+      "TOLLROAD_SMTP_PORT",
+      "TOLLROAD_SMTP_USER",
+      "TOLLROAD_SMTP_SENDER",
       "TOLLROAD_ALLOWED_ORIGINS",
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
@@ -361,11 +369,9 @@ export class TollroadStack extends cdk.Stack {
     });
     // The API reads catalog/ledger/library and runs the metering transaction on
     // DSQL; it generates the IAM auth token itself (DbConnectAdmin), same as the
-    // rollup. Email sign-in codes go out via SES.
+    // rollup. Email sign-in codes go out via ZeptoMail SMTP (plain HTTPS/SMTP, no
+    // IAM needed), so SES permissions are no longer granted.
     apiFn.addToRolePolicy(dsqlConnectAdmin);
-    apiFn.addToRolePolicy(
-      new iam.PolicyStatement({ sid: "TollroadApiSendOtpEmail", actions: ["ses:SendEmail"], resources: ["*"] }),
-    );
     // The charge handler writes one METER item per metered minute into the table;
     // the stream then drives the rollup. Least-privilege: PutItem only.
     table.grant(apiFn, "dynamodb:PutItem");

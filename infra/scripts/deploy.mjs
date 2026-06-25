@@ -38,13 +38,24 @@ const REQUIRED = [
   "TOLLROAD_SESSION_SECRET",
   "TOLLROAD_CF_KEY_PAIR_ID",
   "TOLLROAD_CF_PRIVATE_KEY",
-  "TOLLROAD_SES_SENDER",
+  // ZeptoMail SMTP token for OTP email (replaced SES). Without it the Lambda
+  // falls back to console-logging codes and no sign-in email is ever sent.
+  "TOLLROAD_SMTP_PASS",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
 ];
-const OPTIONAL = ["TOLLROAD_ALLOWED_ORIGINS", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"];
+// SMTP host/port/user/sender all default in code (backend/src/domain/email.ts),
+// so they're only forwarded when explicitly overridden in the env file.
+const OPTIONAL = [
+  "TOLLROAD_ALLOWED_ORIGINS",
+  "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+  "TOLLROAD_SMTP_SENDER",
+  "TOLLROAD_SMTP_HOST",
+  "TOLLROAD_SMTP_PORT",
+  "TOLLROAD_SMTP_USER",
+];
 
 function die(msg) {
   console.error(`\n✖ ${msg}\n`);
