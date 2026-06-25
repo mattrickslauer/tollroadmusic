@@ -135,6 +135,19 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     };
   }, [loadMe]);
 
+  // Out-of-band wallet changes (e.g. a 1¢ like charged from LibraryProvider) sync
+  // the displayed balance here, the single source of truth; `needFunds` means the
+  // charge was declined for lack of funds, so open the top-up sheet.
+  useEffect(() => {
+    const onBalance = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { balanceCents?: number; needFunds?: boolean } | undefined;
+      if (typeof detail?.balanceCents === "number") setBalanceCents(detail.balanceCents);
+      if (detail?.needFunds) setTopup(true);
+    };
+    window.addEventListener("tollroad:balance", onBalance);
+    return () => window.removeEventListener("tollroad:balance", onBalance);
+  }, []);
+
   useEffect(() => { nowRef.current = current; }, [current]);
 
   // metering loop — accrue real elapsed playback time only; never bill seeks,

@@ -41,13 +41,22 @@ export interface MeterEvent {
   /** Wall-clock minute the charge billed; pass the SAME value used for the DSQL
    *  ledger so the idempotency keys line up and the rollup reconciles to a no-op. */
   minuteEpoch?: number;
+  /** Override the ledger idempotency key. Defaults to '<user>#<track>#<minute>'.
+   *  Non-minute charges (e.g. a like) pass their own key so the rollup writes the
+   *  matching ledger row. When set, also pass `skSuffix` to avoid colliding with a
+   *  metered minute for the same (user, track). */
+  idempotencyKey?: string;
+  /** Replaces the minute in the DynamoDB sort key (`EVT#<skSuffix>#<track>`), so a
+   *  non-minute event coexists with a metered minute for the same (user, track). */
+  skSuffix?: string;
 }
 
 export async function emitMeterEvent(e: MeterEvent): Promise<void> {
   if (!TABLE) return; // unconfigured (local dev): the DSQL ledger write already ran.
 
   const minuteEpoch = e.minuteEpoch ?? currentMinuteEpoch();
-  const key = `${e.accountId}#${e.trackId}#${minuteEpoch}`;
+  const key = e.idempotencyKey ?? `${e.accountId}#${e.trackId}#${minuteEpoch}`;
+  const sk = e.skSuffix ?? String(minuteEpoch);
   const ttl = Math.floor(Date.now() / 1000) + TTL_SECONDS;
   try {
     const { client, PutItemCommand } = await getClient();
@@ -56,7 +65,7 @@ export async function emitMeterEvent(e: MeterEvent): Promise<void> {
         TableName: TABLE,
         Item: {
           PK: { S: `USER#${e.accountId}` },
-          SK: { S: `EVT#${minuteEpoch}#${e.trackId}` },
+          SK: { S: `EVT#${sk}#${e.trackId}` },
           type: { S: "METER" }, // the stream filter the rollup subscribes to
           idempotencyKey: { S: key },
           userId: { S: e.accountId },

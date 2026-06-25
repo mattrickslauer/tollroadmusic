@@ -4,6 +4,10 @@ import { type Handler, type ApiRequest, ok, error, requireSession, HttpError } f
 import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import * as lib from "../domain/library.ts";
+import { getTrackBilling } from "../domain/tracks.ts";
+import { chargeLike, LIKE_COST_CENTS } from "../domain/billing.ts";
+import { emitMeterEvent } from "../domain/meter.ts";
+import { paymentRequired } from "../lib/x402.ts";
 
 async function guard(req: ApiRequest) {
   if (!sessionConfigured() || !dsqlConfigured()) throw new HttpError(503, "library not configured");
@@ -23,11 +27,49 @@ export const getLikes: Handler = async (req) => {
   return ok({ tracks, likedIds: ids });
 };
 
+// Toggle a like. Liking tips LIKE_COST_CENTS toward the song (once per track,
+// ever); unliking is free and never refunds. A like with too small a balance gets
+// the same x402 402 the /charge endpoint returns, so the client can prompt a top-up.
 export const postLike: Handler = async (req) => {
   const s = await guard(req);
   const trackId = trackIdFrom(req);
   if (!trackId) return error(400, "trackId required");
-  return ok(await lib.toggleLike(s.sub, trackId));
+
+  // Unlike first — if a row was removed this was an unlike: free, no track lookup.
+  if (await lib.unlikeIfPresent(s.sub, trackId)) return ok({ liked: false, charged: false });
+
+  // Otherwise it's a like, which costs money — resolve the artist for the ledger.
+  const track = await getTrackBilling(trackId);
+  if (!track) return error(404, "no such track");
+
+  const result = await chargeLike({ accountId: s.sub, trackId: track.id, artistId: track.artistId });
+  if (!result.ok) {
+    const res = paymentRequired({
+      resource: `/v1/library/likes`,
+      trackId: track.id,
+      pricePerMinuteCents: LIKE_COST_CENTS,
+      reason: "insufficient balance",
+    });
+    (res.body as Record<string, unknown>).balanceCents = result.balanceCents;
+    return res;
+  }
+
+  // Mirror the charge into the metering hot path so the rollup updates artist
+  // earnings, exactly as /charge does. Keyed '<user>#<track>#like' to match the
+  // ledger row; best-effort (the listener is already billed durably in DSQL).
+  if (result.charged) {
+    await emitMeterEvent({
+      accountId: s.sub,
+      trackId: track.id,
+      artistId: track.artistId,
+      amountCents: LIKE_COST_CENTS,
+      minuteEpoch: result.minuteEpoch,
+      idempotencyKey: `${s.sub}#${track.id}#like`,
+      skSuffix: "like",
+    });
+  }
+
+  return ok({ liked: true, charged: result.charged, balanceCents: result.balanceCents });
 };
 
 export const deleteLike: Handler = async (req) => {
