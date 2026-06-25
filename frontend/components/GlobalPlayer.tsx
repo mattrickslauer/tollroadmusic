@@ -11,6 +11,7 @@ import LibraryProvider from "@/context/LibraryProvider";
 import PlayerProvider, { usePlayer } from "@/context/PlayerProvider";
 import { BondProvider } from "@/context/BondProvider";
 import PlayerBar from "@/components/listen/PlayerBar";
+import TierUpCelebration from "@/components/bond/TierUpCelebration";
 
 // The dark (listen) experience: there the bar is docked beside the sidebar and
 // shown even when idle ("pick a track…"). Everywhere else the bar is global
@@ -29,6 +30,8 @@ export default function GlobalPlayer({ children }: { children: React.ReactNode }
         <BondProvider>
           {children}
           <GlobalBar />
+          {/* App-wide tier-up celebration — listens for bond tier crossings. */}
+          <TierUpCelebration />
         </BondProvider>
       </PlayerProvider>
     </LibraryProvider>

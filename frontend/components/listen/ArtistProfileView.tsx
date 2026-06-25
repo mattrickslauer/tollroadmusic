@@ -3,6 +3,8 @@
 import type { ArtistProfile } from "@/lib/api/types";
 import CoverImage from "./CoverImage";
 import TrackCard from "./TrackCard";
+import BondCard from "@/components/bond/BondCard";
+import SuperfanLeaderboard from "@/components/bond/SuperfanLeaderboard";
 
 /** Public artist profile view. Renders the artist's avatar, name, meta line
  *  (genre · location), bio, optional website link, and a playable track grid
@@ -33,6 +35,8 @@ export default function ArtistProfileView({ profile }: { profile: ArtistProfile 
         )}
       </header>
 
+      <BondCard artistId={artist.id} artistName={artist.name} />
+
       {tracks.length === 0 ? (
         <p className="lx-empty">No tracks yet.</p>
       ) : (
@@ -42,6 +46,8 @@ export default function ArtistProfileView({ profile }: { profile: ArtistProfile 
           ))}
         </div>
       )}
+
+      <SuperfanLeaderboard artistId={artist.id} />
     </>
   );
 }

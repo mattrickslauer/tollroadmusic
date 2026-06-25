@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ArtistLink from "./ArtistLink";
+import BondMeter from "@/components/bond/BondMeter";
 import { usePlayer } from "@/context/PlayerProvider";
 import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
@@ -42,6 +43,8 @@ export default function PlayerBar() {
             <div className="lx-player-meta">
               <span className="lx-player-title" title={current.title}>{current.title}</span>
               <ArtistLink id={current.artistId} name={current.artistName} className="lx-player-artist" />
+              {/* Live Superfan-Bond meter — ticks up as the metered minutes accrue. */}
+              <BondMeter />
             </div>
             <LikeButton trackId={current.id} size={16} />
           </>

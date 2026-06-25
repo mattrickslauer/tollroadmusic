@@ -1,2 +1,336 @@
 /* Superfan Bond — player meter + tier-up celebration. Owned by the Wave-2
-   "player celebration" agent. (Stub: add styles here, do not touch the layout.) */
+   "player celebration" agent. Reads the dark .app-dark tokens (tokens.css) and
+   the brand amber / meter-green (globals.css). All classes are .lx- prefixed and
+   scoped to the bond UI, so this file never touches the player-bar layout grid. */
+
+/* ============================================================
+   Tier accent palette — one hue per tier, keyed off data-tier.
+   Used by both the dock meter badge and the celebration burst.
+   ============================================================ */
+.lx-bond-meter,
+.lx-tierup {
+  --lx-tier: var(--bond-tier0); /* Listener (default) */
+  --lx-tier-glow: var(--bond-tier0-glow);
+}
+.lx-bond-meter[data-tier="Regular"],
+.lx-tierup[data-tier="Regular"] {
+  --lx-tier: var(--bond-tier1);
+  --lx-tier-glow: var(--bond-tier1-glow);
+}
+.lx-bond-meter[data-tier="Fan"],
+.lx-tierup[data-tier="Fan"] {
+  --lx-tier: var(--bond-tier2);
+  --lx-tier-glow: var(--bond-tier2-glow);
+}
+.lx-bond-meter[data-tier="Superfan"],
+.lx-tierup[data-tier="Superfan"] {
+  --lx-tier: var(--bond-tier3);
+  --lx-tier-glow: var(--bond-tier3-glow);
+}
+.lx-bond-meter[data-tier="Devotee"],
+.lx-tierup[data-tier="Devotee"] {
+  --lx-tier: var(--bond-tier4);
+  --lx-tier-glow: var(--bond-tier4-glow);
+}
+
+/* ============================================================
+   Dock meter — compact, sits under the now-playing title/artist.
+   Row: [tier badge] [thin progress bar] [BP count].
+   ============================================================ */
+.lx-bond-meter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  min-width: 0;
+  max-width: 220px;
+  animation: lxBondIn 0.3s ease both;
+}
+
+.lx-bond-badge {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: var(--lx-tier);
+  background: color-mix(in srgb, var(--lx-tier) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lx-tier) 40%, transparent);
+  white-space: nowrap;
+}
+
+.lx-bond-bar {
+  position: relative;
+  flex: 1;
+  min-width: 28px;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--app-elev);
+  overflow: hidden;
+}
+.lx-bond-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--lx-tier) 65%, transparent), var(--lx-tier));
+  box-shadow: 0 0 8px -1px var(--lx-tier-glow);
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Top tier — the bar is "complete"; give it a gentle living shimmer. */
+.lx-bond-meter[data-maxed="true"] .lx-bond-fill {
+  animation: lxBondShimmer 2.4s ease-in-out infinite;
+}
+
+.lx-bond-bp {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--app-text);
+  line-height: 1;
+}
+.lx-bond-bp small {
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--app-text-faint);
+}
+
+@keyframes lxBondIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes lxBondShimmer {
+  0%, 100% { opacity: 0.78; }
+  50% { opacity: 1; }
+}
+
+/* Phone: the dock restacks tight — the BP number is the first thing to drop,
+   the badge + bar still tell the story. */
+@media (max-width: 640px) {
+  .lx-bond-meter { gap: 6px; max-width: 160px; margin-top: 3px; }
+  .lx-bond-bp { display: none; }
+}
+
+/* ============================================================
+   Tier-up celebration — a premium toast above the dock.
+   ============================================================ */
+.lx-tierup-layer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--playerbar-h, 92px) + 18px);
+  z-index: 80;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none; /* only the toast itself is interactive */
+}
+
+.lx-tierup {
+  position: relative;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(420px, 92vw);
+  padding: 14px 44px 14px 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  color: var(--app-text);
+  background:
+    radial-gradient(140% 120% at 0% 0%, color-mix(in srgb, var(--lx-tier) 22%, transparent), transparent 60%),
+    linear-gradient(180deg, rgba(26, 26, 34, 0.98), rgba(14, 14, 20, 0.99));
+  border: 1px solid color-mix(in srgb, var(--lx-tier) 45%, var(--app-line));
+  box-shadow:
+    0 18px 50px -12px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 0 34px -6px var(--lx-tier-glow);
+  animation: lxTierIn 0.5s cubic-bezier(0.18, 1.3, 0.4, 1) both;
+}
+
+/* The medallion badge with the new tier name. */
+.lx-tierup-badge {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--lx-tier) 16%, var(--app-surface));
+  border: 1px solid color-mix(in srgb, var(--lx-tier) 55%, transparent);
+  box-shadow: 0 0 22px -4px var(--lx-tier-glow), 0 0 0 4px color-mix(in srgb, var(--lx-tier) 10%, transparent);
+  animation: lxBadgePop 0.6s cubic-bezier(0.18, 1.5, 0.35, 1) 0.08s both;
+}
+.lx-tierup-badge::after {
+  /* sweeping sheen across the medallion */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: lxSheen 1.2s ease 0.5s 1 both;
+}
+.lx-tierup-badge-tier {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.05;
+  padding: 0 4px;
+  color: var(--lx-tier);
+  text-shadow: 0 0 12px var(--lx-tier-glow);
+}
+
+.lx-tierup-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.lx-tierup-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lx-tier);
+}
+.lx-tierup-headline {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--app-text);
+}
+.lx-tierup-headline strong { font-weight: 800; color: var(--lx-tier); }
+.lx-tierup-more {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--app-text-faint);
+}
+
+.lx-tierup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--app-text-faint);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.lx-tierup-close:hover { color: var(--app-text); background: var(--app-elev); }
+.lx-tierup-close svg { width: 14px; height: 14px; }
+
+/* Thin auto-dismiss countdown bar along the bottom edge. */
+.lx-tierup-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--lx-tier), color-mix(in srgb, var(--lx-tier) 30%, transparent));
+  animation: lxTierCountdown 4s linear both;
+}
+
+/* ----- confetti burst ----- */
+.lx-tierup-burst {
+  position: absolute;
+  left: 42px; /* over the medallion */
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.lx-tierup-particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  opacity: 0;
+  background: var(--lx-tier);
+  transform: rotate(var(--lx-ang)) translateX(0) scale(1);
+  animation: lxBurst 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) var(--lx-delay) 1 both;
+}
+.lx-tierup-particle:nth-child(3n) { background: var(--app-accent-bright); border-radius: 50%; }
+.lx-tierup-particle:nth-child(3n + 1) { background: var(--app-text); }
+.lx-tierup-particle:nth-child(4n) { width: 4px; height: 9px; }
+
+@keyframes lxTierIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes lxBadgePop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  60% { transform: scale(1.12) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes lxSheen {
+  to { transform: translateX(120%); }
+}
+@keyframes lxBurst {
+  0% { opacity: 0; transform: rotate(var(--lx-ang)) translateX(0) scale(0.4); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--lx-ang)) translateX(var(--lx-dist)) scale(0.7); }
+}
+@keyframes lxTierCountdown {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Phone: keep the toast clear of the taller two-row mobile dock. */
+@media (max-width: 640px) {
+  .lx-tierup-layer { bottom: 142px; }
+  .lx-tierup { gap: 11px; padding: 12px 40px 12px 12px; }
+  .lx-tierup-badge { width: 48px; height: 48px; }
+  .lx-tierup-headline { font-size: 0.86rem; }
+  .lx-tierup-burst { left: 36px; }
+}
+
+/* ============================================================
+   Reduced motion — drop the celebration's motion, keep it legible.
+   The toast still appears (and still auto-dismisses) — just no
+   burst, pop, sheen, shimmer, or slide.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .lx-bond-meter,
+  .lx-bond-fill,
+  .lx-tierup,
+  .lx-tierup-badge,
+  .lx-tierup-badge::after,
+  .lx-tierup-particle {
+    animation: none !important;
+    transition: none !important;
+  }
+  .lx-tierup { opacity: 1; transform: none; }
+  .lx-tierup-badge { opacity: 1; transform: none; }
+  .lx-tierup-particle { display: none; }
+  /* keep the countdown as a non-distracting timer (it's just a shrinking line) */
+  .lx-tierup-progress { animation: lxTierCountdown 4s linear both; }
+}

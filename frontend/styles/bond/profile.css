@@ -1,2 +1,221 @@
-/* Superfan Bond — fan profile wall. Owned by the Wave-2 "profile page" agent.
-   (Stub: add styles here, do not touch the layout.) */
+/* Superfan Bond — fan profile wall (the public "wall of bonds" at /u/<handle>).
+   Owned by the Wave-2 "profile page" agent. A premium collectible trophy shelf:
+   tier-colored tiles, subtle hover lift, clean responsive grid. Reads only the
+   .app-dark tokens (styles/tokens.css) + brand tokens, .lx- prefixed throughout.
+
+   Tier color language (cool -> hot toward Devotee), shared across the feature:
+     0 Listener  — slate/blue (coolest)
+     1 Regular   — teal
+     2 Fan       — meter-green
+     3 Superfan  — amber (the brand action accent)
+     4 Devotee   — hot magenta/red (hottest)
+   Exposed as --lx-tier-{c,glow} so a tile + its badge share one hue. */
+
+.lx-bond-wall {
+  --lx-tier-c: var(--bond-tier0);
+  --lx-tier-glow: rgba(124, 138, 165, 0.16);
+  max-width: 1100px;
+}
+.lx-bond-tile[data-tier="0"],
+.lx-bond-tile-tier[data-tier="0"] { --lx-tier-c: var(--bond-tier0); --lx-tier-glow: rgba(124, 138, 165, 0.18); }
+.lx-bond-tile[data-tier="1"],
+.lx-bond-tile-tier[data-tier="1"] { --lx-tier-c: var(--bond-tier1); --lx-tier-glow: rgba(52, 207, 224, 0.18); }
+.lx-bond-tile[data-tier="2"],
+.lx-bond-tile-tier[data-tier="2"] { --lx-tier-c: var(--bond-tier2); --lx-tier-glow: rgba(102, 230, 166, 0.20); }
+.lx-bond-tile[data-tier="3"],
+.lx-bond-tile-tier[data-tier="3"] { --lx-tier-c: var(--bond-tier3); --lx-tier-glow: rgba(255, 176, 46, 0.22); }
+.lx-bond-tile[data-tier="4"],
+.lx-bond-tile-tier[data-tier="4"] { --lx-tier-c: var(--bond-tier4); --lx-tier-glow: rgba(255, 77, 114, 0.24); }
+
+/* ---------- header ---------- */
+.lx-bond-wall-head { margin-bottom: 26px; }
+.lx-bond-wall-eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+.lx-bond-wall-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 8px 0 2px;
+  color: var(--app-text);
+}
+.lx-bond-wall-handle {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--app-text-dim);
+}
+.lx-bond-wall-stats {
+  display: flex;
+  gap: 14px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.lx-bond-wall-stat {
+  flex: 0 1 auto;
+  min-width: 132px;
+  padding: 12px 18px;
+  border-radius: var(--app-r);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line-soft);
+}
+.lx-bond-wall-stat dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+.lx-bond-wall-stat dd {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--app-text);
+  margin-top: 4px;
+}
+
+/* ---------- the shelf ---------- */
+.lx-bond-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+  list-style: none;
+  padding: 0;
+}
+
+.lx-bond-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px;
+  border-radius: var(--app-r-lg);
+  background: linear-gradient(180deg, var(--app-surface-2), var(--app-surface));
+  border: 1px solid var(--app-line);
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+/* A tier-tinted top edge + soft inner glow — the collectible "rarity" cue. */
+.lx-bond-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--lx-tier-c);
+  opacity: 0.9;
+}
+.lx-bond-tile::after {
+  content: "";
+  position: absolute;
+  inset: -40% 0 auto 0;
+  height: 120px;
+  background: radial-gradient(120px 60px at 50% 0%, var(--lx-tier-glow), transparent 70%);
+  pointer-events: none;
+}
+.lx-bond-tile:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--lx-tier-c) 45%, var(--app-line));
+  box-shadow: 0 14px 30px -18px var(--lx-tier-glow), 0 0 0 1px var(--lx-tier-glow);
+}
+
+.lx-bond-tile-top { display: flex; }
+.lx-bond-tile-tier {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lx-tier-c);
+  background: var(--lx-tier-glow);
+  border: 1px solid color-mix(in srgb, var(--lx-tier-c) 40%, transparent);
+}
+
+.lx-bond-tile-artist {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 12px;
+  color: var(--app-text);
+}
+.lx-bond-tile-artist-link { color: inherit; }
+.lx-bond-tile-artist-link:hover { color: var(--lx-tier-c); }
+
+.lx-bond-tile-bp {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
+}
+.lx-bond-tile-bp-num {
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+.lx-bond-tile-bp-lbl {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+.lx-bond-tile-rank {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--app-text-dim);
+}
+.lx-bond-tile-rank strong { color: var(--lx-tier-c); font-weight: 600; }
+
+.lx-bond-tile-sk { gap: 0; }
+.lx-bond-tile-sk::before,
+.lx-bond-tile-sk::after { display: none; }
+
+/* ---------- empty + not-found states ---------- */
+.lx-bond-wall-empty,
+.lx-bond-wall-missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 56px 24px;
+  border-radius: var(--app-r-lg);
+  background: var(--app-surface);
+  border: 1px dashed var(--app-line);
+}
+.lx-bond-wall-empty-mark {
+  font-size: 2rem;
+  color: var(--app-accent);
+  opacity: 0.85;
+}
+.lx-bond-wall-empty-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+.lx-bond-wall-empty-sub {
+  color: var(--app-text-dim);
+  max-width: 42ch;
+}
+.lx-bond-wall-empty-sub code {
+  font-family: var(--font-mono);
+  color: var(--app-accent);
+  font-size: 0.9em;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 560px) {
+  .lx-bond-grid { grid-template-columns: 1fr; gap: 12px; }
+  .lx-bond-wall-stat { flex: 1 1 100%; }
+}

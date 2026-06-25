@@ -1,2 +1,335 @@
 /* Superfan Bond — artist-page bond card + leaderboard. Owned by the Wave-2
-   "artist page card" agent. (Stub: add styles here, do not touch the layout.) */
+   "artist page card" agent. Reads only the dark tokens (styles/tokens.css +
+   the brand palette in globals.css). Class prefix: lx- ("listen experience").
+
+   Tier color scale escalates cool -> hot toward Devotee, keyed off a
+   data-tier="0..4" attribute so badges, bars and rows all read one ramp:
+     0 Listener  slate-blue   (coolest)
+     1 Regular   cyan / teal
+     2 Fan       meter-green
+     3 Superfan  amber / gold
+     4 Devotee   magenta-crimson (hottest)
+   ------------------------------------------------------------------------- */
+
+.app-dark {
+  --bond-t0: var(--bond-tier0);
+  --bond-t1: var(--bond-tier1);
+  --bond-t2: var(--bond-tier2);
+  --bond-t3: var(--bond-tier3);
+  --bond-t4: var(--bond-tier4);
+
+  --bond-t0-soft: rgba(124, 138, 165, 0.16);
+  --bond-t1-soft: rgba(52, 207, 224, 0.16);
+  --bond-t2-soft: rgba(102, 230, 166, 0.16);
+  --bond-t3-soft: rgba(255, 176, 46, 0.18);
+  --bond-t4-soft: rgba(255, 77, 114, 0.18);
+}
+
+/* The active tier color/glow for a given element, resolved from data-tier. */
+[data-tier="0"] { --bond-c: var(--bond-t0); --bond-c-soft: var(--bond-t0-soft); }
+[data-tier="1"] { --bond-c: var(--bond-t1); --bond-c-soft: var(--bond-t1-soft); }
+[data-tier="2"] { --bond-c: var(--bond-t2); --bond-c-soft: var(--bond-t2-soft); }
+[data-tier="3"] { --bond-c: var(--bond-t3); --bond-c-soft: var(--bond-t3-soft); }
+[data-tier="4"] { --bond-c: var(--bond-t4); --bond-c-soft: var(--bond-t4-soft); }
+
+/* ===================== Bond card ======================================== */
+.lx-bond-card {
+  position: relative;
+  margin: 4px 0 30px;
+  max-width: 520px;
+  padding: 20px 22px;
+  border-radius: var(--app-r-lg);
+  background:
+    radial-gradient(420px 200px at 100% -40%, var(--bond-c-soft), transparent 70%),
+    var(--app-surface);
+  border: 1px solid var(--app-line);
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.lx-bond-card[data-tier] { border-color: color-mix(in srgb, var(--bond-c) 32%, var(--app-line)); }
+/* The top edge picks up the tier color as a thin signature stripe. */
+.lx-bond-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--bond-c), transparent);
+  opacity: 0.85;
+}
+.lx-bond-card[data-live="true"] {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bond-c) 40%, transparent),
+    0 10px 40px -16px var(--bond-c-soft);
+}
+
+.lx-bond-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lx-bond-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--app-text-faint);
+}
+
+/* The tier badge — pill in the tier color. */
+.lx-bond-tier {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--bond-c);
+  background: var(--bond-c-soft);
+  border: 1px solid color-mix(in srgb, var(--bond-c) 45%, transparent);
+  text-shadow: 0 0 16px var(--bond-c-soft);
+}
+/* Devotee badge runs hot — a subtle pulse for the top tier. */
+.lx-bond-tier[data-tier="4"] {
+  animation: lxBondHot 2.6s ease-in-out infinite;
+}
+@keyframes lxBondHot {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 18px -2px var(--bond-t4-soft); }
+}
+
+.lx-bond-points {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 14px;
+}
+.lx-bond-points-num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.4rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--app-text);
+}
+.lx-bond-points-lbl {
+  font-size: 0.8rem;
+  color: var(--app-text-dim);
+}
+.lx-bond-streak {
+  margin-left: auto;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffb86b;
+  white-space: nowrap;
+  animation: lxBondFlame 1.8s ease-in-out infinite;
+}
+@keyframes lxBondFlame {
+  0%, 100% { transform: scale(1); filter: none; }
+  50% { transform: scale(1.06); filter: drop-shadow(0 0 6px rgba(255, 138, 46, 0.5)); }
+}
+
+/* Progress bar toward the next tier. */
+.lx-bond-progress { margin-bottom: 14px; }
+.lx-bond-bar {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--app-elev);
+  overflow: hidden;
+}
+.lx-bond-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--bond-c) 60%, var(--app-elev)), var(--bond-c));
+  box-shadow: 0 0 12px -2px var(--bond-c);
+  /* smooth fill as the live meter ticks the bond up */
+  transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* Sheen sweeping across the fill — addictive "earning" feel. */
+.lx-bond-bar-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: translateX(-100%);
+  animation: lxBondSheen 2.4s ease-in-out infinite;
+}
+.lx-bond-next {
+  margin: 9px 0 0;
+  font-size: 0.82rem;
+  color: var(--app-text-dim);
+}
+.lx-bond-next strong { color: var(--bond-c); font-weight: 700; }
+.lx-bond-progress-max .lx-bond-next { color: var(--bond-c); font-weight: 600; }
+
+@keyframes lxBondSheen {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+
+.lx-bond-rank {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--app-text-dim);
+}
+.lx-bond-rank strong { color: var(--app-text); font-weight: 800; }
+.lx-bond-rank-empty {
+  color: var(--app-text-faint);
+  font-style: italic;
+}
+
+/* Skeleton state: inert, no tier glow. */
+.lx-bond-card-sk::before { display: none; }
+.lx-bond-card-sk { border-color: var(--app-line); }
+.lx-bond-card-sk .lx-bond-points { margin-bottom: 18px; }
+
+/* ===================== Leaderboard ===================================== */
+.lx-leaderboard {
+  margin: 8px 0 40px;
+  max-width: 720px;
+}
+.lx-leaderboard-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.lx-leaderboard-title { margin-bottom: 0; }
+.lx-leaderboard-count {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--app-text-faint);
+}
+
+.lx-leaderboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lx-leaderboard-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 14px;
+  border-radius: var(--app-r);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line-soft);
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.lx-leaderboard-row:not(.lx-leaderboard-row-sk):hover {
+  background: var(--app-surface-2);
+  transform: translateX(2px);
+}
+
+/* #1 — crowned, gold glow. */
+.lx-leaderboard-row[data-first="true"] {
+  background:
+    radial-gradient(300px 120px at 0% 50%, var(--bond-t3-soft), transparent 70%),
+    var(--app-surface-2);
+  border-color: color-mix(in srgb, var(--amber) 45%, transparent);
+  box-shadow: 0 0 0 1px var(--bond-t3-soft), 0 12px 34px -18px var(--amber-glow);
+}
+
+.lx-leaderboard-rank {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--app-text-faint);
+  text-align: center;
+}
+.lx-leaderboard-crown {
+  font-size: 1.15rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px var(--amber-glow));
+}
+
+.lx-leaderboard-fan {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lx-leaderboard-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lx-leaderboard-handle {
+  font-size: 0.78rem;
+  color: var(--app-text-faint);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lx-leaderboard-tier {
+  justify-self: end;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--bond-c);
+  background: var(--bond-c-soft);
+  border: 1px solid color-mix(in srgb, var(--bond-c) 38%, transparent);
+}
+
+.lx-leaderboard-bp {
+  justify-self: end;
+  min-width: 56px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--app-text);
+}
+.lx-leaderboard-bp small {
+  margin-left: 3px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--app-text-faint);
+}
+
+.lx-leaderboard-empty {
+  padding: 22px 0;
+  color: var(--app-text-dim);
+  font-size: 0.95rem;
+}
+
+/* ===================== Responsive ====================================== */
+@media (max-width: 640px) {
+  .lx-bond-card { max-width: none; padding: 18px; }
+  .lx-bond-points-num { font-size: 2rem; }
+  .lx-bond-streak { margin-left: 0; flex-basis: 100%; }
+
+  .lx-leaderboard-row {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  /* The tier badge folds away on narrow screens; rank + handle + BP stay. */
+  .lx-leaderboard-tier { display: none; }
+}
+
+/* Respect reduced-motion: hold the bond animations static. */
+@media (prefers-reduced-motion: reduce) {
+  .lx-bond-bar-fill::after,
+  .lx-bond-streak,
+  .lx-bond-tier[data-tier="4"] { animation: none; }
+  .lx-bond-bar-fill { transition: none; }
+}
