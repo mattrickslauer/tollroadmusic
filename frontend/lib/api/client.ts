@@ -44,15 +44,15 @@ function body(b: unknown): RequestInit {
 export const getCatalog = () => req<Catalog>("/catalog");
 
 // --- Billing / x402 --------------------------------------------------------
-export type ChargeOk = { balanceCents: number; charged: boolean };
-/** Pay for one metered minute. Returns {ok:false, balanceCents} on 402. */
-export async function charge(trackId: string): Promise<{ ok: true; balanceCents: number } | { ok: false; balanceCents: number }> {
+export type ChargeOk = { balanceMillicents: number; charged: boolean };
+/** Pay for one metered minute. Returns {ok:false, balanceMillicents} on 402. */
+export async function charge(trackId: string): Promise<{ ok: true; balanceMillicents: number } | { ok: false; balanceMillicents: number }> {
   try {
     const d = await req<ChargeOk>("/charge", body({ trackId }));
-    return { ok: true, balanceCents: d.balanceCents };
+    return { ok: true, balanceMillicents: d.balanceMillicents };
   } catch (e) {
     if (e instanceof ApiError && e.status === 402) {
-      return { ok: false, balanceCents: (e.body as { balanceCents?: number })?.balanceCents ?? 0 };
+      return { ok: false, balanceMillicents: (e.body as { balanceMillicents?: number })?.balanceMillicents ?? 0 };
     }
     throw e;
   }
@@ -67,16 +67,16 @@ export async function streamUrl(trackId: string): Promise<string> {
 }
 
 // --- Wallet ----------------------------------------------------------------
-export const getBalance = () => req<{ balanceCents: number; history: HistoryRow[] }>("/balance");
+export const getBalance = () => req<{ balanceMillicents: number; history: HistoryRow[] }>("/balance");
 export const topup = (method: "ach" | "card") =>
   req<{ demo: boolean; clientSecret?: string; publishableKey?: string; method: string; creditCents: number; feeCents: number; chargeCents: number }>(
     "/wallet/topup",
     body({ method }),
   );
-export const demoCredit = (method: "ach" | "card") => req<{ balanceCents: number; demo: boolean }>("/wallet/demo-credit", body({ method }));
+export const demoCredit = (method: "ach" | "card") => req<{ balanceMillicents: number; demo: boolean }>("/wallet/demo-credit", body({ method }));
 /** Claim the one-time $3 (300-minute) welcome gift. Idempotent server-side. */
-export const claimOnboardingGift = () => req<{ credited: boolean; balanceCents: number }>("/wallet/onboarding-gift", body({}));
-export const confirmTopup = (paymentIntentId: string) => req<{ balanceCents: number; status: string }>("/wallet/confirm", body({ paymentIntentId }));
+export const claimOnboardingGift = () => req<{ credited: boolean; balanceMillicents: number }>("/wallet/onboarding-gift", body({}));
+export const confirmTopup = (paymentIntentId: string) => req<{ balanceMillicents: number; status: string }>("/wallet/confirm", body({ paymentIntentId }));
 
 // --- Library ---------------------------------------------------------------
 export const getLikes = () => req<{ tracks: LibraryTrack[]; likedIds: string[] }>("/library/likes");
@@ -97,6 +97,10 @@ export const recordPlay = (trackId: string) => req<{ ok: boolean }>("/recents", 
 // --- Artist ----------------------------------------------------------------
 export const createArtist = (fields: Record<string, unknown>) => req<{ id: string; name: string }>("/artists", body(fields));
 export const getArtist = (id: string) => req<ArtistProfile>(`/artists/${encodeURIComponent(id)}`);
+
+/** Set the per-minute rate for a track. Rate is in millicents (0 = free, max 100000, step 100). */
+export const setTrackRate = (trackId: string, ratePerMinuteMillicents: number) =>
+  req<{ ok: boolean; ratePerMinuteMillicents: number }>("/artist/track/rate", body({ trackId, ratePerMinuteMillicents }));
 
 // --- Artist content / profile ----------------------------------------------
 export const presignAvatar = (contentType: string) =>

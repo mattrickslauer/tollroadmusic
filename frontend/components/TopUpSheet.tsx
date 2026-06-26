@@ -21,8 +21,8 @@ interface Props {
   /** Optional context line, e.g. "You're out of funds." */
   reason?: string;
   onClose: () => void;
-  /** Called with the new balance (cents) once the wallet is funded. */
-  onFunded: (balanceCents: number) => void;
+  /** Called with the new balance (millicents) once the wallet is funded. */
+  onFunded: (balanceMillicents: number) => void;
 }
 
 const TOPUP_CENTS = 1000;
@@ -64,7 +64,7 @@ export default function TopUpSheet({ reason, onClose, onFunded }: Props) {
       const data = await api.topup(method);
       if (data.demo) {
         const cd = await api.demoCredit(method);
-        onFunded(cd.balanceCents);
+        onFunded(cd.balanceMillicents);
         return;
       }
       setQuote(data as Quote);
@@ -149,7 +149,7 @@ function PayForm({
   error,
 }: {
   chargeCents: number;
-  onFunded: (cents: number) => void;
+  onFunded: (millicents: number) => void;
   onError: (msg: string) => void;
   onBack: () => void;
   error: string | null;
@@ -174,7 +174,7 @@ function PayForm({
     try {
       const data = await api.confirmTopup(paymentIntent?.id ?? "");
       setPending(false);
-      onFunded(data.balanceCents);
+      onFunded(data.balanceMillicents);
     } catch (e) {
       setPending(false);
       onError(e instanceof api.ApiError ? e.message : "Could not confirm payment.");

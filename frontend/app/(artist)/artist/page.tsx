@@ -5,11 +5,12 @@
 import Link from "next/link";
 import { serverArtistSummary, apiConfigured, hasSessionCookie } from "@/lib/api/server";
 import ProfileEditor from "@/components/artist/ProfileEditor";
+import { formatRate } from "@/components/listen/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+const usdM = (m: number) => `$${(m / 100000).toFixed(2)}`;
 const dur = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 export default async function ArtistDashboardPage() {
@@ -51,7 +52,7 @@ export default async function ArtistDashboardPage() {
           <ProfileEditor artist={summary.artist} tracks={summary.tracks} uploadsConfigured={summary.uploadsConfigured !== false} />
 
           <div className="az-stats">
-            <Stat k="Total earned" v={usd(summary.earningsCents)} green />
+            <Stat k="Total earned" v={usdM(summary.earningsMillicents)} green />
             <Stat k="Minutes played" v={summary.minutes.toLocaleString("en-US")} />
             <Stat k="Tracks" v={String(summary.trackCount)} />
             <Stat k="Genre" v={summary.artist.genre || "—"} />
@@ -69,7 +70,7 @@ export default async function ArtistDashboardPage() {
                     <tr key={t.id}>
                       <td>{t.title}</td>
                       <td>{dur(t.durationSeconds)}</td>
-                      <td className="az-amt">{usd(t.pricePerMinuteCents)}</td>
+                      <td className="az-amt">{formatRate(t.pricePerMinuteMillicents)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -91,7 +92,7 @@ export default async function ArtistDashboardPage() {
                     <tr key={d.day}>
                       <td>{d.day}</td>
                       <td>{d.minutes.toLocaleString("en-US")}</td>
-                      <td className="az-amt">{usd(d.amountCents)}</td>
+                      <td className="az-amt">{usdM(d.amountMillicents)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -9,7 +9,7 @@ export type CatalogTrack = {
   artistName: string;
   genre: string | null;
   durationSeconds: number;
-  pricePerMinuteCents: number;
+  pricePerMinuteMillicents: number;
   coverImageKey: string | null;
 };
 
@@ -23,13 +23,13 @@ export type CatalogArtist = {
   payoutsEnabled: boolean;
   trackCount: number;
   minutes: number;
-  earningsCents: number;
+  earningsMillicents: number;
 };
 
 export type Catalog = {
   artists: CatalogArtist[];
   tracks: CatalogTrack[];
-  stats: { artists: number; tracks: number; minutes: number; earningsCents: number };
+  stats: { artists: number; tracks: number; minutes: number; earningsMillicents: number };
 };
 
 export type LibraryTrack = CatalogTrack & { addedAt?: number };
@@ -54,7 +54,7 @@ export type HistoryRow = {
   artistId: string;
   coverImageKey: string | null;
   minutes: number;
-  amountCents: number;
+  amountMillicents: number;
   lastPlayedEpoch: number;
 };
 
@@ -79,7 +79,7 @@ export type ArtistTrack = {
   id: string;
   title: string;
   durationSeconds: number;
-  pricePerMinuteCents: number;
+  pricePerMinuteMillicents: number;
   coverImageKey: string | null;
 };
 
@@ -87,9 +87,9 @@ export type ArtistSummary = {
   artist: { id: string; name: string; genre: string | null; location: string | null; bio: string | null; website: string | null; avatarKey: string | null };
   artistId: string;
   minutes: number;
-  earningsCents: number;
+  earningsMillicents: number;
   trackCount: number;
-  byDay: { day: string; minutes: number; amountCents: number }[];
+  byDay: { day: string; minutes: number; amountMillicents: number }[];
   tracks: ArtistTrack[];
   /** False when the backend has no images bucket configured — image uploads will 503.
    *  Optional: a backend predating this flag omits it, which callers treat as enabled. */

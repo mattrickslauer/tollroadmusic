@@ -3,7 +3,7 @@
 import ArtistLink from "./ArtistLink";
 import type { CatalogTrack, LibraryTrack } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
-import { clock } from "./format";
+import { clock, formatRate } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
 import CoverImage from "./CoverImage";
@@ -58,7 +58,7 @@ export default function TrackList({ tracks, onRemove, removeLabel = "Remove", on
                 <ArtistLink id={t.artistId} name={t.artistName} className="lx-row-artist" />
               </span>
             </div>
-            <span className="lx-row-rate">{t.pricePerMinuteCents}¢/min</span>
+            <span className="lx-row-rate">{formatRate(t.pricePerMinuteMillicents)}</span>
             <span className="lx-row-dur">{clock(t.durationSeconds)}</span>
             <span className="lx-row-actions">
               <LikeButton trackId={t.id} size={16} />
