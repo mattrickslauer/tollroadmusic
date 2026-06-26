@@ -8,7 +8,7 @@
 // pay and where; it calls the charge endpoint, then retries.
 //
 //   GET /v1/stream/{track}          -> 402 { accepts: [ { scheme:"prepaid", ... } ] }
-//   POST /v1/charge { trackId }     -> 200 { balanceCents }   (the payment)
+//   POST /v1/charge { trackId }     -> 200 { balanceMillicents }   (the payment)
 //   GET /v1/stream/{track}          -> 200 { url }            (now authorized)
 import { type ApiResponse } from "./http.ts";
 
@@ -21,7 +21,7 @@ export interface PaymentRequirements {
   network: "tollroad";
   /** Currency of `maxAmountRequired`. */
   asset: "usd";
-  /** Price to satisfy this request, in cents (one metered minute). */
+  /** Price to satisfy this request, in millicents (one metered minute). */
   maxAmountRequired: number;
   /** The protected resource path. */
   resource: string;
@@ -31,8 +31,8 @@ export interface PaymentRequirements {
   payTo: string;
   /** Convenience: top up the wallet if the balance can't cover the charge. */
   topUpUrl: string;
-  /** Per-minute rate, echoed for clients that want to show a meter. */
-  pricePerMinuteCents: number;
+  /** Per-minute rate in millicents, echoed for clients that want to show a meter. */
+  pricePerMinuteMillicents: number;
 }
 
 export interface PaymentRequiredBody {
@@ -45,7 +45,7 @@ export interface PaymentRequiredBody {
 export function paymentRequired(opts: {
   resource: string;
   trackId: string;
-  pricePerMinuteCents: number;
+  pricePerMinuteMillicents: number;
   reason?: string;
 }): ApiResponse {
   const body: PaymentRequiredBody = {
@@ -56,13 +56,13 @@ export function paymentRequired(opts: {
         scheme: "prepaid",
         network: "tollroad",
         asset: "usd",
-        maxAmountRequired: opts.pricePerMinuteCents,
+        maxAmountRequired: opts.pricePerMinuteMillicents,
         resource: opts.resource,
         description: `One metered minute of track ${opts.trackId}`,
         mimeType: "audio/mpeg",
         payTo: "/v1/charge",
         topUpUrl: "/v1/wallet/topup",
-        pricePerMinuteCents: opts.pricePerMinuteCents,
+        pricePerMinuteMillicents: opts.pricePerMinuteMillicents,
       },
     ],
   };

@@ -11,7 +11,7 @@ export interface LibraryTrack {
   artistName: string;
   genre: string | null;
   durationSeconds: number;
-  pricePerMinuteCents: number;
+  pricePerMinuteMillicents: number;
   coverImageKey: string | null;
   addedAt?: number;
 }
@@ -19,7 +19,7 @@ export interface LibraryTrack {
 // Shared projection so every library list returns the same track shape.
 const TRACK_COLS = `
   t.id, t.title, t.artist_id, a.name AS artist_name, a.genre,
-  t.duration_seconds, t.price_per_minute_cents, t.cover_image_key`;
+  t.duration_seconds, t.price_per_minute_millicents, t.cover_image_key`;
 
 function mapTrack(r: Record<string, unknown>): LibraryTrack {
   return {
@@ -29,7 +29,7 @@ function mapTrack(r: Record<string, unknown>): LibraryTrack {
     artistName: r.artist_name as string,
     genre: (r.genre as string) ?? null,
     durationSeconds: Number(r.duration_seconds),
-    pricePerMinuteCents: Number(r.price_per_minute_cents),
+    pricePerMinuteMillicents: Number(r.price_per_minute_millicents),
     coverImageKey: (r.cover_image_key as string) ?? null,
   };
 }

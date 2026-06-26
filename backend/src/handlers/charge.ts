@@ -28,7 +28,7 @@ export const charge: Handler = async (req) => {
     accountId: session.sub,
     trackId: track.id,
     artistId: track.artistId,
-    amountCents: track.pricePerMinuteCents,
+    amountMillicents: track.pricePerMinuteMillicents,
     minuteEpoch,
   });
 
@@ -38,10 +38,10 @@ export const charge: Handler = async (req) => {
     const res = paymentRequired({
       resource: `/v1/charge`,
       trackId: track.id,
-      pricePerMinuteCents: track.pricePerMinuteCents,
+      pricePerMinuteMillicents: track.pricePerMinuteMillicents,
       reason: "insufficient balance",
     });
-    (res.body as Record<string, unknown>).balanceCents = result.balanceCents;
+    (res.body as Record<string, unknown>).balanceMillicents = result.balanceMillicents;
     return res;
   }
 
@@ -54,10 +54,10 @@ export const charge: Handler = async (req) => {
       accountId: session.sub,
       trackId: track.id,
       artistId: track.artistId,
-      amountCents: track.pricePerMinuteCents,
+      amountMillicents: track.pricePerMinuteMillicents,
       minuteEpoch,
     });
   }
 
-  return ok({ balanceCents: result.balanceCents, charged: result.charged });
+  return ok({ balanceMillicents: result.balanceMillicents, charged: result.charged });
 };

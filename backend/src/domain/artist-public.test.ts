@@ -21,11 +21,13 @@ test("mapPublicArtist exposes only public fields", () => {
 test("mapArtistTracks maps snake_case to CatalogTrack camelCase", () => {
   const rows = [{
     id: "t1", title: "Drift", artist_id: "a1", artist_name: "Nova",
-    genre: "Synthwave", duration_seconds: 180, price_per_minute_cents: 1,
+    genre: "Synthwave", duration_seconds: 180, price_per_minute_millicents: 1000,
     cover_image_key: "track-covers/t1.jpg",
   }];
   const out = mapArtistTracks(rows);
-  assert.equal(out[0].artistId, "a1");
-  assert.equal(out[0].durationSeconds, 180);
-  assert.equal(out[0].coverImageKey, "track-covers/t1.jpg");
+  const track = out[0]!;
+  assert.equal(track.artistId, "a1");
+  assert.equal(track.durationSeconds, 180);
+  assert.equal(track.coverImageKey, "track-covers/t1.jpg");
+  assert.equal(track.pricePerMinuteMillicents, 1000);
 });

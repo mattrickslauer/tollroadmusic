@@ -4,7 +4,7 @@ import { paymentRequired, X402_VERSION } from "./lib/x402.ts";
 import { match } from "./router.ts";
 
 test("paymentRequired builds a valid x402 402 body", () => {
-  const res = paymentRequired({ resource: "/v1/stream/t1", trackId: "t1", pricePerMinuteCents: 4 });
+  const res = paymentRequired({ resource: "/v1/stream/t1", trackId: "t1", pricePerMinuteMillicents: 4 });
   assert.equal(res.status, 402);
   const body = res.body as any;
   assert.equal(body.x402Version, X402_VERSION);

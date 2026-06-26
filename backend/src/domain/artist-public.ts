@@ -20,7 +20,7 @@ const ARTIST_SQL = `
 
 const TRACKS_SQL = `
   SELECT t.id, t.title, t.artist_id, a.name AS artist_name, a.genre,
-         t.duration_seconds, t.price_per_minute_cents, t.cover_image_key
+         t.duration_seconds, t.price_per_minute_millicents, t.cover_image_key
   FROM tracks t JOIN artists a ON a.id = t.artist_id
   WHERE t.artist_id = $1
   ORDER BY t.title`;
@@ -36,7 +36,7 @@ export function mapArtistTracks(rows: Record<string, any>[]): CatalogTrack[] {
   return rows.map((r) => ({
     id: r.id, title: r.title, artistId: r.artist_id, artistName: r.artist_name,
     genre: r.genre, durationSeconds: r.duration_seconds,
-    pricePerMinuteCents: r.price_per_minute_cents, coverImageKey: r.cover_image_key,
+    pricePerMinuteMillicents: r.price_per_minute_millicents, coverImageKey: r.cover_image_key,
   }));
 }
 

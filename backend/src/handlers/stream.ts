@@ -30,7 +30,7 @@ export const streamGrant: Handler = async (req) => {
     return paymentRequired({
       resource: `/v1/stream/${trackId}`,
       trackId,
-      pricePerMinuteCents: track.pricePerMinuteCents,
+      pricePerMinuteMillicents: track.pricePerMinuteMillicents,
     });
   }
 

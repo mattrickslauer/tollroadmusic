@@ -28,7 +28,7 @@ export interface ArtistProfile {
   avatarKey: string | null;
 }
 export interface ListenerProfile {
-  balanceCents: number;
+  balanceMillicents: number;
   /** Whether the one-time onboarding welcome gift has been claimed. */
   onboardingGiftClaimed: boolean;
 }
@@ -200,8 +200,8 @@ export async function getProfiles(accountId: string): Promise<Profiles> {
       `SELECT id, name, genre, location, bio, website, avatar_key FROM artists WHERE account_id = $1 LIMIT 1`,
       [accountId],
     ),
-    query<{ balanceCents: number; giftClaimed: boolean }>(
-      `SELECT balance_cents AS "balanceCents",
+    query<{ balanceMillicents: number; giftClaimed: boolean }>(
+      `SELECT balance_millicents AS "balanceMillicents",
               (onboarding_gift_claimed_at IS NOT NULL) AS "giftClaimed"
          FROM listener_profiles WHERE account_id = $1 LIMIT 1`,
       [accountId],
@@ -222,7 +222,7 @@ export async function getProfiles(accountId: string): Promise<Profiles> {
       : null,
     listener: listenerR.rows[0]
       ? {
-          balanceCents: Number(listenerR.rows[0].balanceCents),
+          balanceMillicents: Number(listenerR.rows[0].balanceMillicents),
           onboardingGiftClaimed: Boolean(listenerR.rows[0].giftClaimed),
         }
       : null,

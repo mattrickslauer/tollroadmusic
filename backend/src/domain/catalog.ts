@@ -10,7 +10,7 @@ export type CatalogTrack = {
   artistName: string;
   genre: string | null;
   durationSeconds: number;
-  pricePerMinuteCents: number;
+  pricePerMinuteMillicents: number;
   coverImageKey: string | null;
 };
 
@@ -41,7 +41,7 @@ const ARTISTS_SQL = `
 
 const TRACKS_SQL = `
   SELECT t.id, t.title, t.artist_id, a.name AS artist_name, a.genre,
-         t.duration_seconds, t.price_per_minute_cents, t.cover_image_key
+         t.duration_seconds, t.price_per_minute_millicents, t.cover_image_key
   FROM tracks t
   JOIN artists a ON a.id = t.artist_id
   ORDER BY a.name, t.title`;
@@ -92,7 +92,7 @@ export async function getCatalog(): Promise<Catalog> {
       artistName: r.artist_name,
       genre: r.genre,
       durationSeconds: r.duration_seconds,
-      pricePerMinuteCents: r.price_per_minute_cents,
+      pricePerMinuteMillicents: r.price_per_minute_millicents,
       coverImageKey: r.cover_image_key,
     }));
 
@@ -113,7 +113,7 @@ export type ArtistTrack = {
   id: string;
   title: string;
   durationSeconds: number;
-  pricePerMinuteCents: number;
+  pricePerMinuteMillicents: number;
   coverImageKey: string | null;
 };
 
@@ -135,10 +135,10 @@ export async function getArtistSummary(artistId: string): Promise<{
       id: string;
       title: string;
       duration_seconds: number;
-      price_per_minute_cents: number;
+      price_per_minute_millicents: number;
       cover_image_key: string | null;
     }>(
-      `SELECT id, title, duration_seconds, price_per_minute_cents, cover_image_key
+      `SELECT id, title, duration_seconds, price_per_minute_millicents, cover_image_key
          FROM tracks WHERE artist_id = $1 ORDER BY title`,
       [artistId],
     );
@@ -151,7 +151,7 @@ export async function getArtistSummary(artistId: string): Promise<{
       id: r.id,
       title: r.title,
       durationSeconds: r.duration_seconds,
-      pricePerMinuteCents: r.price_per_minute_cents,
+      pricePerMinuteMillicents: r.price_per_minute_millicents,
       coverImageKey: r.cover_image_key,
     }));
     return {

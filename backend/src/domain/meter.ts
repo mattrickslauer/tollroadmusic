@@ -37,7 +37,8 @@ export interface MeterEvent {
   accountId: string;
   trackId: string;
   artistId: string;
-  amountCents: number;
+  /** Charge amount in millicents for this metered minute. */
+  amountMillicents: number;
   /** Wall-clock minute the charge billed; pass the SAME value used for the DSQL
    *  ledger so the idempotency keys line up and the rollup reconciles to a no-op. */
   minuteEpoch?: number;
@@ -63,7 +64,7 @@ export async function emitMeterEvent(e: MeterEvent): Promise<void> {
           trackId: { S: e.trackId },
           artistId: { S: e.artistId },
           minuteEpoch: { N: String(minuteEpoch) },
-          amountCents: { N: String(e.amountCents) },
+          amountMillicents: { N: String(e.amountMillicents) },
           // GSI1 — reverse lookup ARTIST#<id> → recent metered events.
           GSI1PK: { S: `ARTIST#${e.artistId}` },
           GSI1SK: { S: `EVT#${minuteEpoch}#${e.accountId}` },
