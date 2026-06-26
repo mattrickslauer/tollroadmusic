@@ -8,6 +8,8 @@ import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
 import FullscreenPlayer from "./FullscreenPlayer";
+import ShareButton from "./ShareButton";
+import { songPath } from "@/lib/shareUrls";
 import VolumeControl from "./VolumeControl";
 import { Sk } from "./Skeleton";
 
@@ -46,6 +48,7 @@ export default function PlayerBar() {
               <BondMeter />
             </div>
             <LikeButton trackId={current.id} size={16} />
+            <ShareButton path={songPath(current)} title={`${current.title} — ${current.artistName}`} />
           </>
         ) : (
           <span className="lx-player-idle">Pick a track to start the meter.</span>

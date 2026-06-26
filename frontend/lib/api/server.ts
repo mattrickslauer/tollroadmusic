@@ -27,6 +27,24 @@ async function serverGet<T>(path: string, opts: { auth?: boolean } = {}): Promis
 
 export const serverCatalog = () => serverGet<Catalog>("/catalog");
 
+/** Catalog for the public share pages. Unlike serverCatalog (no-store, for the
+ *  live app), this caches with ISR so crawlers and link unfurlers get fast,
+ *  shared HTML and we don't hammer the backend on every bot hit. Revalidates
+ *  hourly. Returns null if the backend is unreachable / not configured so pages
+ *  can 404 cleanly instead of throwing a 500 at a crawler. */
+export async function serverCatalogPublic(revalidate = 3600): Promise<Catalog | null> {
+  if (!apiConfigured()) return null;
+  const headers: Record<string, string> = {};
+  if (APP_KEY) headers["x-api-key"] = APP_KEY;
+  try {
+    const res = await fetch(`${BACKEND}/catalog`, { headers, next: { revalidate } });
+    if (!res.ok) return null;
+    return (await res.json()) as Catalog;
+  } catch {
+    return null;
+  }
+}
+
 /** Public artist profile (GET /artists/:id). Returns null when the artist is
  *  not found (404); throws for other non-OK responses. */
 export async function serverArtistProfile(id: string): Promise<ArtistProfile | null> {

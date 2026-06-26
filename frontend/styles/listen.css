@@ -416,6 +416,27 @@
 .lx-like:hover { color: var(--app-text); background: var(--app-surface-2); transform: scale(1.1); }
 .lx-like[data-on="true"] { color: #ff5a9e; }
 
+/* Icon share button — reuses the .lx-like icon-button frame; flashes "Copied!"
+ * as a small tooltip on clipboard fallback (Web Share API shows the native
+ * sheet). Distinct from .lx-share (the playlist header's copy-link pill). */
+.lx-share-icon { position: relative; }
+.lx-share-icon[data-copied="true"] { color: var(--app-green, #66e6a6); }
+.lx-share-icon[data-copied="true"]::after {
+  content: "Copied!";
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--app-elev-hi, #1a1a22);
+  color: var(--app-text, #f4efe3);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .lx-menu-wrap { position: relative; line-height: 0; }
 .lx-menu-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 30px; border: none; background: none; color: var(--app-text-faint); cursor: pointer; padding: 4px; border-radius: 50%; line-height: 0; transition: color 0.15s, background 0.15s; }
 .lx-menu-btn:hover { color: var(--app-text); background: var(--app-surface-2); }
