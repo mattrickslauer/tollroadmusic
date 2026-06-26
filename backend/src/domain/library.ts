@@ -36,19 +36,28 @@ function mapTrack(r: Record<string, unknown>): LibraryTrack {
 
 // --- Likes -----------------------------------------------------------------
 
-/** Toggle a like. Returns the resulting state. */
-export async function toggleLike(accountId: string, trackId: string): Promise<{ liked: boolean }> {
+/** Remove a like if present. Returns true when a row was deleted (an unlike).
+ *  Unliking is always free and never refunds the 1¢ like-charge. The charge for
+ *  the liking side lives in the billing/wallet-store paths; this only manages the
+ *  `likes` membership row. */
+export async function unlikeIfPresent(accountId: string, trackId: string): Promise<boolean> {
   const del = await query(
     `DELETE FROM likes WHERE account_id = $1 AND track_id = $2`,
     [accountId, trackId],
   );
-  if (del.rowCount) return { liked: false };
+  return Boolean(del.rowCount);
+}
+
+/** Idempotently add the `likes` membership row. Used by the Dynamo command path,
+ *  which records the charge as a METER item and does NOT write the `likes` table
+ *  via the projector — so the handler inserts membership here after a confirmed
+ *  charge. The local DSQL path inserts the row inside its own charge transaction. */
+export async function addLike(accountId: string, trackId: string): Promise<void> {
   await query(
     `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
        ON CONFLICT (account_id, track_id) DO NOTHING`,
     [accountId, trackId],
   );
-  return { liked: true };
 }
 
 export async function setLike(accountId: string, trackId: string, liked: boolean): Promise<void> {

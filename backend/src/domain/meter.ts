@@ -25,6 +25,14 @@ export interface MeterEvent {
   /** Wall-clock minute the charge billed; pin the SAME value the debit used so
    *  the idempotency key lines up. Defaults to the current minute. */
   minuteEpoch?: number;
+  /** Override the ledger idempotency key. Defaults to '<user>#<track>#<minute>'.
+   *  Non-minute charges (e.g. a like) pass their own key so the projector writes
+   *  the matching ledger row. When set, also pass `skSuffix` to avoid colliding
+   *  with a metered minute for the same (user, track). */
+  idempotencyKey?: string;
+  /** Replaces the minute in the DynamoDB sort key (`EVT#<skSuffix>#<track>`), so a
+   *  non-minute event coexists with a metered minute for the same (user, track). */
+  skSuffix?: string;
 }
 
 /** Build the canonical METER item (DynamoDB AttributeValue map) for a metered
@@ -35,11 +43,12 @@ export function meterEventItem(
   e: MeterEvent,
   minuteEpoch = e.minuteEpoch ?? currentMinuteEpoch(),
 ): Record<string, AttributeValue> {
-  const key = `${e.accountId}#${e.trackId}#${minuteEpoch}`;
+  const key = e.idempotencyKey ?? `${e.accountId}#${e.trackId}#${minuteEpoch}`;
+  const sk = e.skSuffix ?? String(minuteEpoch);
   const ttl = Math.floor(Date.now() / 1000) + METER_TTL_SECONDS;
   return {
     PK: { S: `USER#${e.accountId}` },
-    SK: { S: `EVT#${minuteEpoch}#${e.trackId}` },
+    SK: { S: `EVT#${sk}#${e.trackId}` },
     type: { S: "METER" }, // the stream filter the projector subscribes to
     idempotencyKey: { S: key },
     userId: { S: e.accountId },

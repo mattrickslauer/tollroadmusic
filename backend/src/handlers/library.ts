@@ -4,6 +4,10 @@ import { type Handler, type ApiRequest, ok, error, requireSession, HttpError } f
 import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import * as lib from "../domain/library.ts";
+import { getTrackBilling } from "../domain/tracks.ts";
+import { localDsqlBilling, chargeLikeLocalDsql, LIKE_COST_CENTS } from "../domain/billing.ts";
+import { walletStoreConfigured, debitLike } from "../domain/wallet-store.ts";
+import { paymentRequired } from "../lib/x402.ts";
 
 async function guard(req: ApiRequest) {
   if (!sessionConfigured() || !dsqlConfigured()) throw new HttpError(503, "library not configured");
@@ -23,11 +27,51 @@ export const getLikes: Handler = async (req) => {
   return ok({ tracks, likedIds: ids });
 };
 
+// Toggle a like. Liking tips LIKE_COST_CENTS toward the song (once per track,
+// ever); unliking is free and never refunds. A like with too small a balance gets
+// the same x402 402 the /charge endpoint returns, so the client can prompt a top-up.
 export const postLike: Handler = async (req) => {
   const s = await guard(req);
   const trackId = trackIdFrom(req);
   if (!trackId) return error(400, "trackId required");
-  return ok(await lib.toggleLike(s.sub, trackId));
+
+  // Billing backend: DynamoDB (prod) or, only under the explicit local opt-in, the
+  // legacy DSQL-direct path. Mirrors handlers/charge.ts.
+  const useDynamo = walletStoreConfigured();
+  if (!useDynamo && !localDsqlBilling()) return error(503, "billing not configured");
+
+  // Unlike first — if a row was removed this was an unlike: free, no track lookup.
+  if (await lib.unlikeIfPresent(s.sub, trackId)) return ok({ liked: false, charged: false });
+
+  // Otherwise it's a like, which costs money — resolve the artist for the ledger.
+  const track = await getTrackBilling(trackId);
+  if (!track) return error(404, "no such track");
+
+  const result = useDynamo
+    ? await debitLike({ accountId: s.sub, trackId: track.id, artistId: track.artistId })
+    : await chargeLikeLocalDsql({ accountId: s.sub, trackId: track.id, artistId: track.artistId });
+
+  if (!result.ok) {
+    const res = paymentRequired({
+      resource: `/v1/library/likes`,
+      trackId: track.id,
+      pricePerMinuteCents: LIKE_COST_CENTS,
+      reason: "insufficient balance",
+    });
+    (res.body as Record<string, unknown>).balanceCents = result.balanceCents;
+    return res;
+  }
+
+  // Atomicity note: in the Dynamo command path the CHARGE is atomic (the debit and
+  // its METER item commit in one TransactWriteItems), and the METER item is the
+  // once-ever source of truth for the like-tip. The `likes` membership is a
+  // SEPARATE, synchronous DSQL write made only AFTER a confirmed charge — so if it
+  // fails the listener is still correctly charged (degrading to "charged, not-yet-
+  // shown"), and a retry re-adds membership for free (the replayed charge is a
+  // no-op). The local DSQL path already inserted the `likes` row in its own txn.
+  if (useDynamo) await lib.addLike(s.sub, track.id);
+
+  return ok({ liked: true, charged: result.charged, balanceCents: result.balanceCents });
 };
 
 export const deleteLike: Handler = async (req) => {

@@ -19,6 +19,10 @@ import { creditBalance, walletStoreConfigured } from "./wallet-store.ts";
 
 export const TOPUP_CENTS = 1000;
 
+// A like is a one-time 1¢ tip toward the song. Unlike a metered minute, the
+// listener pays it at most once per track — the idempotency key omits the minute.
+export const LIKE_COST_CENTS = 1;
+
 // The one-time welcome gift: $3.00 = 300 minutes of listening at the 1¢/min
 // default rate. Granted once per account on first onboarding.
 export const ONBOARDING_GIFT_CENTS = 300;
@@ -115,6 +119,85 @@ export async function chargeMinuteLocalDsql(input: ChargeInput): Promise<ChargeR
              (idempotency_key, user_id, track_id, artist_id, minute_epoch, amount_cents)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [key, input.accountId, input.trackId, input.artistId, minuteEpoch, amt],
+        );
+        await db.query("COMMIT");
+        return { ok: true, balanceCents: Number(upd.rows[0]!.balance_cents), charged: true };
+      } catch (err) {
+        await db.query("ROLLBACK").catch(() => {});
+        throw err;
+      }
+    }),
+  );
+}
+
+/** LOCAL-DEV ONLY: like a track, charging LIKE_COST_CENTS toward it exactly once
+ *  — ever — straight against DSQL (conditional balance debit + royalty_ledger
+ *  INSERT + `likes` row, all in one transaction). Reached only via the
+ *  TOLLROAD_LOCAL_DSQL_BILLING opt-in when DynamoDB is unconfigured; in prod the
+ *  command path uses wallet-store.debitLike and the projector builds the ledger.
+ *
+ *  The idempotency key (`<user>#<track>#like`, no minute) makes the charge a
+ *  once-per-track event: unliking never refunds, and a later re-like is free —
+ *  the existing ledger row short-circuits to a no-charge insert. The result union
+ *  matches chargeMinuteLocalDsql so the handler treats both paths uniformly. */
+export async function chargeLikeLocalDsql(input: {
+  accountId: string;
+  trackId: string;
+  artistId: string;
+}): Promise<ChargeResult> {
+  const key = `${input.accountId}#${input.trackId}#like`;
+  const minuteEpoch = currentMinuteEpoch();
+
+  return withRetry(() =>
+    withDsql(async (db) => {
+      try {
+        await db.query("BEGIN");
+
+        const dup = await db.query(
+          `SELECT 1 FROM royalty_ledger WHERE idempotency_key = $1`,
+          [key],
+        );
+        if (dup.rowCount) {
+          // Already paid for this like before — re-like is free. Ensure the row.
+          await db.query(
+            `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
+               ON CONFLICT (account_id, track_id) DO NOTHING`,
+            [input.accountId, input.trackId],
+          );
+          const bal = await db.query<{ balance_cents: string }>(
+            `SELECT balance_cents FROM listener_profiles WHERE account_id = $1`,
+            [input.accountId],
+          );
+          await db.query("COMMIT");
+          return { ok: true, balanceCents: Number(bal.rows[0]?.balance_cents ?? 0), charged: false };
+        }
+
+        const upd = await db.query<{ balance_cents: string }>(
+          `UPDATE listener_profiles
+              SET balance_cents = balance_cents - $2
+            WHERE account_id = $1 AND balance_cents >= $2
+            RETURNING balance_cents`,
+          [input.accountId, LIKE_COST_CENTS],
+        );
+        if (!upd.rowCount) {
+          await db.query("ROLLBACK");
+          const bal = await query<{ balance_cents: string }>(
+            `SELECT balance_cents FROM listener_profiles WHERE account_id = $1`,
+            [input.accountId],
+          );
+          return { ok: false, reason: "insufficient", balanceCents: Number(bal.rows[0]?.balance_cents ?? 0) };
+        }
+
+        await db.query(
+          `INSERT INTO royalty_ledger
+             (idempotency_key, user_id, track_id, artist_id, minute_epoch, amount_cents)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [key, input.accountId, input.trackId, input.artistId, minuteEpoch, LIKE_COST_CENTS],
+        );
+        await db.query(
+          `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
+             ON CONFLICT (account_id, track_id) DO NOTHING`,
+          [input.accountId, input.trackId],
         );
         await db.query("COMMIT");
         return { ok: true, balanceCents: Number(upd.rows[0]!.balance_cents), charged: true };

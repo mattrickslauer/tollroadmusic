@@ -12,7 +12,7 @@
 // balance is untouched and `charged:false` is returned). Top-ups are likewise
 // idempotent on `paymentRef`.
 import type { AttributeValue, TransactionCanceledException } from "@aws-sdk/client-dynamodb";
-import { currentMinuteEpoch } from "./billing.ts";
+import { currentMinuteEpoch, LIKE_COST_CENTS } from "./billing.ts";
 import { meterEventItem } from "./meter.ts";
 
 const REGION = process.env.TOLLROAD_DSQL_REGION ?? process.env.AWS_REGION ?? "us-east-1";
@@ -124,6 +124,77 @@ export async function debitMinute(input: DebitInput): Promise<DebitResult> {
   }
 
   // Committed: a genuinely new charge. Read back the authoritative balance.
+  return { ok: true, balanceCents: await readBalance(input.accountId), charged: true };
+}
+
+/** Conditionally debit a one-time 1¢ like-tip AND record its METER event in a
+ *  single transaction — the exact same shape as debitMinute, but keyed
+ *  '<user>#<track>#like' (no minute) with SK suffix `like`, so it coexists with
+ *  metered minutes for the same (user, track) and is charged at most once ever.
+ *  The METER INSERT (`attribute_not_exists`) fires the stream → projector → DSQL
+ *  ledger; the command path itself never touches DSQL. `charged:false` means the
+ *  like was already paid for (idempotent replay); a re-like is therefore free. */
+export async function debitLike(input: { accountId: string; trackId: string; artistId: string }): Promise<DebitResult> {
+  if (!TABLE) throw new Error("TOLLROAD_TABLE is not set");
+  const minuteEpoch = currentMinuteEpoch();
+  const amt = LIKE_COST_CENTS;
+  const { client, m } = await getSdk();
+
+  try {
+    await client.send(
+      new m.TransactWriteItemsCommand({
+        TransactItems: [
+          {
+            // [0] Conditional debit — the authoritative balance can never go
+            // negative (a missing BAL item fails `balanceCents >= :amt` too).
+            Update: {
+              TableName: TABLE,
+              Key: balanceKey(input.accountId),
+              UpdateExpression: "ADD balanceCents :neg",
+              ConditionExpression: "balanceCents >= :amt",
+              ExpressionAttributeValues: { ":neg": { N: String(-amt) }, ":amt": { N: String(amt) } },
+              ReturnValuesOnConditionCheckFailure: "ALL_OLD",
+            },
+          },
+          {
+            // [1] One stream INSERT (→ one ledger row) per like, ever. Keyed
+            // '<user>#<track>#like' with SK suffix `like` so it never collides
+            // with a metered minute for the same (user, track).
+            Put: {
+              TableName: TABLE,
+              Item: meterEventItem({
+                accountId: input.accountId,
+                trackId: input.trackId,
+                artistId: input.artistId,
+                amountCents: LIKE_COST_CENTS,
+                minuteEpoch,
+                idempotencyKey: `${input.accountId}#${input.trackId}#like`,
+                skSuffix: "like",
+              }, minuteEpoch),
+              ConditionExpression: "attribute_not_exists(PK)",
+            },
+          },
+        ],
+      }),
+    );
+  } catch (err) {
+    const cancel = isCanceled(err);
+    const reasons = cancel?.CancellationReasons;
+    if (reasons) {
+      // Check the METER guard first: a replayed like is an idempotent no-op
+      // regardless of the current balance (the listener was already billed).
+      if (reasons[1]?.Code === "ConditionalCheckFailed") {
+        return { ok: true, balanceCents: await readBalance(input.accountId), charged: false };
+      }
+      if (reasons[0]?.Code === "ConditionalCheckFailed") {
+        // Insufficient funds — ALL_OLD hands us the live balance to surface.
+        return { ok: false, reason: "insufficient", balanceCents: Number(reasons[0].Item?.balanceCents?.N ?? 0) };
+      }
+    }
+    throw err;
+  }
+
+  // Committed: a genuinely new like-charge. Read back the authoritative balance.
   return { ok: true, balanceCents: await readBalance(input.accountId), charged: true };
 }
 
