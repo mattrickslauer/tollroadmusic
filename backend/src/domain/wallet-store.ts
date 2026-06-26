@@ -83,6 +83,30 @@ async function debitWithMeterEvent(
   if (!TABLE) throw new Error("TOLLROAD_TABLE is not set");
   const { client, m } = await getSdk();
 
+  // Free tier (amount 0): debiting zero is a no-op, and it must NOT require a BAL
+  // item — a brand-new listener has none, and `balanceMillicents >= 0` evaluates
+  // false against a missing attribute, which would wrongly 402 a free track. Skip
+  // the balance condition entirely and record only the METER event so the free
+  // play still streams to the projector (ledger row at amount 0 → counted in stats).
+  if (amountMillicents === 0) {
+    try {
+      await client.send(
+        new m.PutItemCommand({
+          TableName: TABLE,
+          Item: meterItem,
+          ConditionExpression: "attribute_not_exists(PK)",
+        }),
+      );
+    } catch (err) {
+      // Replayed minute — already recorded; idempotent no-op, balance untouched.
+      if ((err as { name?: string })?.name === "ConditionalCheckFailedException") {
+        return { ok: true, balanceMillicents: await readBalance(accountId), charged: false };
+      }
+      throw err;
+    }
+    return { ok: true, balanceMillicents: await readBalance(accountId), charged: true };
+  }
+
   try {
     await client.send(
       new m.TransactWriteItemsCommand({
