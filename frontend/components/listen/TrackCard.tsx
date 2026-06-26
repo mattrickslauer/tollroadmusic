@@ -7,6 +7,8 @@ import { clock } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
 import CoverImage from "./CoverImage";
+import ShareButton from "./ShareButton";
+import { songPath } from "@/lib/shareUrls";
 
 /** A playable track tile for grids. Dispatches play into the global player
  *  (seeding the surrounding list as the queue), shows live EQ when active. */
@@ -34,6 +36,7 @@ export default function TrackCard({ track, queue }: { track: CatalogTrack; queue
       </div>
       <div className="lx-card-foot">
         <LikeButton trackId={track.id} />
+        <ShareButton path={songPath(track)} title={`${track.title} — ${track.artistName}`} />
         <AddToPlaylist trackId={track.id} />
         <span className="lx-card-rate">{track.pricePerMinuteCents}¢/min</span>
         <span className="lx-card-dur">{clock(track.durationSeconds)}</span>

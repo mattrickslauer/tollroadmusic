@@ -1,0 +1,193 @@
+/* Public share pages — the standalone, anon landing surface for a song or an
+ * artist. Reuses the marketing brand palette (asphalt / bone / amber from
+ * app/globals.css) but NONE of the app chrome: no sidebar, no player, no auth.
+ * Everything is scoped under .sh so it never leaks into the (listen) app. */
+
+.sh {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--asphalt-900);
+  color: var(--bone);
+}
+
+/* slim header */
+.sh-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem clamp(1rem, 5vw, 2.5rem);
+  border-bottom: 1px solid var(--line-soft);
+}
+.sh-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--bone);
+  text-decoration: none;
+}
+.sh-nav-cta {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--asphalt-900);
+  background: var(--amber);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: filter 0.2s var(--ease);
+}
+.sh-nav-cta:hover { filter: brightness(1.08); }
+
+/* centered content column */
+.sh-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 7vw, 5rem) clamp(1rem, 5vw, 2.5rem);
+}
+
+/* the song card */
+.sh-card {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.sh-cover {
+  width: clamp(220px, 60vw, 340px);
+  aspect-ratio: 1;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--line-soft);
+  background: linear-gradient(135deg, var(--asphalt-800), var(--asphalt-850));
+}
+.sh-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* fallback art when there is no cover/avatar key */
+.sh-cover-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--gold);
+  color: var(--asphalt-900);
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 600;
+}
+.sh-avatar { border-radius: 50%; }
+
+.sh-eyebrow {
+  margin: 1.6rem 0 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.sh-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1.1;
+  margin: 0;
+}
+.sh-artist {
+  margin: 0.5rem 0 0;
+  font-size: 1.05rem;
+  color: var(--bone-dim);
+}
+.sh-artist a { color: var(--bone); text-decoration: none; border-bottom: 1px solid var(--amber); }
+.sh-artist a:hover { color: var(--amber-bright); }
+.sh-meta {
+  margin: 1rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--bone-faint);
+}
+.sh-bio {
+  margin: 1.1rem 0 0;
+  max-width: 46ch;
+  color: var(--bone-dim);
+  line-height: 1.6;
+}
+
+/* primary call to action */
+.sh-cta {
+  margin-top: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: var(--amber);
+  color: var(--asphalt-900);
+  font-weight: 700;
+  font-size: 1.02rem;
+  padding: 0.85rem 1.7rem;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: transform 0.18s var(--ease), filter 0.2s var(--ease);
+}
+.sh-cta:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
+/* artist track grid */
+.sh-tracks {
+  width: 100%;
+  max-width: 720px;
+  margin: 2.6rem auto 0;
+}
+.sh-tracks-head {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  margin: 0 0 0.9rem;
+}
+.sh-track-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+.sh-track {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--bone);
+}
+.sh-track-cover {
+  aspect-ratio: 1;
+  border-radius: var(--r);
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--asphalt-800), var(--asphalt-850));
+  box-shadow: 0 0 0 1px var(--line-soft);
+}
+.sh-track-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sh-track-cover .sh-cover-fallback { font-size: 1.4rem; }
+.sh-track-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.sh-track:hover .sh-track-name { color: var(--amber-bright); }
+
+/* footer */
+.sh-foot {
+  padding: 1.5rem clamp(1rem, 5vw, 2.5rem);
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.85rem;
+  color: var(--bone-faint);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.sh-foot a { color: var(--bone-dim); text-decoration: none; }
+.sh-foot a:hover { color: var(--amber); }

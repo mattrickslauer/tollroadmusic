@@ -7,6 +7,8 @@ import { clock } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
 import CoverImage from "./CoverImage";
+import ShareButton from "./ShareButton";
+import { songPath } from "@/lib/shareUrls";
 
 interface Props {
   tracks: LibraryTrack[];
@@ -62,6 +64,7 @@ export default function TrackList({ tracks, onRemove, removeLabel = "Remove", on
             <span className="lx-row-dur">{clock(t.durationSeconds)}</span>
             <span className="lx-row-actions">
               <LikeButton trackId={t.id} size={16} />
+              <ShareButton path={songPath(t)} title={`${t.title} — ${t.artistName}`} />
               <AddToPlaylist trackId={t.id} />
               {onRemove && (
                 <button className="lx-row-remove" onClick={() => onRemove(t.id)} aria-label={removeLabel} title={removeLabel}>×</button>

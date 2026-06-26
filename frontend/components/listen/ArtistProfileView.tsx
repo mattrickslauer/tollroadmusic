@@ -3,6 +3,8 @@
 import type { ArtistProfile } from "@/lib/api/types";
 import CoverImage from "./CoverImage";
 import TrackCard from "./TrackCard";
+import ShareButton from "./ShareButton";
+import { artistPath } from "@/lib/shareUrls";
 import BondCard from "@/components/bond/BondCard";
 import SuperfanLeaderboard from "@/components/bond/SuperfanLeaderboard";
 
@@ -20,7 +22,10 @@ export default function ArtistProfileView({ profile }: { profile: ArtistProfile 
         <div className="lx-artist-avatar">
           <CoverImage coverKey={artist.avatarKey} alt={artist.name} loading="eager" />
         </div>
-        <h1 className="lx-h1">{artist.name}</h1>
+        <h1 className="lx-h1">
+          {artist.name}
+          <ShareButton path={artistPath({ id: artist.id, name: artist.name })} title={artist.name} size={18} />
+        </h1>
         {meta && <p className="lx-eyebrow">{meta}</p>}
         {artist.bio && <p className="lx-sub">{artist.bio}</p>}
         {artist.website && (
