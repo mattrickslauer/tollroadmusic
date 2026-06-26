@@ -1,7 +1,5 @@
 # Artist Content & Profiles Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Give listeners public artist profile pages and give artists self-service control of their cover art, avatar, and profile data — backed by a new public images bucket — while refreshing the existing catalog cover art.
 
 **Architecture:** Backend is a tiny router (`backend/src/router.ts`) of `compile(method, path, handler)` routes over Aurora DSQL (`query<T>(sql, params)`). Frontend is Next.js App Router: SSR pages fetch via `lib/api/server.ts` (direct to `TOLLROAD_API_BASE`); browser interactivity calls `lib/api/client.ts` (`req<T>()` → `/api/v1` proxy). Uploaded images live in a new public S3 bucket fronted by a public CloudFront distribution; the DB stores bucket-relative keys, resolved client-side via `NEXT_PUBLIC_IMAGES_BASE`.

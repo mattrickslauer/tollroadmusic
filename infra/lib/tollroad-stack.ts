@@ -22,14 +22,17 @@ import { NodejsFunction, OutputFormat } from "aws-cdk-lib/aws-lambda-nodejs";
  *  - One on-demand DynamoDB table `tollroad` is the metering hot path:
  *      • USER#<id> / BAL          — real-time balance, conditional decrement
  *                                   (hard stop-at-zero on /api/renew)
- *      • USER#<id> / EVT#<min>#<t> — metered-minute events (type=METER), with a
- *                                   generous TTL; a NEW_AND_OLD_IMAGES stream
- *                                   drives the rollup.
- *  - Aurora DSQL is the relational system-of-record: catalog, the APPEND-ONLY
- *    royalty ledger (idempotent), and precomputed per-artist/day summaries.
+ *      • USER#<id> / EVT#<min>#<t> — metered-minute events (type=METER), and
+ *                                   USER#<id> / TOPUP#<ref> top-up events
+ *                                   (type=TOPUP), with a generous TTL; a
+ *                                   NEW_AND_OLD_IMAGES stream drives the projector.
+ *  - Aurora DSQL is the relational read side / system-of-record: catalog, the
+ *    APPEND-ONLY royalty ledger (idempotent), precomputed per-artist/day
+ *    summaries, and the eventually-consistent reconciliation balance.
  *  - S3 (SSE-KMS) holds audio; CloudFront (OAC) serves it; the meter gates
  *    access with short-TTL signed cookies (CloudFront key group).
- *  - A Lambda consumes the stream and writes the ledger idempotently.
+ *  - A projector Lambda consumes the stream and is the SOLE writer of the DSQL
+ *    read models (ledger, summaries, wallet_topups, reconciliation balance).
  *
  * Hackathon posture: everything DESTROYs on teardown. Flip to RETAIN for real.
  */
@@ -71,9 +74,16 @@ export class TollroadStack extends cdk.Stack {
     // scripts/migrate-dsql.mjs once the cluster is up.
     const dsqlEndpoint = `${dsqlCluster.attrIdentifier}.dsql.${region}.on.aws`;
 
-    // Admin connect for the rollup Lambda (writes the ledger + summaries).
+    // Admin connect for the API Lambda (catalog/auth/library DDL + reads).
     const dsqlConnectAdmin = new iam.PolicyStatement({
       actions: ["dsql:DbConnectAdmin"],
+      resources: [dsqlCluster.attrResourceArn],
+    });
+    // Least-privilege connect for the projector Lambda: dsql:DbConnect (NOT admin).
+    // It authenticates as a dedicated DML-only role provisioned by the additive
+    // migration; this is the only writer of the DSQL read models.
+    const dsqlConnectProjector = new iam.PolicyStatement({
+      actions: ["dsql:DbConnect"],
       resources: [dsqlCluster.attrResourceArn],
     });
 
@@ -211,35 +221,40 @@ export class TollroadStack extends cdk.Stack {
     );
 
     // ---------------------------------------------------------------------
-    // Lambda — Streams → idempotent royalty rollup into DSQL
+    // Lambda — Streams → CQRS projector (the SOLE writer of the DSQL read models)
     // ---------------------------------------------------------------------
-    // The Node 20 runtime bundles AWS SDK v3 but not pg / the DSQL signer; the
-    // shared layer carries them.
+    // Under polyglot CQRS the command path writes only to DynamoDB; this consumer
+    // projects METER/TOPUP events into the DSQL ledger, summaries, wallet_topups
+    // and the reconciliation balance. The Node 20 runtime bundles AWS SDK v3 but
+    // not pg / the DSQL signer; the shared layer carries them.
     const dsqlLayer = new lambda.LayerVersion(this, "DsqlDepsLayer", {
       code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda", "layers", "dsql")),
       compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
-      description: "pg + @aws-sdk/dsql-signer for the rollup consumer",
+      description: "pg + @aws-sdk/dsql-signer for the projector consumer",
     });
 
-    const rollup = new lambda.Function(this, "RollupConsumerFn", {
+    const projector = new lambda.Function(this, "ProjectorConsumerFn", {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: "index.handler",
-      code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda", "rollup")),
+      code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda", "projector")),
       timeout: cdk.Duration.seconds(30),
       layers: [dsqlLayer],
       environment: {
-        TABLE_NAME: table.tableName,
-        DSQL_ENDPOINT: dsqlEndpoint,
-        DSQL_REGION: region,
+        TOLLROAD_DSQL_ENDPOINT: dsqlEndpoint,
+        TOLLROAD_DSQL_REGION: region,
+        // DML-only role, not admin (see dsqlConnectProjector). Provisioned by the
+        // additive migration; override to "admin" only for a quick laptop demo.
+        TOLLROAD_DSQL_USER: "projector",
       },
     });
-    table.grantStreamRead(rollup);
-    rollup.addToRolePolicy(dsqlConnectAdmin);
+    table.grantStreamRead(projector);
+    projector.addToRolePolicy(dsqlConnectProjector);
 
-    // Only metered-minute events (type=METER) drive the ledger. At-least-once
-    // delivery + retries mean duplicates — the handler dedupes on the idempotency
-    // key (UNIQUE in DSQL), so retries are safe.
-    rollup.addEventSource(
+    // METER + TOPUP inserts drive the read models. At-least-once delivery + retries
+    // mean duplicates — the projector dedupes on the idempotency key / payment ref
+    // (PRIMARY KEY in DSQL), so retries are safe. Two filter patterns OR together:
+    // INSERT AND type IN (METER, TOPUP).
+    projector.addEventSource(
       new DynamoEventSource(table, {
         startingPosition: lambda.StartingPosition.LATEST,
         batchSize: 100,
@@ -249,6 +264,10 @@ export class TollroadStack extends cdk.Stack {
           lambda.FilterCriteria.filter({
             eventName: lambda.FilterRule.isEqual("INSERT"),
             dynamodb: { NewImage: { type: { S: lambda.FilterRule.isEqual("METER") } } },
+          }),
+          lambda.FilterCriteria.filter({
+            eventName: lambda.FilterRule.isEqual("INSERT"),
+            dynamodb: { NewImage: { type: { S: lambda.FilterRule.isEqual("TOPUP") } } },
           }),
         ],
       })
@@ -306,8 +325,9 @@ export class TollroadStack extends cdk.Stack {
       TOLLROAD_DSQL_REGION: region,
       TOLLROAD_CDN_DOMAIN: distribution.distributionDomainName,
       TOLLROAD_IMAGES_BUCKET: imagesBucket.bucketName,
-      // The charge path mirrors each metered minute into the DynamoDB hot path so
-      // the Streams → rollup pipeline fires (backend/src/domain/meter.ts).
+      // The command path runs the balance debit + meter/top-up events on this
+      // table; the Streams → projector pipeline then builds the DSQL read models
+      // (backend/src/domain/wallet-store.ts).
       TOLLROAD_TABLE: table.tableName,
     };
     // Prefer a freshly-minted key group (when -c cfPublicKey is passed); otherwise
@@ -367,14 +387,28 @@ export class TollroadStack extends cdk.Stack {
         banner: "import{createRequire as __cr}from'module';const require=__cr(import.meta.url);",
       },
     });
-    // The API reads catalog/ledger/library and runs the metering transaction on
-    // DSQL; it generates the IAM auth token itself (DbConnectAdmin), same as the
-    // rollup. Email sign-in codes go out via ZeptoMail SMTP (plain HTTPS/SMTP, no
-    // IAM needed), so SES permissions are no longer granted.
+    // The API reads catalog/ledger/library on DSQL and runs the DynamoDB command
+    // path (balance debit + meter/top-up events); it generates the IAM auth token
+    // itself (DbConnectAdmin). Under CQRS it no longer writes the DSQL ledger — the
+    // projector does. Email sign-in codes go out via ZeptoMail SMTP (plain
+    // HTTPS/SMTP, no IAM needed), so SES permissions are no longer granted.
     apiFn.addToRolePolicy(dsqlConnectAdmin);
-    // The charge handler writes one METER item per metered minute into the table;
-    // the stream then drives the rollup. Least-privilege: PutItem only.
-    table.grant(apiFn, "dynamodb:PutItem");
+    // The command path runs entirely on DynamoDB: conditional balance debit/credit
+    // (UpdateItem), real-time balance read (GetItem), recent-meter gate (Query on
+    // GSI1), and the METER/TOPUP event writes (PutItem) that drive the stream →
+    // projector. Scope to the table + its indexes.
+    apiFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        sid: "TollroadCommandPath",
+        actions: [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:Query",
+        ],
+        resources: [table.tableArn, `${table.tableArn}/index/*`],
+      })
+    );
     // Grant the API Lambda write access to the images bucket for presigned PUTs.
     imagesBucket.grantPut(apiFn);
 

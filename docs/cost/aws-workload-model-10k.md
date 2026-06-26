@@ -176,7 +176,7 @@ aws bcm-pricing-calculator create-workload-estimate \
 # 2. load the usage lines (use the id from step 1)
 aws bcm-pricing-calculator batch-create-workload-estimate-usage \
   --workload-estimate-id <ID> \
-  --usage file://docs/aws-workload-model-10k.usage.json --region us-east-1
+  --usage file://docs/cost/aws-workload-model-10k.usage.json --region us-east-1
 
 # 3. read the computed total + per-line costs
 aws bcm-pricing-calculator get-workload-estimate --identifier <ID> --region us-east-1
