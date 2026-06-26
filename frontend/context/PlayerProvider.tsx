@@ -35,11 +35,20 @@ function shouldOnboard(listener?: { onboardingGiftClaimed?: boolean } | null): b
   return Boolean(listener) && !listener!.onboardingGiftClaimed && !onbDismissed();
 }
 
+// Persisted output volume (the user's choice survives reloads + navigation).
+const VOL_KEY = "tollroad:volume";
+const MUTE_KEY = "tollroad:muted";
+const DEFAULT_VOL = 0.85;
+
 export interface PlayerState {
   current: CatalogTrack | null;
   playing: boolean;
-  /** Real seconds of contiguous playback this session (the metered quantity). */
+  /** Real seconds of contiguous playback for the current track (the metered
+   *  quantity). Resets per track — for the running session figure use sessionCost. */
   billedSec: number;
+  /** Accrued cost (dollars) across every track played this session — does NOT
+   *  reset between songs, unlike billedSec. */
+  sessionCost: number;
   /** Current playhead + duration (seconds). */
   cur: number;
   dur: number;
@@ -60,6 +69,14 @@ export interface PlayerState {
   prev: () => void;
   hasNext: boolean;
   hasPrev: boolean;
+  /** Output volume (0–1), independent of metering — billing is wall-clock based. */
+  volume: number;
+  /** Whether output is muted (volume is preserved underneath). */
+  muted: boolean;
+  /** Set output volume (0–1); a non-zero value auto-unmutes (drag-to-unmute). */
+  setVolume: (v: number) => void;
+  /** Toggle mute without losing the underlying volume. */
+  toggleMute: () => void;
   /** Open the add-funds sheet (e.g. from the wallet chip). */
   openTopUp: () => void;
   /** Re-read balance/auth after an external change (e.g. wallet top-up page). */
@@ -85,6 +102,22 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const [billedSec, setBilledSec] = useState(0);
   const [cur, setCur] = useState(0);
   const [dur, setDur] = useState(0);
+
+  // Output volume. Seeded with the default for SSR-safe first render, then
+  // hydrated from localStorage on mount (below) so it never mismatches the
+  // server-rendered markup. `volLoaded` gates the write-back so we don't
+  // overwrite the stored value with the default before we've read it.
+  const [volume, setVolumeState] = useState(DEFAULT_VOL);
+  const [muted, setMuted] = useState(false);
+  const volLoaded = useRef(false);
+
+  // Cost (cents) of tracks already finished this session. The current track's
+  // accrued cost is added live on top of this; it's folded in here when the
+  // track switches, so the meter spans the whole session, not just one song.
+  const [sessionCents, setSessionCents] = useState(0);
+  // Mirror of billedSec so stream() can read its latest value (it has a stable
+  // identity and would otherwise close over a stale billedSec).
+  const billedSecRef = useRef(0);
 
   const [needsAuth, setNeedsAuth] = useState(false);
   const [balanceCents, setBalanceCents] = useState(0);
@@ -149,6 +182,31 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   }, []);
 
   useEffect(() => { nowRef.current = current; }, [current]);
+  useEffect(() => { billedSecRef.current = billedSec; }, [billedSec]);
+
+  // Hydrate persisted volume/mute once on the client (after the SSR default
+  // render), then mark loaded so the sync effect may write back.
+  useEffect(() => {
+    try {
+      const v = parseFloat(localStorage.getItem(VOL_KEY) ?? "");
+      if (isFinite(v) && v >= 0 && v <= 1) setVolumeState(v);
+      setMuted(localStorage.getItem(MUTE_KEY) === "1");
+    } catch { /* ignore — fall back to defaults */ }
+    volLoaded.current = true;
+  }, []);
+
+  // Keep the single <audio> element in lock-step with the chosen volume/mute,
+  // and persist the choice. `.volume`/`.muted` are element properties, so they
+  // survive src swaps between tracks — set them here and they stick.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (a) { a.volume = volume; a.muted = muted; }
+    if (!volLoaded.current) return; // don't clobber storage before hydration
+    try {
+      localStorage.setItem(VOL_KEY, String(volume));
+      localStorage.setItem(MUTE_KEY, muted ? "1" : "0");
+    } catch { /* ignore */ }
+  }, [volume, muted]);
 
   // metering loop — accrue real elapsed playback time only; never bill seeks,
   // scrubs, or loops. `seeking`/`seeked` (fired for clicks, drags, keyboard,
@@ -225,10 +283,15 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const stream = useCallback(async (t: CatalogTrack) => {
     const a = audioRef.current;
     if (!a) return;
+    // Bank the outgoing track's accrued cost into the session total before the
+    // per-track meter resets, so the session figure carries across songs.
+    const prev = nowRef.current;
+    if (prev) setSessionCents((s) => s + (billedSecRef.current / 60) * prev.pricePerMinuteCents);
     setCurrent(t);
     setCur(0);
     setDur(0);
     setBilledSec(0);
+    billedSecRef.current = 0;
     api.recordPlay(t.id);
     try {
       a.src = await api.streamUrl(t.id);
@@ -287,6 +350,14 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     else a.pause();
   }, []);
 
+  const setVolume = useCallback((v: number) => {
+    const nv = Math.max(0, Math.min(1, v));
+    setVolumeState(nv);
+    if (nv > 0) setMuted(false); // dragging the slider up implies unmute
+  }, []);
+
+  const toggleMute = useCallback(() => setMuted((m) => !m), []);
+
   // Full-service scrubbing: seek anywhere in the track. Setting currentTime
   // fires the native seek events above, so the skipped span is never billed.
   const seek = useCallback((to: number) => {
@@ -318,11 +389,17 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     return () => a.removeEventListener("ended", onEnded);
   }, [next]);
 
+  // Session cost = everything banked from finished tracks + the current track's
+  // live accrual. In dollars, to match what the meter renders.
+  const sessionCost =
+    sessionCents / 100 + (current ? (billedSec / 60) * current.pricePerMinuteCents / 100 : 0);
+
   const value = useMemo<PlayerState>(
     () => ({
       current,
       playing,
       billedSec,
+      sessionCost,
       cur,
       dur,
       balanceCents,
@@ -335,10 +412,14 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       prev,
       hasNext: queuePos >= 0 && queuePos + 1 < queueRef.current.length,
       hasPrev: queuePos > 0,
+      volume,
+      muted,
+      setVolume,
+      toggleMute,
       openTopUp: () => setTopup(true),
       refresh: loadMe,
     }),
-    [current, playing, billedSec, cur, dur, balanceCents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, loadMe],
+    [current, playing, billedSec, sessionCost, cur, dur, balanceCents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, volume, muted, setVolume, toggleMute, loadMe],
   );
 
   return (
