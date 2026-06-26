@@ -2,13 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { songPath, artistPath, absoluteUrl, parseSongSlug, findTrack, findArtist, shareTargets } from "./shareUrls.ts";
 
-const track = (id, title, artistId = "ar", artistName = "Some One") => ({
+const track = (id: string, title: string, artistId = "ar", artistName = "Some One") => ({
   id, title, artistId, artistName,
-  genre: null, durationSeconds: 200, pricePerMinuteCents: 1, coverImageKey: null,
+  genre: null, durationSeconds: 200, pricePerMinuteMillicents: 1000, coverImageKey: null,
 });
-const artist = (id, name) => ({
+const artist = (id: string, name: string) => ({
   id, name, genre: null, location: null, bio: null, avatarKey: null,
-  payoutsEnabled: true, trackCount: 1, minutes: 0, earningsCents: 0,
+  payoutsEnabled: true, trackCount: 1, minutes: 0, earningsMillicents: 0,
 });
 
 test("songPath: readable slug + 8-char short id", () => {
@@ -36,7 +36,7 @@ const catalog = {
     track("a1b2c3d4-1111-1111-1111-111111111111", "Drive", "ar1", "Adhesion & Scrap Heap"),
     track("e5f6a7b8-2222-2222-2222-222222222222", "Drive", "ar2", "Lo Fi Cat"), // same title, different id
   ],
-  stats: { artists: 2, tracks: 2, minutes: 0, earningsCents: 0 },
+  stats: { artists: 2, tracks: 2, minutes: 0, earningsMillicents: 0 },
 };
 
 test("findTrack: same-titled songs resolve to distinct tracks by short id", () => {
