@@ -22,8 +22,8 @@ test("artistPath: slugified name; falls back to id when name is empty", () => {
   assert.equal(artistPath(artist("ar2", "")), "/a/ar2");
 });
 test("absoluteUrl: prefixes the site origin and a leading slash", () => {
-  assert.equal(absoluteUrl("/s/x--1"), "https://tollroad.music/s/x--1");
-  assert.equal(absoluteUrl("s/x--1"), "https://tollroad.music/s/x--1");
+  assert.equal(absoluteUrl("/s/x--1"), "https://www.tollroadmusic.xyz/s/x--1");
+  assert.equal(absoluteUrl("s/x--1"), "https://www.tollroadmusic.xyz/s/x--1");
 });
 test("parseSongSlug: trailing id after the last '--'; bare uuid passes through", () => {
   assert.equal(parseSongSlug("midnight-drive--a1b2c3d4").id, "a1b2c3d4");
@@ -56,11 +56,11 @@ test("findArtist: by slug and by bare id; unknown -> null", () => {
 });
 
 test("shareTargets: covers the expected channels", () => {
-  const keys = shareTargets("https://tollroad.music/s/x--1", "Drive — Lo Fi Cat").map((t) => t.key);
+  const keys = shareTargets("https://www.tollroadmusic.xyz/s/x--1", "Drive — Lo Fi Cat").map((t) => t.key);
   assert.deepEqual(keys, ["sms", "whatsapp", "telegram", "x", "facebook", "email"]);
 });
 test("shareTargets: url and title are encoded into every href", () => {
-  const url = "https://tollroad.music/s/midnight-drive--a1b2c3d4";
+  const url = "https://www.tollroadmusic.xyz/s/midnight-drive--a1b2c3d4";
   const ts = shareTargets(url, "Midnight Drive & Co");
   const enc = encodeURIComponent(url);
   // every link must carry the encoded absolute url (so the shared link works)

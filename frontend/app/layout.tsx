@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   title: "TollRoad — Pay for the minutes you actually hear",
   description:
     "The metered-billing DSP for music. You pay for the minutes you actually listen — artists get paid for the minutes you actually played. Streaming, metered like a utility.",
-  metadataBase: new URL("https://tollroad.music"),
+  metadataBase: new URL("https://www.tollroadmusic.xyz"),
   openGraph: {
     title: "TollRoad — Pay for the minutes you actually hear",
     description:
