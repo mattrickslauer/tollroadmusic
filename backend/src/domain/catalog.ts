@@ -24,13 +24,13 @@ export type CatalogArtist = {
   payoutsEnabled: boolean;
   trackCount: number;
   minutes: number;
-  earningsCents: number;
+  earningsMillicents: number;
 };
 
 export type Catalog = {
   artists: CatalogArtist[];
   tracks: CatalogTrack[];
-  stats: { artists: number; tracks: number; minutes: number; earningsCents: number };
+  stats: { artists: number; tracks: number; minutes: number; earningsMillicents: number };
 };
 
 const ARTISTS_SQL = `
@@ -49,7 +49,7 @@ const TRACKS_SQL = `
 const EARNINGS_SQL = `
   SELECT artist_id,
          COALESCE(SUM(minutes), 0)      AS minutes,
-         COALESCE(SUM(amount_cents), 0) AS earnings_cents
+         COALESCE(SUM(amount_millicents), 0) AS earnings_millicents
   FROM artist_daily_summary
   GROUP BY artist_id`;
 
@@ -60,9 +60,9 @@ export async function getCatalog(): Promise<Catalog> {
     const tracksR = await db.query(TRACKS_SQL);
     const earnR = await db.query(EARNINGS_SQL);
 
-    const earnings = new Map<string, { minutes: number; earningsCents: number }>();
+    const earnings = new Map<string, { minutes: number; earningsMillicents: number }>();
     for (const r of earnR.rows) {
-      earnings.set(r.artist_id, { minutes: Number(r.minutes), earningsCents: Number(r.earnings_cents) });
+      earnings.set(r.artist_id, { minutes: Number(r.minutes), earningsMillicents: Number(r.earnings_millicents) });
     }
     const trackCounts = new Map<string, number>();
     for (const r of tracksR.rows) {
@@ -81,7 +81,7 @@ export async function getCatalog(): Promise<Catalog> {
         payoutsEnabled: r.payouts_enabled,
         trackCount: trackCounts.get(r.id) || 0,
         minutes: e?.minutes ?? 0,
-        earningsCents: e?.earningsCents ?? 0,
+        earningsMillicents: e?.earningsMillicents ?? 0,
       };
     });
 
@@ -100,7 +100,7 @@ export async function getCatalog(): Promise<Catalog> {
       artists: artists.length,
       tracks: tracks.length,
       minutes: [...earnings.values()].reduce((s, e) => s + e.minutes, 0),
-      earningsCents: [...earnings.values()].reduce((s, e) => s + e.earningsCents, 0),
+      earningsMillicents: [...earnings.values()].reduce((s, e) => s + e.earningsMillicents, 0),
     };
 
     return { artists, tracks, stats };
@@ -120,14 +120,14 @@ export type ArtistTrack = {
 export async function getArtistSummary(artistId: string): Promise<{
   artistId: string;
   minutes: number;
-  earningsCents: number;
+  earningsMillicents: number;
   trackCount: number;
-  byDay: { day: string; minutes: number; amountCents: number }[];
+  byDay: { day: string; minutes: number; amountMillicents: number }[];
   tracks: ArtistTrack[];
 }> {
   return withDsql(async (db) => {
-    const totalR = await db.query<{ minutes: string; amount_cents: string }>(
-      `SELECT COALESCE(SUM(minutes),0) AS minutes, COALESCE(SUM(amount_cents),0) AS amount_cents
+    const totalR = await db.query<{ minutes: string; amount_millicents: string }>(
+      `SELECT COALESCE(SUM(minutes),0) AS minutes, COALESCE(SUM(amount_millicents),0) AS amount_millicents
          FROM artist_daily_summary WHERE artist_id = $1`,
       [artistId],
     );
@@ -142,8 +142,8 @@ export async function getArtistSummary(artistId: string): Promise<{
          FROM tracks WHERE artist_id = $1 ORDER BY title`,
       [artistId],
     );
-    const byDayR = await db.query<{ day: string; minutes: string; amount_cents: string }>(
-      `SELECT day, minutes, amount_cents FROM artist_daily_summary
+    const byDayR = await db.query<{ day: string; minutes: string; amount_millicents: string }>(
+      `SELECT day, minutes, amount_millicents FROM artist_daily_summary
         WHERE artist_id = $1 ORDER BY day DESC LIMIT 30`,
       [artistId],
     );
@@ -157,12 +157,12 @@ export async function getArtistSummary(artistId: string): Promise<{
     return {
       artistId,
       minutes: Number(totalR.rows[0]?.minutes ?? 0),
-      earningsCents: Number(totalR.rows[0]?.amount_cents ?? 0),
+      earningsMillicents: Number(totalR.rows[0]?.amount_millicents ?? 0),
       trackCount: tracks.length,
       byDay: byDayR.rows.map((r) => ({
         day: r.day,
         minutes: Number(r.minutes),
-        amountCents: Number(r.amount_cents),
+        amountMillicents: Number(r.amount_millicents),
       })),
       tracks,
     };

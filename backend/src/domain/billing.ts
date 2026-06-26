@@ -26,7 +26,7 @@ export function isValidRateMillicents(n: unknown): boolean {
 
 /** Convert a Stripe cents amount to millicents (×1000). */
 export const stripeCentsToMillicents = (cents: number): number => cents * 1000;
-/** Convert millicents to Stripe cents, rounding up sub-cent remainders. */
+/** Convert millicents to Stripe cents, rounding to the nearest cent. */
 export const millicentsToStripeCents = (millicents: number): number => Math.round(millicents / 1000);
 
 export function cardFeeCents(amountCents: number): number {
