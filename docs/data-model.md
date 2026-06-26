@@ -13,19 +13,27 @@ sparse `GSI1`.
 | Item | PK | SK | Attributes | Notes |
 |---|---|---|---|---|
 | **Listener balance** | `USER#<userId>` | `BAL` | `balanceCents`, `updatedAt` | Authoritative real-time balance. Decremented with a **conditional** `UpdateItem` (`balanceCents >= :cost`) → hard stop-at-zero on the hot path. |
-| **Metered minute** | `USER#<userId>` | `EVT#<minuteEpoch>#<trackId>` | `type="METER"`, `userId`, `trackId`, `artistId`, `minuteEpoch`, `amountCents`, `idempotencyKey`, `ttl`, `GSI1PK=ARTIST#<artistId>`, `GSI1SK=EVT#<minuteEpoch>` | Written by `/api/renew`. `type="METER"` is the stream filter that drives the rollup. `ttl` is **generous** (e.g. 30 days) — never expire a minute before it's durable in the ledger. |
-| **Play session** *(optional)* | `USER#<userId>` | `SESS#<trackId>` | `cookieExpiresAt`, `lastRenewAt`, `ttl` | Lets the server reason about an active session; not required for billing. |
+| **Metered minute** | `USER#<userId>` | `EVT#<minuteEpoch>#<trackId>` | `type="METER"`, `userId`, `trackId`, `artistId`, `minuteEpoch`, `amountCents`, `idempotencyKey`, `ttl`, `GSI1PK=ARTIST#<artistId>`, `GSI1SK=EVT#<minuteEpoch>` | Written by `POST /v1/charge` (the command path), atomically with the balance debit. `type="METER"` is the stream filter that drives the projector. `ttl` is **generous** (30 days) — never expire a minute before it's durable in the ledger. |
+| **Top-up** | `USER#<userId>` | `TOPUP#<paymentRef>` | `type="TOPUP"`, `userId`, `paymentRef`, `amountCents`, `feeCents`, `method`, `status` | Written when a balance credit lands (Stripe / demo / onboarding gift). Idempotent on `paymentRef`; the projector inserts `wallet_topups` and reconciles the DSQL balance. No TTL. |
 
-### Hot-path write (`/api/renew`, every ~45s)
+### Hot-path write (`POST /v1/charge`, ~once per minute played)
+
+One atomic `TransactWriteItems` — the conditional debit and the guarded meter event
+commit together or not at all:
 
 ```
-UpdateItem  PK=USER#<u> SK=BAL
-  SET balanceCents = balanceCents - :cost, updatedAt = :now
-  ConditionExpression: balanceCents >= :cost      # stop-at-zero
-PutItem     PK=USER#<u> SK=EVT#<min>#<t>          # type=METER → Streams → rollup
-  idempotencyKey = '<u>#<t>#<min>'
-→ issue a fresh short-TTL CloudFront signed cookie
+TransactWriteItems [
+  Update  PK=USER#<u> SK=BAL
+    SET balanceCents = balanceCents - :cost, updatedAt = :now
+    ConditionExpression: balanceCents >= :cost      # stop-at-zero
+  Put     PK=USER#<u> SK=EVT#<min>#<t>              # type=METER → Streams → projector
+    ConditionExpression: attribute_not_exists(PK)    # one event per unique minute
+    idempotencyKey = '<u>#<t>#<min>'
+]
 ```
+
+A separate `GET /v1/stream/{trackId}` then issues a short-TTL CloudFront **signed URL**
+once `hasRecentMeter` confirms a recent paid minute.
 
 `idempotencyKey = user#track#minute` is the dedup anchor that makes the
 downstream ledger exactly-once.
@@ -36,7 +44,7 @@ downstream ledger exactly-once.
 
 PostgreSQL-16 wire-compatible, **OLTP**, scale-to-zero. Designed around DSQL's
 grain: **no foreign keys / triggers / PL-pgSQL** (integrity in the app + the
-rollup), secondary indexes via `CREATE INDEX ASYNC`, **append-only** ledger to
+projector), secondary indexes via `CREATE INDEX ASYNC`, **append-only** ledger to
 avoid OCC hotspots, precomputed summary for BI. Canonical DDL lives in
 [`../infra/scripts/migrate-dsql.mjs`](../infra/scripts/migrate-dsql.mjs).
 

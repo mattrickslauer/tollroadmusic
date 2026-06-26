@@ -12,6 +12,7 @@ import { webhook } from "./handlers/stripe-webhook.ts";
 import * as library from "./handlers/library.ts";
 import { summary as artistSummary, create as artistCreate } from "./handlers/artist.ts";
 import * as artistContent from "./handlers/artist-content.ts";
+import * as superfan from "./handlers/superfan.ts";
 
 interface Route {
   method: string;
@@ -78,6 +79,11 @@ const ROUTES: Route[] = [
   compile("POST", "/artist/cover/commit", artistContent.coverCommit),
   compile("POST", "/artist/track/rate", artistContent.rateUpdate),
   compile("POST", "/artist/profile", artistContent.profileUpdate),
+
+  compile("GET", "/superfan/bond/{artistId}", superfan.bond),
+  compile("GET", "/superfan/leaderboard/{artistId}", superfan.leaderboard),
+  compile("GET", "/superfan/my-bonds", superfan.myBonds),
+  compile("GET", "/superfan/profile/{handle}", superfan.profile),
 ];
 
 export interface Match {

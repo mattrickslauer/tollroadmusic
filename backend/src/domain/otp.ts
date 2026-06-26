@@ -9,7 +9,21 @@ const MAX_ATTEMPTS = 5;
 const RESEND_COOLDOWN_MS = 30 * 1000;
 const MAX_SENDS = 5;
 
-const pepper = process.env.TOLLROAD_SESSION_SECRET ?? "";
+// HMAC pepper for OTP code hashes. Kept SEPARATE from the session-signing key so
+// the two secrets can be rotated independently: prefer TOLLROAD_OTP_PEPPER, and
+// only fall back to TOLLROAD_SESSION_SECRET (with a one-time warning) so existing
+// deploys that haven't set the new var keep working. Note: any OTP issued under
+// the old pepper won't verify after this changes — acceptable given the 10-min TTL.
+function resolvePepper(): string {
+  const dedicated = process.env.TOLLROAD_OTP_PEPPER;
+  if (dedicated) return dedicated;
+  console.warn(
+    "TOLLROAD_OTP_PEPPER is not set — falling back to TOLLROAD_SESSION_SECRET for OTP hashing. Set TOLLROAD_OTP_PEPPER to separate the OTP pepper from the session key.",
+  );
+  return process.env.TOLLROAD_SESSION_SECRET ?? "";
+}
+
+const pepper = resolvePepper();
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();

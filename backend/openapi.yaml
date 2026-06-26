@@ -7,9 +7,10 @@ info:
     event. Streaming is gated by an **x402-style** protocol (crypto-free): a
     request for a paid resource that has no recent paid minute returns
     **402 Payment Required** with machine-readable payment requirements; the
-    caller pays via `POST /v1/charge` (debiting its prepaid wallet, reconciled in
-    Aurora DSQL) and retries. The consumer app, third-party integrations, and AI
-    agents are all just clients of this one contract.
+    caller pays via `POST /v1/charge` (a conditional debit of its prepaid wallet —
+    the authoritative balance in Amazon DynamoDB — later reconciled into Aurora
+    DSQL by the Streams projector) and retries. The consumer app, third-party
+    integrations, and AI agents are all just clients of this one contract.
 servers:
   - url: "{apiBaseUrl}/v1"
     variables:
@@ -161,9 +162,11 @@ paths:
     post:
       summary: Pay for one metered minute of a track (the x402 payment step).
       description: >
-        Conditionally debits the caller's wallet by the track's per-minute rate
-        and writes an append-only royalty-ledger row, idempotent per
-        (user, track, wall-clock minute). Returns 402 if the balance can't cover it.
+        Conditionally debits the caller's wallet (the authoritative DynamoDB
+        balance) by the track's per-minute rate and records a meter event,
+        idempotent per (user, track, wall-clock minute). The append-only DSQL
+        royalty-ledger row is built asynchronously by the Streams projector, not
+        in this request. Returns 402 if the balance can't cover it.
       security: [{ bearerAuth: [] }, { apiKey: [] }]
       requestBody:
         required: true

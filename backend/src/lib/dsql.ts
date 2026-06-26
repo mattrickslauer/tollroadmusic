@@ -13,6 +13,9 @@ import { DsqlSigner } from "@aws-sdk/dsql-signer";
 
 const ENDPOINT = process.env.TOLLROAD_DSQL_ENDPOINT;
 const REGION = process.env.TOLLROAD_DSQL_REGION || "us-east-1";
+// Least-privilege: connect as TOLLROAD_DSQL_USER. Defaults to "admin" so the
+// demo keeps working unchanged; in production point it at a DML-only role.
+const DB_USER = process.env.TOLLROAD_DSQL_USER || "admin";
 
 // Rotate the connection after this long — comfortably under the token's ~15-min TTL.
 const TOKEN_MAX_AGE_MS = 10 * 60 * 1000;
@@ -32,7 +35,7 @@ async function openClient(): Promise<Client> {
   const c = new Client({
     host: ENDPOINT,
     port: 5432,
-    user: "admin",
+    user: DB_USER,
     database: "postgres",
     password: token,
     ssl: { rejectUnauthorized: true },

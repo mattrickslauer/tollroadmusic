@@ -41,4 +41,4 @@ Without `-c cfPublicKey`, the distribution deploys **open** (no signed-cookie ga
 
 - Hackathon posture: every resource has `removalPolicy: DESTROY` / `autoDeleteObjects` so `cdk destroy` is clean. Flip to `RETAIN` for anything real.
 - The data model (DynamoDB item shapes + DSQL DDL) is documented in [`../docs/data-model.md`](../docs/data-model.md).
-- Cost model: [`../docs/COST_ESTIMATE.md`](../docs/COST_ESTIMATE.md).
+- Cost model: [`../docs/cost/COST_ESTIMATE.md`](../docs/cost/COST_ESTIMATE.md).

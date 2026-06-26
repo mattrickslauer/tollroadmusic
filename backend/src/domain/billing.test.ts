@@ -5,7 +5,7 @@ import {
   MAX_RATE_MILLICENTS,
   stripeCentsToMillicents,
   millicentsToStripeCents,
-  chargeMinute,
+  chargeMinuteLocalDsql,
 } from "./billing.ts";
 import { dsqlConfigured, query } from "../lib/dsql.ts";
 
@@ -64,7 +64,7 @@ test(
     );
 
     try {
-      const result = await chargeMinute({
+      const result = await chargeMinuteLocalDsql({
         accountId,
         trackId,
         artistId,

@@ -15,12 +15,20 @@ import {
   millicentsToStripeCents,
   stripeCentsToMillicents,
 } from "../domain/billing.ts";
+import { walletStoreConfigured, getRealtimeBalance } from "../domain/wallet-store.ts";
+
+// The displayed balance is the AUTHORITATIVE real-time balance (DynamoDB) when
+// the wallet store is configured; only the laptop-demo fallback reads the DSQL
+// reconciliation balance. History is always the DSQL read model.
+async function liveBalance(accountId: string): Promise<number> {
+  return walletStoreConfigured() ? getRealtimeBalance(accountId) : getBalanceMillicents(accountId);
+}
 
 export const balance: Handler = async (req) => {
   if (!sessionConfigured() || !dsqlConfigured()) return error(503, "billing not configured");
   const session = await requireSession(req);
   const [balanceMillicents, history] = await Promise.all([
-    getBalanceMillicents(session.sub),
+    liveBalance(session.sub),
     getListeningHistory(session.sub),
   ]);
   return ok({ balanceMillicents, history });
@@ -119,7 +127,7 @@ export const confirm: Handler = async (req) => {
   const meta = intent.metadata ?? {};
   if (meta.accountId !== session.sub) return error(403, "not your payment");
   if (!CREDITABLE.has(intent.status)) {
-    return json409(intent.status, await getBalanceMillicents(session.sub));
+    return json409(intent.status, await liveBalance(session.sub));
   }
 
   const { balanceMillicents } = await creditTopup({

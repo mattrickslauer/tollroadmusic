@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ArtistLink from "./ArtistLink";
+import BondMeter from "@/components/bond/BondMeter";
 import { usePlayer } from "@/context/PlayerProvider";
 import { clock, usdM } from "./format";
 import LikeButton from "./LikeButton";
@@ -14,11 +15,10 @@ import { Sk } from "./Skeleton";
  *  navigation. Shows the live meter: balance + this-session cost.
  *  On phones, tapping the track info expands into the full-screen player. */
 export default function PlayerBar() {
-  const { current, playing, cur, dur, billedSec, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
   const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
-  const cost = current ? (billedSec / 60) * current.pricePerMinuteMillicents / 100000 : 0;
 
   // Tapping the track info opens the full-screen view — phones only; on wider
   // screens the bar already shows everything, so the gesture is a no-op there.
@@ -42,6 +42,8 @@ export default function PlayerBar() {
             <div className="lx-player-meta">
               <span className="lx-player-title" title={current.title}>{current.title}</span>
               <ArtistLink id={current.artistId} name={current.artistName} className="lx-player-artist" />
+              {/* Live Superfan-Bond meter — ticks up as the metered minutes accrue. */}
+              <BondMeter />
             </div>
             <LikeButton trackId={current.id} size={16} />
           </>
@@ -92,7 +94,7 @@ export default function PlayerBar() {
             {balanceReady ? usdM(balanceMillicents) : <Sk h={15} w={48} radius={4} style={{ marginBottom: 3 }} />}
             <small>balance</small>
           </span>
-          <span className="lx-meter-cost">${cost.toFixed(4)}<small>session</small></span>
+          <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>
         </button>
       </div>
 
