@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { songPath, artistPath, absoluteUrl, parseSongSlug, findTrack, findArtist } from "./shareUrls.ts";
+import { songPath, artistPath, absoluteUrl, parseSongSlug, findTrack, findArtist, shareTargets } from "./shareUrls.ts";
 
 const track = (id, title, artistId = "ar", artistName = "Some One") => ({
   id, title, artistId, artistName,
@@ -53,4 +53,25 @@ test("findArtist: by slug and by bare id; unknown -> null", () => {
   assert.equal(findArtist(catalog, "adhesion-scrap-heap")?.id, "ar1");
   assert.equal(findArtist(catalog, "ar2")?.id, "ar2");
   assert.equal(findArtist(catalog, "ghost"), null);
+});
+
+test("shareTargets: covers the expected channels", () => {
+  const keys = shareTargets("https://tollroad.music/s/x--1", "Drive — Lo Fi Cat").map((t) => t.key);
+  assert.deepEqual(keys, ["sms", "whatsapp", "telegram", "x", "facebook", "email"]);
+});
+test("shareTargets: url and title are encoded into every href", () => {
+  const url = "https://tollroad.music/s/midnight-drive--a1b2c3d4";
+  const ts = shareTargets(url, "Midnight Drive & Co");
+  const enc = encodeURIComponent(url);
+  // every link must carry the encoded absolute url (so the shared link works)
+  for (const t of ts) assert.ok(t.href.includes(enc) || t.href.includes(encodeURIComponent(`Midnight Drive & Co ${url}`)), `${t.key} missing url`);
+  // the "&" in the title must be percent-encoded, never left raw to break params
+  const x = ts.find((t) => t.key === "x")!;
+  assert.ok(x.href.includes("Midnight%20Drive%20%26%20Co"));
+  assert.ok(!x.href.includes("Drive & Co"));
+});
+test("shareTargets: sms and mailto use protocol handlers", () => {
+  const ts = shareTargets("https://t.m/s/x--1", "T");
+  assert.ok(ts.find((t) => t.key === "sms")!.href.startsWith("sms:"));
+  assert.ok(ts.find((t) => t.key === "email")!.href.startsWith("mailto:"));
 });

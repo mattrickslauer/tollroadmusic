@@ -416,26 +416,27 @@
 .lx-like:hover { color: var(--app-text); background: var(--app-surface-2); transform: scale(1.1); }
 .lx-like[data-on="true"] { color: #ff5a9e; }
 
-/* Icon share button — reuses the .lx-like icon-button frame; flashes "Copied!"
- * as a small tooltip on clipboard fallback (Web Share API shows the native
- * sheet). Distinct from .lx-share (the playlist header's copy-link pill). */
+/* Icon share trigger — reuses the .lx-like icon-button frame; opens the share
+ * popover menu below. Distinct from .lx-share (the playlist header copy pill). */
 .lx-share-icon { position: relative; }
-.lx-share-icon[data-copied="true"] { color: var(--app-green, #66e6a6); }
-.lx-share-icon[data-copied="true"]::after {
-  content: "Copied!";
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--app-elev-hi, #1a1a22);
-  color: var(--app-text, #f4efe3);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-  pointer-events: none;
+
+/* Share popover — reuses the .lx-menu* shell (see AddToPlaylist); each item is
+ * an icon + label row, and links render as flat menu rows (no underline). */
+.lx-share-menu .lx-menu-list { gap: 1px; }
+.lx-share-mi {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: var(--app-text);
 }
+a.lx-share-mi:hover { color: var(--app-text); }
+.lx-share-mi-ic { flex: none; color: var(--app-text-dim); }
+.lx-share-mi:hover .lx-share-mi-ic { color: var(--app-accent); }
+.lx-share-mi[data-done="true"],
+.lx-share-mi[data-done="true"] .lx-share-mi-ic { color: var(--app-green); }
+/* Artist profile: title + share trigger on one row. */
+.lx-head-titlerow { display: flex; align-items: center; gap: 12px; }
 
 .lx-menu-wrap { position: relative; line-height: 0; }
 .lx-menu-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 30px; border: none; background: none; color: var(--app-text-faint); cursor: pointer; padding: 4px; border-radius: 50%; line-height: 0; transition: color 0.15s, background 0.15s; }
