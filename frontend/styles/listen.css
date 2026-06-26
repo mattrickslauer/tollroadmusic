@@ -597,6 +597,22 @@
 .lx-meter-bal[data-low="true"] { color: #ff8a8a; }
 .lx-meter-bal small, .lx-meter-cost small { font-family: var(--font-body); font-size: 0.6rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--app-text-faint); }
 
+/* ---------- volume control (mute toggle + level slider) ---------- */
+.lx-volume { display: flex; align-items: center; gap: 8px; }
+.lx-vol-btn { border: none; background: none; color: var(--app-text-dim); cursor: pointer; line-height: 0; padding: 2px; display: grid; place-items: center; transition: color 0.15s; }
+.lx-vol-btn:hover { color: var(--app-text); }
+.lx-vol-btn svg { width: 19px; height: 19px; }
+.lx-vol-track { position: relative; width: 78px; height: 5px; border-radius: 3px; background: var(--app-elev); }
+.lx-vol-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--app-text-dim); transition: background 0.15s; }
+.lx-volume:hover .lx-vol-fill { background: var(--app-accent); }
+.lx-vol-track input { position: absolute; inset: -6px 0; width: 100%; height: calc(100% + 12px); opacity: 0; cursor: pointer; margin: 0; }
+
+/* ---------- expand-to-full-screen button (in the bar's right cluster) ---------- */
+.lx-expand { border: none; background: none; color: var(--app-text-dim); cursor: pointer; line-height: 0; padding: 4px; border-radius: 8px; display: grid; place-items: center; transition: color 0.15s, background 0.15s; }
+.lx-expand:hover:not(:disabled) { color: var(--app-text); background: var(--app-surface-2); }
+.lx-expand:disabled { opacity: 0.3; cursor: default; }
+.lx-expand svg { width: 18px; height: 18px; }
+
 /* ---------- mobile chrome (hidden on desktop) ---------- */
 .lx-burger { display: none; }
 .lx-scrim { display: none; }
@@ -610,6 +626,9 @@
   .lx-main { margin-left: 72px; }
   .lx-player { left: 72px; grid-template-columns: 1fr 1.4fr auto; gap: 12px; padding: 0 12px; }
   .lx-content { padding: 20px 16px 0; }
+  /* the inline volume slider is too wide for the tighter tablet bar — it stays
+     available in the full-screen view (reachable via the expand button) */
+  .lx-player-right .lx-volume { display: none; }
 }
 
 /* ---------- responsive: phone — sidebar becomes a slide-in drawer ---------- */
@@ -706,6 +725,8 @@
   .lx-player-left .lx-like { display: none; }
   .lx-player-ctrls .lx-pctrl:not(.lx-pctrl-main) { display: none; }
   .lx-live { display: none; }
+  /* the track-info tap already opens full-screen here, where volume lives */
+  .lx-player-right .lx-volume, .lx-expand { display: none; }
   .lx-meter { padding: 6px 10px; gap: 10px; }
   .lx-meter-bal, .lx-meter-cost { font-size: 0.8rem; }
 
@@ -802,6 +823,21 @@
 .lx-full-play svg { width: 30px !important; height: 30px !important; }
 
 .lx-full-meter { align-self: center; }
+
+/* In the full-screen view the volume slider stretches to a comfortable width
+   and centers under the transport controls. */
+.lx-full-volume { align-self: center; width: min(320px, 84%); gap: 12px; }
+.lx-full-volume .lx-vol-track { flex: 1; width: auto; height: 6px; }
+.lx-full-volume .lx-vol-fill { background: var(--app-accent); }
+.lx-full-volume .lx-vol-btn svg { width: 22px; height: 22px; }
+
+/* Desktop full-screen: the layout was tuned for a phone's narrow column. On
+   wider viewports, cap the content width and size the cover to the viewport
+   height so it doesn't stretch edge-to-edge. */
+@media (min-width: 641px) {
+  .lx-full-top, .lx-full-body { width: min(680px, 100%); margin-left: auto; margin-right: auto; }
+  .lx-full-cover { width: min(46vh, 440px); }
+}
 
 /* ---------- loading shells (skeletons) ----------------------------------- */
 /* A shimmering block used to stand in for any not-yet-loaded value. Shows no
