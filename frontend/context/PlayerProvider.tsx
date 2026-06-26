@@ -43,8 +43,12 @@ const DEFAULT_VOL = 0.85;
 export interface PlayerState {
   current: CatalogTrack | null;
   playing: boolean;
-  /** Real seconds of contiguous playback this session (the metered quantity). */
+  /** Real seconds of contiguous playback for the current track (the metered
+   *  quantity). Resets per track — for the running session figure use sessionCost. */
   billedSec: number;
+  /** Accrued cost (dollars) across every track played this session — does NOT
+   *  reset between songs, unlike billedSec. */
+  sessionCost: number;
   /** Current playhead + duration (seconds). */
   cur: number;
   dur: number;
@@ -107,6 +111,14 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const [muted, setMuted] = useState(false);
   const volLoaded = useRef(false);
 
+  // Cost (cents) of tracks already finished this session. The current track's
+  // accrued cost is added live on top of this; it's folded in here when the
+  // track switches, so the meter spans the whole session, not just one song.
+  const [sessionCents, setSessionCents] = useState(0);
+  // Mirror of billedSec so stream() can read its latest value (it has a stable
+  // identity and would otherwise close over a stale billedSec).
+  const billedSecRef = useRef(0);
+
   const [needsAuth, setNeedsAuth] = useState(false);
   const [balanceCents, setBalanceCents] = useState(0);
   const [balanceReady, setBalanceReady] = useState(false);
@@ -157,6 +169,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   }, [loadMe]);
 
   useEffect(() => { nowRef.current = current; }, [current]);
+  useEffect(() => { billedSecRef.current = billedSec; }, [billedSec]);
 
   // Hydrate persisted volume/mute once on the client (after the SSR default
   // render), then mark loaded so the sync effect may write back.
@@ -257,10 +270,15 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const stream = useCallback(async (t: CatalogTrack) => {
     const a = audioRef.current;
     if (!a) return;
+    // Bank the outgoing track's accrued cost into the session total before the
+    // per-track meter resets, so the session figure carries across songs.
+    const prev = nowRef.current;
+    if (prev) setSessionCents((s) => s + (billedSecRef.current / 60) * prev.pricePerMinuteCents);
     setCurrent(t);
     setCur(0);
     setDur(0);
     setBilledSec(0);
+    billedSecRef.current = 0;
     api.recordPlay(t.id);
     try {
       a.src = await api.streamUrl(t.id);
@@ -358,11 +376,17 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     return () => a.removeEventListener("ended", onEnded);
   }, [next]);
 
+  // Session cost = everything banked from finished tracks + the current track's
+  // live accrual. In dollars, to match what the meter renders.
+  const sessionCost =
+    sessionCents / 100 + (current ? (billedSec / 60) * current.pricePerMinuteCents / 100 : 0);
+
   const value = useMemo<PlayerState>(
     () => ({
       current,
       playing,
       billedSec,
+      sessionCost,
       cur,
       dur,
       balanceCents,
@@ -382,7 +406,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       openTopUp: () => setTopup(true),
       refresh: loadMe,
     }),
-    [current, playing, billedSec, cur, dur, balanceCents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, volume, muted, setVolume, toggleMute, loadMe],
+    [current, playing, billedSec, sessionCost, cur, dur, balanceCents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, volume, muted, setVolume, toggleMute, loadMe],
   );
 
   return (

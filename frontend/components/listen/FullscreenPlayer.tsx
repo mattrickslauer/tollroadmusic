@@ -15,10 +15,9 @@ import { Sk } from "./Skeleton";
  *  the same global player as PlayerBar, so play/pause/seek/volume stay in
  *  lock-step between the two. Available at every width; PlayerBar opens it. */
 export default function FullscreenPlayer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { current, playing, cur, dur, billedSec, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
-  const cost = current ? (billedSec / 60) * current.pricePerMinuteCents / 100 : 0;
 
   // Lock background scroll + close on Escape while the sheet is up.
   useEffect(() => {
@@ -108,7 +107,7 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
             {balanceReady ? usd(balanceCents) : <Sk h={17} w={56} radius={4} style={{ marginBottom: 3 }} />}
             <small>balance</small>
           </span>
-          <span className="lx-meter-cost">${cost.toFixed(4)}<small>session</small></span>
+          <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>
         </button>
       </div>
     </div>,

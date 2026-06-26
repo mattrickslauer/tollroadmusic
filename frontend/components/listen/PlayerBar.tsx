@@ -17,11 +17,10 @@ import { Sk } from "./Skeleton";
  *  Tapping the track info (or the expand button) opens the full-screen player —
  *  available at every width, not just phones. */
 export default function PlayerBar() {
-  const { current, playing, cur, dur, billedSec, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
   const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
-  const cost = current ? (billedSec / 60) * current.pricePerMinuteCents / 100 : 0;
 
   // Open the full-screen "now playing" view. Works at every width now: phones
   // tap the track info, desktop clicks the cover or the dedicated expand button.
@@ -96,7 +95,7 @@ export default function PlayerBar() {
             {balanceReady ? usd(balanceCents) : <Sk h={15} w={48} radius={4} style={{ marginBottom: 3 }} />}
             <small>balance</small>
           </span>
-          <span className="lx-meter-cost">${cost.toFixed(4)}<small>session</small></span>
+          <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>
         </button>
         <button className="lx-expand" onClick={expand} disabled={!current} aria-label="Open full-screen player" title="Full screen">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14h6v6M20 10h-6V4M4 20l6-6M20 4l-6 6" /></svg>

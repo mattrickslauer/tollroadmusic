@@ -1313,10 +1313,13 @@ h1.hero-title .serif {
 .auth-overlay {
   position: fixed; inset: 0; z-index: 200;
   background: rgba(6, 6, 8, 0.66); backdrop-filter: blur(6px);
-  display: grid; place-items: center; padding: 20px;
+  display: flex; padding: 20px; overflow-y: auto;
 }
 .auth-sheet {
   position: relative; width: 100%; max-width: 400px;
+  /* margin:auto centers when it fits; on tall content the overlay scrolls
+     instead of clipping (e.g. Stripe's PaymentElement). */
+  margin: auto;
   background: var(--asphalt-800); border: 1px solid var(--line);
   border-radius: var(--r-lg); padding: 30px 26px 26px;
   box-shadow: 0 30px 80px rgba(0,0,0,0.5);
