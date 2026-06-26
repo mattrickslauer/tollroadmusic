@@ -48,7 +48,7 @@ const STATEMENTS = [
      artist_id              UUID NOT NULL,
      title                  TEXT NOT NULL,
      duration_seconds       INTEGER NOT NULL,
-     price_per_minute_cents INTEGER NOT NULL DEFAULT 1,
+     price_per_minute_millicents INTEGER NOT NULL DEFAULT 1000,
      audio_key              TEXT NOT NULL,
      created_at             TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
@@ -89,7 +89,7 @@ const STATEMENTS = [
   // so an account can be a listener, an artist, or both.
   `CREATE TABLE IF NOT EXISTS listener_profiles (
      account_id    UUID PRIMARY KEY,
-     balance_cents BIGINT NOT NULL DEFAULT 0,
+     balance_millicents BIGINT NOT NULL DEFAULT 0,
      created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
   // One-time onboarding gift: stamped when the listener claims their free
@@ -115,7 +115,7 @@ const STATEMENTS = [
      track_id        UUID NOT NULL,
      artist_id       UUID NOT NULL,
      minute_epoch    BIGINT NOT NULL,
-     amount_cents    INTEGER NOT NULL,
+     amount_millicents    INTEGER NOT NULL,
      created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
   `CREATE INDEX ASYNC IF NOT EXISTS ledger_by_artist_minute ON royalty_ledger (artist_id, minute_epoch)`,
@@ -127,7 +127,7 @@ const STATEMENTS = [
      artist_id     UUID NOT NULL,
      day           DATE NOT NULL,
      minutes       BIGINT NOT NULL DEFAULT 0,
-     amount_cents  BIGINT NOT NULL DEFAULT 0,
+     amount_millicents  BIGINT NOT NULL DEFAULT 0,
      PRIMARY KEY (artist_id, day)
    )`,
   // Wallet top-ups — one row per funded Stripe payment (ACH or card). The PK is
@@ -138,7 +138,7 @@ const STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS wallet_topups (
      payment_ref   TEXT PRIMARY KEY,
      account_id    UUID NOT NULL,
-     amount_cents  BIGINT NOT NULL,
+     amount_millicents  BIGINT NOT NULL,
      fee_cents     BIGINT NOT NULL DEFAULT 0,
      method        TEXT NOT NULL,
      status        TEXT NOT NULL,
