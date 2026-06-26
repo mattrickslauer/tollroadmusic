@@ -34,7 +34,7 @@ components:
         scheme: { type: string, enum: [prepaid] }
         network: { type: string, enum: [tollroad] }
         asset: { type: string, enum: [usd] }
-        maxAmountRequired: { type: integer, description: Cents to satisfy this request (one minute). }
+        maxAmountRequired: { type: integer, description: Millicents to satisfy this request (one minute). }
         resource: { type: string }
         description: { type: string }
         mimeType: { type: string }

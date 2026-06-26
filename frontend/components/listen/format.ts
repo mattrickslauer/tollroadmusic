@@ -6,9 +6,6 @@ export function clock(t: number): string {
   return `${m}:${s}`;
 }
 
-/** Format a cents value as a dollar string: usd(150) → "$1.50" */
-export const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
-
 /** Format a millicents value as a dollar string: usdM(150000) → "$1.50" */
 export const usdM = (m: number) => `$${(m / 100000).toFixed(2)}`;
 

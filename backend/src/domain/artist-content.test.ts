@@ -28,7 +28,7 @@ test("sanitizeProfile ignores unknown keys and empty object", () => {
   assert.deepEqual(sanitizeProfile({ foo: "x" } as any), {});
 });
 
-test("rate handler rejects off-step / over-cap before touching DB", () => {
+test("isValidRateMillicents rejects off-step / over-cap / non-integer rates", () => {
   // off-step (150 is not a multiple of 100)
   assert.equal(isValidRateMillicents(150), false);
   // over-cap (> 100000)

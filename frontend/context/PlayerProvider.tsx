@@ -261,7 +261,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
         return;
       }
       if (needsAuth) { setGate(t); return; } // must sign in first
-      if (balanceMillicents <= 0) { setPending(t); setTopup(true); return; } // must have funds
+      if (balanceMillicents <= 0 && (t.pricePerMinuteMillicents ?? 0) > 0) { setPending(t); setTopup(true); return; } // must have funds for paid tracks
       beginPlay(t);
     },
     [needsAuth, balanceMillicents, beginPlay],
@@ -349,7 +349,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
             // resume the track they tried to play — never dead-end into top-up.
             if (shouldOnboard(listener)) { setPending(t); setOnboard(true); return; }
             if (!t) return;
-            if (bal <= 0) { setPending(t); setTopup(true); }
+            if (bal <= 0 && (t.pricePerMinuteMillicents ?? 0) > 0) { setPending(t); setTopup(true); }
             else beginPlay(t);
           }}
         />
@@ -363,7 +363,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
             setOnboard(false);
             const t = pending;
             setPending(null);
-            if (t && millicents > 0) beginPlay(t);
+            if (t && (millicents > 0 || (t.pricePerMinuteMillicents ?? 0) === 0)) beginPlay(t);
           }}
         />
       )}

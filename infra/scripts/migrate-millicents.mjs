@@ -1,22 +1,31 @@
-// One-shot live migration: rename every billing money column to *_millicents and
-// scale existing values × 1000. Idempotent — re-running is a no-op once the
-// marker row exists for a table. fee_cents is intentionally left in cents
-// (Stripe boundary).
+// One-shot live migration: scale existing cent values × 1000, then rename every
+// billing money column to *_millicents. Idempotent — re-running is a no-op once
+// the DB is fully migrated. fee_cents is intentionally left in cents (Stripe
+// boundary).
 //
 // DSQL constraints respected:
 //   - Only ONE DDL statement per (implicit) transaction — each ALTER runs alone.
 //   - No mixing DDL and DML in the same transaction — the scale UPDATE and marker
 //     INSERT run in their own DML-only BEGIN/COMMIT.
 //
-// Algorithm per column:
+// Algorithm per column (scale-then-rename with per-table marker):
 //   1. CREATE TABLE IF NOT EXISTS migration_markers (DDL, idempotent, run once).
-//   2. If marker row `millicents:<table>` exists → column already migrated; skip.
-//   3. Else:
-//      a. If newCol absent AND oldCol present → ALTER TABLE … RENAME COLUMN
-//         (standalone DDL, no surrounding transaction).
-//      b. BEGIN; UPDATE … SET newCol = newCol * 1000;
-//             INSERT INTO migration_markers(name) VALUES ('millicents:<table>');
-//         COMMIT;  (DML only — safe to combine.)
+//   2. Determine oldExists and newExists via information_schema.
+//   3. If oldExists is TRUE (column still in cents — the only case that should scale):
+//      a. If marker `scaled:<table>` is ABSENT: run, in one DML-only transaction,
+//         BEGIN; UPDATE <table> SET <oldCol> = <oldCol> * 1000;
+//               INSERT INTO migration_markers(name) VALUES ('scaled:<table>');
+//         COMMIT;  (scale while column is still named <oldCol>)
+//      b. Then run ALTER TABLE <table> RENAME COLUMN <oldCol> TO <newCol>
+//         as a standalone DDL (regardless of whether the marker was already set,
+//         i.e. crash-safe: if we scaled but didn't rename, we still rename).
+//   4. If oldExists is FALSE (column is already <newCol>):
+//      → Do NOTHING. Covers born-millicents DBs and fully-migrated DBs.
+//        Logs "skip <table> (already millicents)".
+//
+// Crash-safety: a crash after scale but before rename leaves <oldCol> present +
+// marker set → re-run skips the scale (marker present) and just renames.
+// No double-scale, no ambiguity.
 
 import { Client } from "pg";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
@@ -38,7 +47,7 @@ const COLS = [
 
 async function colExists(db, table, col) {
   const r = await db.query(
-    `SELECT 1 FROM information_schema.columns WHERE table_name = $1 AND column_name = $2`,
+    `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1 AND column_name = $2`,
     [table, col],
   );
   return r.rowCount > 0;
@@ -63,43 +72,46 @@ await db.query(
 );
 
 for (const [table, oldCol, newCol] of COLS) {
-  const markerName = `millicents:${table}`;
+  const oldExists = await colExists(db, table, oldCol);
+  const newExists = await colExists(db, table, newCol);
 
-  // Step 2: check if this table has already been fully migrated.
+  if (!oldExists) {
+    // Column is already newCol (born-millicents DB or fully migrated) — skip.
+    if (newExists) {
+      console.log(`skip ${table} (already millicents)`);
+    } else {
+      console.warn(`WARNING: neither ${oldCol} nor ${newCol} found in ${table} — skipping`);
+    }
+    continue;
+  }
+
+  // oldCol exists (still in cents) — scale then rename.
+
+  // Step 3a: scale values in a DML-only transaction (skip if marker already set,
+  // i.e. a previous run scaled but crashed before the rename).
+  const markerName = `scaled:${table}`;
   const markerRow = await db.query(
     `SELECT 1 FROM migration_markers WHERE name = $1`,
     [markerName],
   );
-  if (markerRow.rowCount > 0) {
-    console.log(`skip ${table} (marker exists)`);
-    continue;
-  }
-
-  // Step 3a: rename the column if needed (standalone DDL — no transaction wrapper).
-  const newExists = await colExists(db, table, newCol);
-  const oldExists = await colExists(db, table, oldCol);
-
-  if (!newExists && oldExists) {
+  if (markerRow.rowCount === 0) {
+    await db.query("BEGIN");
+    await db.query(`UPDATE ${table} SET ${oldCol} = ${oldCol} * 1000`);
     await db.query(
-      `ALTER TABLE ${table} RENAME COLUMN ${oldCol} TO ${newCol}`,
+      `INSERT INTO migration_markers(name) VALUES ($1)`,
+      [markerName],
     );
-    console.log(`renamed ${table}.${oldCol} -> ${newCol}`);
-  } else if (newExists) {
-    console.log(`${table}.${newCol} already present — skipping rename`);
+    await db.query("COMMIT");
+    console.log(`scaled ${table}.${oldCol} (×1000)`);
   } else {
-    console.warn(`WARNING: neither ${oldCol} nor ${newCol} found in ${table} — skipping scale`);
-    continue;
+    console.log(`skip scale ${table} (already scaled — completing rename)`);
   }
 
-  // Step 3b: scale values and record marker in one DML transaction.
-  await db.query("BEGIN");
-  await db.query(`UPDATE ${table} SET ${newCol} = ${newCol} * 1000`);
+  // Step 3b: rename the column (standalone DDL — no transaction wrapper).
   await db.query(
-    `INSERT INTO migration_markers(name) VALUES ($1)`,
-    [markerName],
+    `ALTER TABLE ${table} RENAME COLUMN ${oldCol} TO ${newCol}`,
   );
-  await db.query("COMMIT");
-  console.log(`migrated ${table}.${newCol} (×1000)`);
+  console.log(`renamed ${table}.${oldCol} -> ${newCol}`);
 }
 
 await db.end();
