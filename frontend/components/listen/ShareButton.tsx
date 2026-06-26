@@ -45,7 +45,7 @@ export default function ShareButton({
 
   return (
     <button
-      className={["lx-like", "lx-share", className].filter(Boolean).join(" ")}
+      className={["lx-like", "lx-share-icon", className].filter(Boolean).join(" ")}
       data-copied={copied}
       onClick={onShare}
       aria-label={`Share ${title}`}

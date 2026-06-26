@@ -70,13 +70,17 @@ export type DebitResult =
   | { ok: true; balanceCents: number; charged: boolean }
   | { ok: false; reason: "insufficient"; balanceCents: number };
 
-/** Conditionally debit one metered minute AND record its METER event in a single
- *  transaction. The METER INSERT (`attribute_not_exists`) is what fires the stream
- *  → projector → DSQL ledger; the command path itself never touches DSQL. */
-export async function debitMinute(input: DebitInput): Promise<DebitResult> {
+/** Conditionally debit `amountCents` from the authoritative balance AND insert a
+ *  prebuilt METER event in a single transaction. The METER INSERT
+ *  (`attribute_not_exists`) is what fires the stream → projector → DSQL ledger; the
+ *  command path itself never touches DSQL. Shared by the per-minute and per-like
+ *  charge paths — only the METER item's idempotency key / sort key differ. */
+async function debitWithMeterEvent(
+  accountId: string,
+  amountCents: number,
+  meterItem: Record<string, AttributeValue>,
+): Promise<DebitResult> {
   if (!TABLE) throw new Error("TOLLROAD_TABLE is not set");
-  const minuteEpoch = input.minuteEpoch ?? currentMinuteEpoch();
-  const amt = input.amountCents;
   const { client, m } = await getSdk();
 
   try {
@@ -88,18 +92,21 @@ export async function debitMinute(input: DebitInput): Promise<DebitResult> {
             // negative (a missing BAL item fails `balanceCents >= :amt` too).
             Update: {
               TableName: TABLE,
-              Key: balanceKey(input.accountId),
+              Key: balanceKey(accountId),
               UpdateExpression: "ADD balanceCents :neg",
               ConditionExpression: "balanceCents >= :amt",
-              ExpressionAttributeValues: { ":neg": { N: String(-amt) }, ":amt": { N: String(amt) } },
+              ExpressionAttributeValues: {
+                ":neg": { N: String(-amountCents) },
+                ":amt": { N: String(amountCents) },
+              },
               ReturnValuesOnConditionCheckFailure: "ALL_OLD",
             },
           },
           {
-            // [1] One stream INSERT (→ one ledger row) per unique metered minute.
+            // [1] One stream INSERT (→ one ledger row) per unique charge.
             Put: {
               TableName: TABLE,
-              Item: meterEventItem(input, minuteEpoch),
+              Item: meterItem,
               ConditionExpression: "attribute_not_exists(PK)",
             },
           },
@@ -110,10 +117,10 @@ export async function debitMinute(input: DebitInput): Promise<DebitResult> {
     const cancel = isCanceled(err);
     const reasons = cancel?.CancellationReasons;
     if (reasons) {
-      // Check the METER guard first: a replayed minute is an idempotent no-op
+      // Check the METER guard first: a replayed charge is an idempotent no-op
       // regardless of the current balance (the listener was already billed).
       if (reasons[1]?.Code === "ConditionalCheckFailed") {
-        return { ok: true, balanceCents: await readBalance(input.accountId), charged: false };
+        return { ok: true, balanceCents: await readBalance(accountId), charged: false };
       }
       if (reasons[0]?.Code === "ConditionalCheckFailed") {
         // Insufficient funds — ALL_OLD hands us the live balance to surface.
@@ -124,7 +131,45 @@ export async function debitMinute(input: DebitInput): Promise<DebitResult> {
   }
 
   // Committed: a genuinely new charge. Read back the authoritative balance.
-  return { ok: true, balanceCents: await readBalance(input.accountId), charged: true };
+  return { ok: true, balanceCents: await readBalance(accountId), charged: true };
+}
+
+/** Conditionally debit one metered minute AND record its METER event in a single
+ *  transaction. The METER INSERT (`attribute_not_exists`) is what fires the stream
+ *  → projector → DSQL ledger; the command path itself never touches DSQL. */
+export async function debitMinute(input: DebitInput): Promise<DebitResult> {
+  const minuteEpoch = input.minuteEpoch ?? currentMinuteEpoch();
+  return debitWithMeterEvent(input.accountId, input.amountCents, meterEventItem(input, minuteEpoch));
+}
+
+export interface DebitLikeInput {
+  accountId: string;
+  trackId: string;
+  artistId: string;
+  amountCents: number;
+}
+
+/** Charge a like — a once-EVER tip toward a track — debiting the balance and
+ *  inserting its METER event in one transaction, exactly like a metered minute.
+ *  The idempotency key (`<user>#<track>#like`) and sort key (`EVT#like#<track>`)
+ *  omit the minute, so the `attribute_not_exists` guard makes the charge fire at
+ *  most once per (user, track): a re-like after an unlike replays the guard,
+ *  cancels the transaction, and returns `charged:false` with the balance
+ *  untouched. The projector turns the METER event into a royalty_ledger row, so a
+ *  like flows into artist earnings just like a stream. */
+export async function debitLike(input: DebitLikeInput): Promise<DebitResult> {
+  const item = meterEventItem({
+    accountId: input.accountId,
+    trackId: input.trackId,
+    artistId: input.artistId,
+    amountCents: input.amountCents,
+    idempotencyKey: `${input.accountId}#${input.trackId}#like`,
+    skSuffix: "like",
+    // Durable: the guard must outlive METER_TTL_SECONDS so a like is once-EVER,
+    // never re-charged on an unlike→re-like after the minute-TTL window.
+    noTtl: true,
+  });
+  return debitWithMeterEvent(input.accountId, input.amountCents, item);
 }
 
 export interface CreditInput {

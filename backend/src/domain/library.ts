@@ -36,19 +36,16 @@ function mapTrack(r: Record<string, unknown>): LibraryTrack {
 
 // --- Likes -----------------------------------------------------------------
 
-/** Toggle a like. Returns the resulting state. */
-export async function toggleLike(accountId: string, trackId: string): Promise<{ liked: boolean }> {
+/** Remove a like if present. Returns true when a row was deleted (an unlike).
+ *  Unliking is always free and never refunds the 1¢ like-charge. The liking side
+ *  of the toggle lives in billing.chargeLike, which inserts the `likes` row in the
+ *  same transaction as the charge. */
+export async function unlikeIfPresent(accountId: string, trackId: string): Promise<boolean> {
   const del = await query(
     `DELETE FROM likes WHERE account_id = $1 AND track_id = $2`,
     [accountId, trackId],
   );
-  if (del.rowCount) return { liked: false };
-  await query(
-    `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
-       ON CONFLICT (account_id, track_id) DO NOTHING`,
-    [accountId, trackId],
-  );
-  return { liked: true };
+  return Boolean(del.rowCount);
 }
 
 export async function setLike(accountId: string, trackId: string, liked: boolean): Promise<void> {

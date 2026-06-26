@@ -15,9 +15,13 @@
 // old chargeMinute is now chargeMinuteLocalDsql, reached only under the explicit
 // TOLLROAD_LOCAL_DSQL_BILLING=1 opt-in. Idempotency key: '<user>#<track>#<minuteEpoch>'.
 import { withDsql, query } from "../lib/dsql.ts";
-import { creditBalance, walletStoreConfigured } from "./wallet-store.ts";
+import { creditBalance, debitLike, walletStoreConfigured } from "./wallet-store.ts";
 
 export const TOPUP_CENTS = 1000;
+
+// A like is a one-time 1¢ tip toward the song. Unlike a metered minute, the
+// listener pays it at most once per track — the idempotency key omits the minute.
+export const LIKE_COST_CENTS = 1;
 
 // The one-time welcome gift: $3.00 = 300 minutes of listening at the 1¢/min
 // default rate. Granted once per account on first onboarding.
@@ -118,6 +122,120 @@ export async function chargeMinuteLocalDsql(input: ChargeInput): Promise<ChargeR
         );
         await db.query("COMMIT");
         return { ok: true, balanceCents: Number(upd.rows[0]!.balance_cents), charged: true };
+      } catch (err) {
+        await db.query("ROLLBACK").catch(() => {});
+        throw err;
+      }
+    }),
+  );
+}
+
+export interface LikeChargeInput {
+  accountId: string;
+  trackId: string;
+  artistId: string;
+}
+export type LikeChargeResult =
+  | { ok: true; liked: true; charged: boolean; balanceCents: number }
+  | { ok: false; reason: "insufficient"; balanceCents: number };
+
+/** Like a track, charging LIKE_COST_CENTS toward it exactly once — ever.
+ *
+ *  PROD: the wallet debit + METER event are written together in DynamoDB
+ *  (wallet-store.debitLike); the METER event streams to the projector, which
+ *  builds the DSQL royalty_ledger row, so a like flows into artist earnings just
+ *  like a metered minute. The DynamoDB `attribute_not_exists` guard is the
+ *  once-per-track gate — unliking never refunds, and a re-like after an unlike
+ *  replays as `charged:false` (free). The `likes` membership row is the read-model
+ *  record the UI lists; we write it to DSQL (idempotent ON CONFLICT) once the
+ *  authoritative charge has committed. Falls back to the legacy DSQL-direct path
+ *  for the laptop demo. */
+export async function chargeLike(input: LikeChargeInput): Promise<LikeChargeResult> {
+  if (walletStoreConfigured()) {
+    const result = await debitLike({
+      accountId: input.accountId,
+      trackId: input.trackId,
+      artistId: input.artistId,
+      amountCents: LIKE_COST_CENTS,
+    });
+    if (!result.ok) return { ok: false, reason: "insufficient", balanceCents: result.balanceCents };
+    // Charge committed (or was already paid on a prior like) — mirror the
+    // membership row the UI reads. The royalty_ledger row is the projector's job,
+    // driven by the METER event the debit just wrote.
+    await query(
+      `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
+         ON CONFLICT (account_id, track_id) DO NOTHING`,
+      [input.accountId, input.trackId],
+    );
+    return { ok: true, liked: true, charged: result.charged, balanceCents: result.balanceCents };
+  }
+  return chargeLikeLocalDsql(input);
+}
+
+/** LOCAL-DEV ONLY: the legacy synchronous DSQL like-charge — conditional balance
+ *  debit + royalty_ledger INSERT + likes row, all in one transaction. Reached only
+ *  when DynamoDB is unconfigured (the laptop demo). The idempotency key
+ *  (`<user>#<track>#like`, no minute) makes it once-per-track: unliking never
+ *  refunds, a re-like is free (the existing ledger row short-circuits), and the
+ *  ledger row mirrors a metered minute (amount=1, current minute_epoch) so a like
+ *  flows into artist earnings like a stream. */
+export async function chargeLikeLocalDsql(input: LikeChargeInput): Promise<LikeChargeResult> {
+  const key = `${input.accountId}#${input.trackId}#like`;
+  const minuteEpoch = currentMinuteEpoch();
+
+  return withRetry(() =>
+    withDsql(async (db) => {
+      try {
+        await db.query("BEGIN");
+
+        const dup = await db.query(
+          `SELECT 1 FROM royalty_ledger WHERE idempotency_key = $1`,
+          [key],
+        );
+        if (dup.rowCount) {
+          // Already paid for this like before — re-like is free. Ensure the row.
+          await db.query(
+            `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
+               ON CONFLICT (account_id, track_id) DO NOTHING`,
+            [input.accountId, input.trackId],
+          );
+          const bal = await db.query<{ balance_cents: string }>(
+            `SELECT balance_cents FROM listener_profiles WHERE account_id = $1`,
+            [input.accountId],
+          );
+          await db.query("COMMIT");
+          return { ok: true, liked: true, charged: false, balanceCents: Number(bal.rows[0]?.balance_cents ?? 0) };
+        }
+
+        const upd = await db.query<{ balance_cents: string }>(
+          `UPDATE listener_profiles
+              SET balance_cents = balance_cents - $2
+            WHERE account_id = $1 AND balance_cents >= $2
+            RETURNING balance_cents`,
+          [input.accountId, LIKE_COST_CENTS],
+        );
+        if (!upd.rowCount) {
+          await db.query("ROLLBACK");
+          const bal = await query<{ balance_cents: string }>(
+            `SELECT balance_cents FROM listener_profiles WHERE account_id = $1`,
+            [input.accountId],
+          );
+          return { ok: false, reason: "insufficient", balanceCents: Number(bal.rows[0]?.balance_cents ?? 0) };
+        }
+
+        await db.query(
+          `INSERT INTO royalty_ledger
+             (idempotency_key, user_id, track_id, artist_id, minute_epoch, amount_cents)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [key, input.accountId, input.trackId, input.artistId, minuteEpoch, LIKE_COST_CENTS],
+        );
+        await db.query(
+          `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
+             ON CONFLICT (account_id, track_id) DO NOTHING`,
+          [input.accountId, input.trackId],
+        );
+        await db.query("COMMIT");
+        return { ok: true, liked: true, charged: true, balanceCents: Number(upd.rows[0]!.balance_cents) };
       } catch (err) {
         await db.query("ROLLBACK").catch(() => {});
         throw err;

@@ -84,7 +84,21 @@ export const confirmTopup = (paymentIntentId: string) => req<{ balanceCents: num
 
 // --- Library ---------------------------------------------------------------
 export const getLikes = () => req<{ tracks: LibraryTrack[]; likedIds: string[] }>("/library/likes");
-export const toggleLike = (trackId: string) => req<{ liked: boolean }>("/library/likes", body({ trackId }));
+/** Toggle a like. Liking tips 1¢ toward the song (once per track, ever); unliking
+ *  is free. Returns {ok:false, balanceCents} on 402 when the wallet can't cover it. */
+export async function toggleLike(
+  trackId: string,
+): Promise<{ ok: true; liked: boolean; balanceCents?: number } | { ok: false; balanceCents: number }> {
+  try {
+    const d = await req<{ liked: boolean; charged?: boolean; balanceCents?: number }>("/library/likes", body({ trackId }));
+    return { ok: true, liked: d.liked, balanceCents: d.balanceCents };
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 402) {
+      return { ok: false, balanceCents: (e.body as { balanceCents?: number })?.balanceCents ?? 0 };
+    }
+    throw e;
+  }
+}
 export const getPlaylists = () => req<{ playlists: PlaylistSummary[] }>("/playlists");
 export const createPlaylist = (name: string) => req<PlaylistSummary>("/playlists", body({ name }));
 export const getPlaylist = (id: string) => req<PlaylistDetail>(`/playlists/${encodeURIComponent(id)}`);
