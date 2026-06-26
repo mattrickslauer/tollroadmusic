@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { startOtp, verifyOtp, loadAnonId, loadRef, clearRef, type Me } from "@/lib/auth";
 
@@ -83,7 +84,14 @@ export default function SignInSheet({ reason, onClose, onSignedIn }: Props) {
     router.push("/browse");
   }
 
-  return (
+  // Portal to <body> so the overlay escapes the sticky <nav>'s stacking
+  // context / containing block (the nav's backdrop-filter makes it the
+  // containing block for position:fixed descendants, which would otherwise
+  // clip this modal to the header bar). Tokens live on :root, so they resolve
+  // fine outside .app-dark — no scope wrapper needed.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="auth-overlay" onMouseDown={onClose}>
       <div className="auth-sheet" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <button className="auth-close" onClick={onClose} aria-label="Close">×</button>
@@ -134,6 +142,7 @@ export default function SignInSheet({ reason, onClose, onSignedIn }: Props) {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
