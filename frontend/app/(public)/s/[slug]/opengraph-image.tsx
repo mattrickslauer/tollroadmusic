@@ -2,6 +2,7 @@ import { serverCatalogPublic } from "@/lib/api/server";
 import { resolveCoverSrc } from "@/lib/coverSrc";
 import { findTrack } from "@/lib/shareUrls";
 import { OG_CONTENT_TYPE, OG_SIZE, shareCard } from "@/lib/og/shareCard";
+import { formatRate } from "@/components/listen/format";
 
 export const runtime = "nodejs";
 export const revalidate = 3600;
@@ -17,7 +18,7 @@ export default async function SongOgImage({ params }: { params: Promise<{ slug: 
     eyebrow: "Song",
     title: track?.title ?? "TollRoad",
     subtitle: track ? `by ${track.artistName}` : "Pay for the minutes you actually hear",
-    badge: track ? `${track.pricePerMinuteCents}¢/min` : undefined,
+    badge: track ? formatRate(track.pricePerMinuteMillicents) : undefined,
     coverUrl: track ? resolveCoverSrc(track.coverImageKey) : null,
   });
 }

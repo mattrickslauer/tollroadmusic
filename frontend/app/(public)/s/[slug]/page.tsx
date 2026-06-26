@@ -6,7 +6,7 @@ import { resolveCoverSrc } from "@/lib/coverSrc";
 import { absoluteUrl, artistPath, findTrack, songPath } from "@/lib/shareUrls";
 import { ROUTES } from "@/lib/routes";
 import { slugify } from "@/lib/slug";
-import { clock } from "@/components/listen/format";
+import { clock, formatRate } from "@/components/listen/format";
 import ShareCover from "@/components/share/ShareCover";
 
 export const runtime = "nodejs";
@@ -48,7 +48,7 @@ export default async function SongPage({ params }: Params) {
   const track = catalog && findTrack(catalog, slug);
   if (!track) notFound();
 
-  const meta = [track.genre, clock(track.durationSeconds), `${track.pricePerMinuteCents}¢/min`]
+  const meta = [track.genre, clock(track.durationSeconds), formatRate(track.pricePerMinuteMillicents)]
     .filter(Boolean)
     .join("  ·  ");
   // CTA deep-links into the live app's artist page (no track-focused player URL
