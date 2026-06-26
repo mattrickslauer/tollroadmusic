@@ -285,8 +285,13 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     if (!a) return;
     // Bank the outgoing track's accrued cost into the session total before the
     // per-track meter resets, so the session figure carries across songs.
+    // Capture billed seconds NOW, by value: the setSessionMillicents updater is
+    // deferred by React until the next render, but `billedSecRef.current = 0`
+    // below runs synchronously first — reading the ref inside the updater would
+    // see 0 and bank nothing (the session meter would reset every switch).
     const prev = nowRef.current;
-    if (prev) setSessionMillicents((s) => s + (billedSecRef.current / 60) * prev.pricePerMinuteMillicents);
+    const prevBilledSec = billedSecRef.current;
+    if (prev) setSessionMillicents((s) => s + (prevBilledSec / 60) * prev.pricePerMinuteMillicents);
     setCurrent(t);
     setCur(0);
     setDur(0);
