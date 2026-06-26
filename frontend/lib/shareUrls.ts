@@ -58,3 +58,25 @@ export function findArtist(catalog: Catalog, slug: string): CatalogArtist | null
     null
   );
 }
+
+export type ShareTarget = { key: string; label: string; href: string };
+
+/** "Share to <app>" deep links built from an absolute url + title. These are
+ *  plain URLs / protocol handlers (sms:, mailto:, intent URLs) that work in
+ *  EVERY browser with no Web Share or Clipboard API — which is exactly why the
+ *  menu offers them: the old single-action button silently failed wherever
+ *  navigator.share / navigator.clipboard were unavailable (e.g. insecure
+ *  contexts). `title` and `url` are encoded here so callers pass raw strings. */
+export function shareTargets(url: string, title: string): ShareTarget[] {
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(title);
+  const tu = encodeURIComponent(`${title} ${url}`); // title + link, for body text
+  return [
+    { key: "sms", label: "Messages", href: `sms:?&body=${tu}` },
+    { key: "whatsapp", label: "WhatsApp", href: `https://wa.me/?text=${tu}` },
+    { key: "telegram", label: "Telegram", href: `https://t.me/share/url?url=${u}&text=${t}` },
+    { key: "x", label: "X", href: `https://twitter.com/intent/tweet?text=${t}&url=${u}` },
+    { key: "facebook", label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${u}` },
+    { key: "email", label: "Email", href: `mailto:?subject=${t}&body=${tu}` },
+  ];
+}

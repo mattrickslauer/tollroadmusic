@@ -22,10 +22,10 @@ export default function ArtistProfileView({ profile }: { profile: ArtistProfile 
         <div className="lx-artist-avatar">
           <CoverImage coverKey={artist.avatarKey} alt={artist.name} loading="eager" />
         </div>
-        <h1 className="lx-h1">
-          {artist.name}
+        <div className="lx-head-titlerow">
+          <h1 className="lx-h1">{artist.name}</h1>
           <ShareButton path={artistPath({ id: artist.id, name: artist.name })} title={artist.name} size={18} />
-        </h1>
+        </div>
         {meta && <p className="lx-eyebrow">{meta}</p>}
         {artist.bio && <p className="lx-sub">{artist.bio}</p>}
         {artist.website && (
