@@ -64,6 +64,16 @@ export async function setTrackCover(artistId: string, trackId: string, key: stri
   );
   return (r.rowCount ?? 0) > 0;
 }
+export async function setTrackRate(
+  artistId: string, trackId: string, rateMillicents: number,
+): Promise<boolean> {
+  const res = await query(
+    `UPDATE tracks SET price_per_minute_millicents = $3
+       WHERE id = $2 AND artist_id = $1`,
+    [artistId, trackId, rateMillicents],
+  );
+  return Boolean(res.rowCount);
+}
 export async function setArtistAvatar(artistId: string, key: string): Promise<void> {
   await query(`UPDATE artists SET avatar_key = $1 WHERE id = $2`, [key, artistId]);
 }

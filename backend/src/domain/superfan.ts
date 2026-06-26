@@ -1,6 +1,6 @@
 // Superfan Bond aggregation queries. The bond between a listener and an artist
 // is derived entirely from the append-only royalty_ledger (one row per metered
-// minute): minutes = COUNT(*), spend = SUM(amount_cents). Tier/BP math is the
+// minute): minutes = COUNT(*), spend = SUM(amount_millicents). Tier/BP math is the
 // canonical, DB-free logic in bondMath.ts; this layer only supplies the numbers
 // (and "today" for the streak).
 import { query } from "../lib/dsql.ts";
@@ -39,7 +39,7 @@ export interface Bond {
   artistName: string;
   bondPoints: number;
   minutes: number;
-  amountCents: number;
+  amountMillicents: number;
   tier: string;
   tierIndex: number;
   nextTier: string | null;
@@ -60,14 +60,14 @@ export async function getBond(userId: string, artistId: string): Promise<Bond | 
   if (artistRes.rowCount === 0) return null;
   const artistName = artistRes.rows[0]?.name ?? "Unknown artist";
 
-  const totalsRes = await query<{ minutes: string; amount_cents: string | null }>(
-    `SELECT COUNT(*) AS minutes, SUM(amount_cents) AS amount_cents
+  const totalsRes = await query<{ minutes: string; amount_millicents: string | null }>(
+    `SELECT COUNT(*) AS minutes, SUM(amount_millicents) AS amount_millicents
        FROM royalty_ledger
       WHERE user_id = $1 AND artist_id = $2`,
     [userId, artistId],
   );
   const minutes = Number(totalsRes.rows[0]?.minutes ?? 0);
-  const amountCents = Number(totalsRes.rows[0]?.amount_cents ?? 0);
+  const amountMillicents = Number(totalsRes.rows[0]?.amount_millicents ?? 0);
   const bondPoints = bondPointsFromMinutes(minutes);
 
   // Distinct claimed fans of this artist (the leaderboard population).
@@ -109,7 +109,7 @@ export async function getBond(userId: string, artistId: string): Promise<Bond | 
     artistName,
     bondPoints,
     minutes,
-    amountCents,
+    amountMillicents,
     tier: tier.name,
     tierIndex: tier.index,
     nextTier: next ? next.name : null,

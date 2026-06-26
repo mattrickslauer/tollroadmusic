@@ -52,8 +52,8 @@ export interface PlayerState {
   /** Current playhead + duration (seconds). */
   cur: number;
   dur: number;
-  /** Live prepaid wallet balance (cents) — decremented as minutes are charged. */
-  balanceCents: number;
+  /** Live prepaid wallet balance (millicents) — decremented as minutes are charged. */
+  balanceMillicents: number;
   /** False until the first balance read resolves — the meter shows a loading
    *  shell, not a misleading $0.00 "out of funds", while the wallet loads. */
   balanceReady: boolean;
@@ -111,16 +111,16 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const [muted, setMuted] = useState(false);
   const volLoaded = useRef(false);
 
-  // Cost (cents) of tracks already finished this session. The current track's
+  // Cost (millicents) of tracks already finished this session. The current track's
   // accrued cost is added live on top of this; it's folded in here when the
   // track switches, so the meter spans the whole session, not just one song.
-  const [sessionCents, setSessionCents] = useState(0);
+  const [sessionMillicents, setSessionMillicents] = useState(0);
   // Mirror of billedSec so stream() can read its latest value (it has a stable
   // identity and would otherwise close over a stale billedSec).
   const billedSecRef = useRef(0);
 
   const [needsAuth, setNeedsAuth] = useState(false);
-  const [balanceCents, setBalanceCents] = useState(0);
+  const [balanceMillicents, setBalanceMillicents] = useState(0);
   const [balanceReady, setBalanceReady] = useState(false);
   const [gate, setGate] = useState<CatalogTrack | null>(null); // sign-in prompt
   const [topup, setTopup] = useState(false); // add-funds prompt
@@ -139,7 +139,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     fetchMe()
       .then((m) => {
         setNeedsAuth(Boolean(m.authConfigured) && !m.account);
-        setBalanceCents(m.profiles?.listener?.balanceCents ?? 0);
+        setBalanceMillicents(m.profiles?.listener?.balanceMillicents ?? 0);
         // Already signed in but never claimed the welcome gift → onboard them.
         if (m.account && shouldOnboard(m.profiles?.listener)) setOnboard(true);
       })
@@ -152,10 +152,10 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   // broadcasts this event; a first-time listener gets the welcome flow + gift.
   useEffect(() => {
     const onSignedIn = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { profiles?: { listener?: { balanceCents?: number; onboardingGiftClaimed?: boolean } | null } } | undefined;
+      const detail = (e as CustomEvent).detail as { profiles?: { listener?: { balanceMillicents?: number; onboardingGiftClaimed?: boolean } | null } } | undefined;
       const listener = detail?.profiles?.listener ?? null;
       setNeedsAuth(false);
-      setBalanceCents(listener?.balanceCents ?? 0);
+      setBalanceMillicents(listener?.balanceMillicents ?? 0);
       if (shouldOnboard(listener)) setOnboard(true);
     };
     // Sign-out anywhere re-syncs auth state (needsAuth flips back on, balance resets).
@@ -173,8 +173,8 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   // charge was declined for lack of funds, so open the top-up sheet.
   useEffect(() => {
     const onBalance = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { balanceCents?: number; needFunds?: boolean } | undefined;
-      if (typeof detail?.balanceCents === "number") setBalanceCents(detail.balanceCents);
+      const detail = (e as CustomEvent).detail as { balanceMillicents?: number; needFunds?: boolean } | undefined;
+      if (typeof detail?.balanceMillicents === "number") setBalanceMillicents(detail.balanceMillicents);
       if (detail?.needFunds) setTopup(true);
     };
     window.addEventListener("tollroad:balance", onBalance);
@@ -247,14 +247,14 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   /** Charge one metered minute (the x402 payment). Returns the new balance and
    *  whether it covered — 402 from the API surfaces as ok:false. */
   const postCharge = useCallback(
-    async (trackId: string): Promise<{ ok: boolean; balanceCents: number }> => {
+    async (trackId: string): Promise<{ ok: boolean; balanceMillicents: number }> => {
       try {
         return await api.charge(trackId);
       } catch {
-        return { ok: false, balanceCents };
+        return { ok: false, balanceMillicents };
       }
     },
-    [balanceCents],
+    [balanceMillicents],
   );
 
   // Per-minute billing: the first minute is prepaid in beginPlay; thereafter,
@@ -267,7 +267,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     if (reached >= chargedMinutesRef.current) {
       chargedMinutesRef.current = reached + 1; // claim the slot before the await
       postCharge(t.id).then((r) => {
-        setBalanceCents(r.balanceCents);
+        setBalanceMillicents(r.balanceMillicents);
         if (!r.ok) {
           audioRef.current?.pause();
           setPending(t);
@@ -286,7 +286,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     // Bank the outgoing track's accrued cost into the session total before the
     // per-track meter resets, so the session figure carries across songs.
     const prev = nowRef.current;
-    if (prev) setSessionCents((s) => s + (billedSecRef.current / 60) * prev.pricePerMinuteCents);
+    if (prev) setSessionMillicents((s) => s + (billedSecRef.current / 60) * prev.pricePerMinuteMillicents);
     setCurrent(t);
     setCur(0);
     setDur(0);
@@ -305,7 +305,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const beginPlay = useCallback(
     async (t: CatalogTrack) => {
       const charge = await postCharge(t.id);
-      setBalanceCents(charge.balanceCents);
+      setBalanceMillicents(charge.balanceMillicents);
       if (!charge.ok) {
         setPending(t);
         setTopup(true);
@@ -337,10 +337,10 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
         return;
       }
       if (needsAuth) { setGate(t); return; } // must sign in first
-      if (balanceCents <= 0) { setPending(t); setTopup(true); return; } // must have funds
+      if (balanceMillicents <= 0 && (t.pricePerMinuteMillicents ?? 0) > 0) { setPending(t); setTopup(true); return; } // paid tracks need funds; free tracks play
       beginPlay(t);
     },
-    [needsAuth, balanceCents, beginPlay],
+    [needsAuth, balanceMillicents, beginPlay],
   );
 
   const toggle = useCallback(() => {
@@ -392,7 +392,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   // Session cost = everything banked from finished tracks + the current track's
   // live accrual. In dollars, to match what the meter renders.
   const sessionCost =
-    sessionCents / 100 + (current ? (billedSec / 60) * current.pricePerMinuteCents / 100 : 0);
+    sessionMillicents / 100000 + (current ? (billedSec / 60) * current.pricePerMinuteMillicents / 100000 : 0);
 
   const value = useMemo<PlayerState>(
     () => ({
@@ -402,7 +402,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       sessionCost,
       cur,
       dur,
-      balanceCents,
+      balanceMillicents,
       balanceReady,
       needsAuth,
       play,
@@ -419,7 +419,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       openTopUp: () => setTopup(true),
       refresh: loadMe,
     }),
-    [current, playing, billedSec, sessionCost, cur, dur, balanceCents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, volume, muted, setVolume, toggleMute, loadMe],
+    [current, playing, billedSec, sessionCost, cur, dur, balanceMillicents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, volume, muted, setVolume, toggleMute, loadMe],
   );
 
   return (
@@ -437,13 +437,13 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
             const t = gate;
             setGate(null);
             const listener = m.profiles?.listener ?? null;
-            const bal = listener?.balanceCents ?? 0;
-            setBalanceCents(bal);
+            const bal = listener?.balanceMillicents ?? 0;
+            setBalanceMillicents(bal);
             // Brand-new listener: welcome them and hand over the $3 gift, then
             // resume the track they tried to play — never dead-end into top-up.
             if (shouldOnboard(listener)) { setPending(t); setOnboard(true); return; }
             if (!t) return;
-            if (bal <= 0) { setPending(t); setTopup(true); }
+            if (bal <= 0 && (t.pricePerMinuteMillicents ?? 0) > 0) { setPending(t); setTopup(true); }
             else beginPlay(t);
           }}
         />
@@ -452,22 +452,22 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       {onboard && (
         <OnboardingFlow
           onClose={() => { dismissOnb(); setOnboard(false); setPending(null); }}
-          onClaimed={(cents) => {
-            setBalanceCents(cents);
+          onClaimed={(millicents) => {
+            setBalanceMillicents(millicents);
             setOnboard(false);
             const t = pending;
             setPending(null);
-            if (t && cents > 0) beginPlay(t);
+            if (t && (millicents > 0 || (t.pricePerMinuteMillicents ?? 0) === 0)) beginPlay(t);
           }}
         />
       )}
 
       {topup && (
         <TopUpSheet
-          reason={balanceCents <= 0 ? "You're out of funds — add money to keep listening." : undefined}
+          reason={balanceMillicents <= 0 ? "You're out of funds — add money to keep listening." : undefined}
           onClose={() => { setTopup(false); setPending(null); }}
-          onFunded={(cents) => {
-            setBalanceCents(cents);
+          onFunded={(millicents) => {
+            setBalanceMillicents(millicents);
             setTopup(false);
             const t = pending;
             setPending(null);

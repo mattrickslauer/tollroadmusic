@@ -13,16 +13,16 @@ export interface HistoryItem {
   artistId: string;
   coverImageKey: string | null;
   minutes: number;
-  amountCents: number;
+  amountMillicents: number;
   lastPlayedEpoch: number;
 }
 
 interface Props {
-  initialBalanceCents: number;
+  initialBalanceMillicents: number;
   history: HistoryItem[];
 }
 
-const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+const usdM = (m: number) => `$${(m / 100000).toFixed(2)}`;
 
 function whenLabel(minuteEpoch: number): string {
   const d = new Date(minuteEpoch * 60 * 1000);
@@ -33,27 +33,27 @@ function whenLabel(minuteEpoch: number): string {
  * The listener wallet view: current balance + a "add funds" action, and the
  * streaming history (each track's paid minutes and spend, newest first).
  */
-export default function WalletPanel({ initialBalanceCents, history }: Props) {
-  const [balanceCents, setBalanceCents] = useState(initialBalanceCents);
+export default function WalletPanel({ initialBalanceMillicents, history }: Props) {
+  const [balanceMillicents, setBalanceMillicents] = useState(initialBalanceMillicents);
   const [sheet, setSheet] = useState(false);
 
-  const totalSpent = history.reduce((s, h) => s + h.amountCents, 0);
+  const totalSpent = history.reduce((s, h) => s + h.amountMillicents, 0);
   const totalMinutes = history.reduce((s, h) => s + h.minutes, 0);
-  const low = balanceCents <= 0;
+  const low = balanceMillicents <= 0;
 
   return (
     <>
       <div className="wallet-top">
         <div className="wallet-balance" data-low={low}>
           <div className="wallet-balance-k">Wallet balance</div>
-          <div className="wallet-balance-v">{usd(balanceCents)}</div>
+          <div className="wallet-balance-v">{usdM(balanceMillicents)}</div>
           {low && <div className="wallet-balance-note">Out of funds — add money to keep listening.</div>}
         </div>
         <button className="btn btn-primary" onClick={() => setSheet(true)}>Add funds</button>
       </div>
 
       <div className="wallet-stats">
-        <Stat k="Total spent" v={usd(totalSpent)} />
+        <Stat k="Total spent" v={usdM(totalSpent)} />
         <Stat k="Minutes streamed" v={totalMinutes.toLocaleString("en-US")} />
         <Stat k="Tracks played" v={String(history.length)} />
       </div>
@@ -74,7 +74,7 @@ export default function WalletPanel({ initialBalanceCents, history }: Props) {
                 <span className="wallet-row-min">{h.minutes} min</span>
                 <span className="wallet-row-when">{whenLabel(h.lastPlayedEpoch)}</span>
               </div>
-              <div className="wallet-row-amt">{usd(h.amountCents)}</div>
+              <div className="wallet-row-amt">{usdM(h.amountMillicents)}</div>
             </li>
           ))}
         </ul>
@@ -83,7 +83,7 @@ export default function WalletPanel({ initialBalanceCents, history }: Props) {
       {sheet && (
         <TopUpSheet
           onClose={() => setSheet(false)}
-          onFunded={(cents) => { setBalanceCents(cents); setSheet(false); }}
+          onFunded={(m) => { setBalanceMillicents(m); setSheet(false); }}
         />
       )}
     </>

@@ -9,8 +9,10 @@ import {
   presignCover,
   commitCover,
   updateArtistProfile,
+  setTrackRate,
   ApiError,
 } from "@/lib/api/client";
+import { formatRate } from "@/components/listen/format";
 import type { ArtistTrack } from "@/lib/api/types";
 
 type ArtistInfo = {
@@ -54,6 +56,25 @@ export default function ProfileEditor({ artist, tracks, uploadsConfigured }: Pro
     Object.fromEntries(tracks.map((t) => [t.id, "idle"])),
   );
   const [coverErrors, setCoverErrors] = useState<Record<string, string | null>>(
+    Object.fromEntries(tracks.map((t) => [t.id, null])),
+  );
+
+  // --- Per-track rate state ---
+  // rateInputs: string value of the ¢/min input (cents, e.g. "0.5")
+  const [rateInputs, setRateInputs] = useState<Record<string, string>>(
+    Object.fromEntries(tracks.map((t) => [
+      t.id,
+      t.pricePerMinuteMillicents === 0 ? "0" : String(t.pricePerMinuteMillicents / 1000),
+    ])),
+  );
+  // rateSavedMillicents: the last committed value, used for formatRate display
+  const [rateSavedMillicents, setRateSavedMillicents] = useState<Record<string, number>>(
+    Object.fromEntries(tracks.map((t) => [t.id, t.pricePerMinuteMillicents])),
+  );
+  const [rateStatuses, setRateStatuses] = useState<Record<string, "idle" | "saving" | "saved" | "error">>(
+    Object.fromEntries(tracks.map((t) => [t.id, "idle"])),
+  );
+  const [rateErrors, setRateErrors] = useState<Record<string, string | null>>(
     Object.fromEntries(tracks.map((t) => [t.id, null])),
   );
 
@@ -116,6 +137,41 @@ export default function ProfileEditor({ artist, tracks, uploadsConfigured }: Pro
       }));
     } finally {
       e.target.value = "";
+    }
+  }
+
+  async function handleSaveRate(trackId: string) {
+    const centsStr = rateInputs[trackId] ?? "0";
+    const cents = parseFloat(centsStr);
+    if (isNaN(cents) || cents < 0 || cents > 100) {
+      setRateErrors((s) => ({ ...s, [trackId]: "Rate must be between 0 and 100 ¢/min." }));
+      setRateStatuses((s) => ({ ...s, [trackId]: "error" }));
+      return;
+    }
+    const millicents = Math.round(cents * 1000);
+    if (millicents % 100 !== 0) {
+      setRateErrors((s) => ({ ...s, [trackId]: "Rate must be a multiple of 0.1¢ (e.g. 0.1, 0.5, 1.0)." }));
+      setRateStatuses((s) => ({ ...s, [trackId]: "error" }));
+      return;
+    }
+    if (millicents > 100000) {
+      setRateErrors((s) => ({ ...s, [trackId]: "Rate cannot exceed 100¢/min." }));
+      setRateStatuses((s) => ({ ...s, [trackId]: "error" }));
+      return;
+    }
+    setRateErrors((s) => ({ ...s, [trackId]: null }));
+    setRateStatuses((s) => ({ ...s, [trackId]: "saving" }));
+    try {
+      const result = await setTrackRate(trackId, millicents);
+      setRateSavedMillicents((s) => ({ ...s, [trackId]: result.ratePerMinuteMillicents }));
+      setRateStatuses((s) => ({ ...s, [trackId]: "saved" }));
+      setTimeout(() => setRateStatuses((s) => ({ ...s, [trackId]: "idle" })), 2500);
+    } catch (err) {
+      setRateStatuses((s) => ({ ...s, [trackId]: "error" }));
+      setRateErrors((s) => ({
+        ...s,
+        [trackId]: err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Save failed",
+      }));
     }
   }
 
@@ -219,10 +275,10 @@ export default function ProfileEditor({ artist, tracks, uploadsConfigured }: Pro
         </div>
       </section>
 
-      {/* ── Per-track covers ───────────────────────────────────────── */}
+      {/* ── Per-track covers + rates ───────────────────────────────── */}
       {tracks.length > 0 && (
         <section className="az-editor-section">
-          <h2 className="az-recent-h">Track covers</h2>
+          <h2 className="az-recent-h">Tracks</h2>
           {!uploadsConfigured && <p className="az-empty">{UPLOADS_OFF_MSG}</p>}
           <div className="az-track-covers">
             {tracks.map((t) => (
@@ -230,6 +286,8 @@ export default function ProfileEditor({ artist, tracks, uploadsConfigured }: Pro
                 <CoverImage coverKey={coverKeys[t.id]} className="az-cover-thumb" alt={t.title} />
                 <div className="az-track-cover-meta">
                   <span className="az-track-title">{t.title}</span>
+
+                  {/* Cover upload */}
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
@@ -248,6 +306,48 @@ export default function ProfileEditor({ artist, tracks, uploadsConfigured }: Pro
                   {uploadsConfigured && coverStatuses[t.id] === "error" && coverErrors[t.id] && (
                     <p className="az-field-error">{coverErrors[t.id]}</p>
                   )}
+
+                  {/* Per-track rate editor */}
+                  <div className="az-rate-editor">
+                    <label className="az-label" htmlFor={`rate-${t.id}`}>
+                      Rate (¢/min) — current: <strong>{formatRate(rateSavedMillicents[t.id] ?? 0)}</strong>
+                    </label>
+                    <div className="az-rate-controls">
+                      <input
+                        id={`rate-${t.id}`}
+                        type="number"
+                        className="az-input az-rate-input"
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        value={rateInputs[t.id] ?? "0"}
+                        onChange={(e) => setRateInputs((s) => ({ ...s, [t.id]: e.target.value }))}
+                        placeholder="e.g. 0.5"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setRateInputs((s) => ({ ...s, [t.id]: "0" }))}
+                        title="Set to Free (0¢/min)"
+                      >
+                        Free
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => handleSaveRate(t.id)}
+                        disabled={rateStatuses[t.id] === "saving"}
+                      >
+                        {rateStatuses[t.id] === "saving" ? "Saving…" : "Save rate"}
+                      </button>
+                    </div>
+                    {rateStatuses[t.id] === "saved" && (
+                      <span className="az-save-ok">Rate saved.</span>
+                    )}
+                    {rateStatuses[t.id] === "error" && rateErrors[t.id] && (
+                      <p className="az-field-error">{rateErrors[t.id]}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

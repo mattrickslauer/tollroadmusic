@@ -6,4 +6,18 @@ export function clock(t: number): string {
   return `${m}:${s}`;
 }
 
-export const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+/** Format a millicents value as a dollar string: usdM(150000) → "$1.50" */
+export const usdM = (m: number) => `$${(m / 100000).toFixed(2)}`;
+
+/** cents = millicents / 1000 */
+export const centsFromMillicents = (m: number) => m / 1000;
+
+/** dollars = millicents / 100000 */
+export const dollarsFromMillicents = (m: number) => m / 100000;
+
+/** Format a per-minute rate in millicents for display.
+ *  0 → "Free"; otherwise e.g. 500 → "0.5¢/min", 1000 → "1¢/min" */
+export function formatRate(millicents: number): string {
+  if (millicents === 0) return "Free";
+  return `${(millicents / 1000).toFixed(1).replace(/\.0$/, "")}¢/min`;
+}

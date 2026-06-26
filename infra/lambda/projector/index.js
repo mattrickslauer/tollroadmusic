@@ -8,7 +8,7 @@
  * This Lambda is the SOLE writer of the DSQL read models — the append-only
  * `royalty_ledger`, the per-artist/day `artist_daily_summary`, the `wallet_topups`
  * record, and the eventually-consistent reconciliation balance in
- * `listener_profiles.balance_cents`. Because the command path no longer races a
+ * `listener_profiles.balance_millicents`. Because the command path no longer races a
  * synchronous DSQL ledger write, the projector's INSERT is now the real, winning
  * write — the old rollup bug (summary never updating because the ledger row
  * already existed) disappears by construction.
@@ -63,21 +63,21 @@ async function getClient() {
 
 const LEDGER_SQL = `
   INSERT INTO royalty_ledger
-    (idempotency_key, user_id, track_id, artist_id, minute_epoch, amount_cents)
+    (idempotency_key, user_id, track_id, artist_id, minute_epoch, amount_millicents)
   VALUES ($1, $2, $3, $4, $5, $6)
   ON CONFLICT (idempotency_key) DO NOTHING
   RETURNING idempotency_key`;
 
 const SUMMARY_SQL = `
-  INSERT INTO artist_daily_summary (artist_id, day, minutes, amount_cents)
+  INSERT INTO artist_daily_summary (artist_id, day, minutes, amount_millicents)
   VALUES ($1, to_timestamp($2 * 60)::date, 1, $3)
   ON CONFLICT (artist_id, day)
   DO UPDATE SET minutes = artist_daily_summary.minutes + 1,
-                amount_cents = artist_daily_summary.amount_cents + EXCLUDED.amount_cents`;
+                amount_millicents = artist_daily_summary.amount_millicents + EXCLUDED.amount_millicents`;
 
 const TOPUP_SQL = `
   INSERT INTO wallet_topups
-    (payment_ref, account_id, amount_cents, fee_cents, method, status)
+    (payment_ref, account_id, amount_millicents, fee_cents, method, status)
   VALUES ($1, $2, $3, $4, $5, $6)
   ON CONFLICT (payment_ref) DO NOTHING
   RETURNING payment_ref`;
@@ -86,10 +86,10 @@ const TOPUP_SQL = `
 // DynamoDB balance. A METER debits it (negative delta), a TOPUP credits it. Upsert
 // so a not-yet-projected profile still reconciles.
 const RECONCILE_BALANCE_SQL = `
-  INSERT INTO listener_profiles (account_id, balance_cents)
+  INSERT INTO listener_profiles (account_id, balance_millicents)
   VALUES ($1, $2)
   ON CONFLICT (account_id)
-  DO UPDATE SET balance_cents = listener_profiles.balance_cents + EXCLUDED.balance_cents`;
+  DO UPDATE SET balance_millicents = listener_profiles.balance_millicents + EXCLUDED.balance_millicents`;
 
 // Optional stream-progress observability (additive). Best-effort; never fails a batch.
 const CHECKPOINT_SQL = `
@@ -110,13 +110,13 @@ async function projectMeter(db, e) {
         e.trackId,
         e.artistId,
         e.minuteEpoch,
-        e.amountCents,
+        e.amountMillicents,
       ]);
       // Only when this minute was genuinely new (not a replay): bump the summary
       // and reconcile the balance down by the amount the command path already debited.
       if (r.rowCount === 1) {
-        await db.query(SUMMARY_SQL, [e.artistId, e.minuteEpoch, e.amountCents]);
-        await db.query(RECONCILE_BALANCE_SQL, [e.userId, -e.amountCents]);
+        await db.query(SUMMARY_SQL, [e.artistId, e.minuteEpoch, e.amountMillicents]);
+        await db.query(RECONCILE_BALANCE_SQL, [e.userId, -e.amountMillicents]);
       }
       await db.query("COMMIT");
       return;
@@ -139,14 +139,14 @@ async function projectTopup(db, e) {
       const r = await db.query(TOPUP_SQL, [
         e.paymentRef,
         e.accountId,
-        e.amountCents,
+        e.amountMillicents,
         e.feeCents,
         e.method,
         e.status,
       ]);
       // Credit the reconciliation balance only when the top-up row was new.
       if (r.rowCount === 1) {
-        await db.query(RECONCILE_BALANCE_SQL, [e.accountId, e.amountCents]);
+        await db.query(RECONCILE_BALANCE_SQL, [e.accountId, e.amountMillicents]);
       }
       await db.query("COMMIT");
       return;
@@ -171,7 +171,8 @@ function parseMeter(img) {
     trackId: imgStr(img, "trackId"),
     artistId: imgStr(img, "artistId"),
     minuteEpoch: imgNum(img, "minuteEpoch"),
-    amountCents: imgNum(img, "amountCents"),
+    // One-release legacy fallback: tolerate old events carrying amountCents (×1000 to convert).
+    amountMillicents: imgNum(img, "amountMillicents") ?? (imgNum(img, "amountCents") != null ? imgNum(img, "amountCents") * 1000 : 0),
   };
   if (!e.idempotencyKey || !e.artistId || e.minuteEpoch == null) return null;
   return e;
@@ -183,12 +184,13 @@ function parseTopup(img) {
     // The command store (domain/wallet-store.ts) writes the account id under
     // `userId` on BOTH meter and topup items; keep one name on the wire.
     accountId: imgStr(img, "userId"),
-    amountCents: imgNum(img, "amountCents"),
+    // One-release legacy fallback: tolerate old events carrying amountCents (×1000 to convert).
+    amountMillicents: imgNum(img, "amountMillicents") ?? (imgNum(img, "amountCents") != null ? imgNum(img, "amountCents") * 1000 : 0),
     feeCents: imgNum(img, "feeCents") ?? 0,
     method: imgStr(img, "method") || "demo",
     status: imgStr(img, "status") || "succeeded",
   };
-  if (!e.paymentRef || !e.accountId || e.amountCents == null) return null;
+  if (!e.paymentRef || !e.accountId || e.amountMillicents == null) return null;
   return e;
 }
 

@@ -12,13 +12,13 @@ export default async function WalletPage() {
   const configured = apiConfigured();
   const session = configured ? await hasSessionCookie() : false;
 
-  let balanceCents = 0;
+  let balanceMillicents = 0;
   let history: HistoryRow[] = [];
   let error: string | null = null;
   if (session) {
     try {
       const wallet = await serverBalance();
-      balanceCents = wallet.balanceCents;
+      balanceMillicents = wallet.balanceMillicents;
       history = wallet.history;
     } catch (e) {
       console.error("wallet: load failed", e);
@@ -41,7 +41,7 @@ export default async function WalletPage() {
         <p className="lx-empty">Sign in to view your wallet and streaming history.</p>
       )}
       {error && <p className="lx-empty">{error}</p>}
-      {session && !error && <WalletPanel initialBalanceCents={balanceCents} history={history} />}
+      {session && !error && <WalletPanel initialBalanceMillicents={balanceMillicents} history={history} />}
     </>
   );
 }

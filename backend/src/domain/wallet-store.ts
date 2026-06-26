@@ -46,11 +46,11 @@ async function readBalance(accountId: string): Promise<number> {
     new m.GetItemCommand({
       TableName: TABLE,
       Key: balanceKey(accountId),
-      ProjectionExpression: "balanceCents",
+      ProjectionExpression: "balanceMillicents",
       ConsistentRead: true,
     }),
   );
-  return Number(res.Item?.balanceCents?.N ?? 0);
+  return Number(res.Item?.balanceMillicents?.N ?? 0);
 }
 
 function isCanceled(err: unknown): TransactionCanceledException | null {
@@ -63,25 +63,49 @@ export interface DebitInput {
   accountId: string;
   trackId: string;
   artistId: string;
-  amountCents: number;
+  amountMillicents: number;
   minuteEpoch?: number;
 }
 export type DebitResult =
-  | { ok: true; balanceCents: number; charged: boolean }
-  | { ok: false; reason: "insufficient"; balanceCents: number };
+  | { ok: true; balanceMillicents: number; charged: boolean }
+  | { ok: false; reason: "insufficient"; balanceMillicents: number };
 
-/** Conditionally debit `amountCents` from the authoritative balance AND insert a
+/** Conditionally debit `amountMillicents` from the authoritative balance AND insert a
  *  prebuilt METER event in a single transaction. The METER INSERT
  *  (`attribute_not_exists`) is what fires the stream → projector → DSQL ledger; the
  *  command path itself never touches DSQL. Shared by the per-minute and per-like
  *  charge paths — only the METER item's idempotency key / sort key differ. */
 async function debitWithMeterEvent(
   accountId: string,
-  amountCents: number,
+  amountMillicents: number,
   meterItem: Record<string, AttributeValue>,
 ): Promise<DebitResult> {
   if (!TABLE) throw new Error("TOLLROAD_TABLE is not set");
   const { client, m } = await getSdk();
+
+  // Free tier (amount 0): debiting zero is a no-op, and it must NOT require a BAL
+  // item — a brand-new listener has none, and `balanceMillicents >= 0` evaluates
+  // false against a missing attribute, which would wrongly 402 a free track. Skip
+  // the balance condition entirely and record only the METER event so the free
+  // play still streams to the projector (ledger row at amount 0 → counted in stats).
+  if (amountMillicents === 0) {
+    try {
+      await client.send(
+        new m.PutItemCommand({
+          TableName: TABLE,
+          Item: meterItem,
+          ConditionExpression: "attribute_not_exists(PK)",
+        }),
+      );
+    } catch (err) {
+      // Replayed minute — already recorded; idempotent no-op, balance untouched.
+      if ((err as { name?: string })?.name === "ConditionalCheckFailedException") {
+        return { ok: true, balanceMillicents: await readBalance(accountId), charged: false };
+      }
+      throw err;
+    }
+    return { ok: true, balanceMillicents: await readBalance(accountId), charged: true };
+  }
 
   try {
     await client.send(
@@ -89,15 +113,15 @@ async function debitWithMeterEvent(
         TransactItems: [
           {
             // [0] Conditional debit — the authoritative balance can never go
-            // negative (a missing BAL item fails `balanceCents >= :amt` too).
+            // negative (a missing BAL item fails `balanceMillicents >= :amt` too).
             Update: {
               TableName: TABLE,
               Key: balanceKey(accountId),
-              UpdateExpression: "ADD balanceCents :neg",
-              ConditionExpression: "balanceCents >= :amt",
+              UpdateExpression: "ADD balanceMillicents :neg",
+              ConditionExpression: "balanceMillicents >= :amt",
               ExpressionAttributeValues: {
-                ":neg": { N: String(-amountCents) },
-                ":amt": { N: String(amountCents) },
+                ":neg": { N: String(-amountMillicents) },
+                ":amt": { N: String(amountMillicents) },
               },
               ReturnValuesOnConditionCheckFailure: "ALL_OLD",
             },
@@ -120,18 +144,18 @@ async function debitWithMeterEvent(
       // Check the METER guard first: a replayed charge is an idempotent no-op
       // regardless of the current balance (the listener was already billed).
       if (reasons[1]?.Code === "ConditionalCheckFailed") {
-        return { ok: true, balanceCents: await readBalance(accountId), charged: false };
+        return { ok: true, balanceMillicents: await readBalance(accountId), charged: false };
       }
       if (reasons[0]?.Code === "ConditionalCheckFailed") {
         // Insufficient funds — ALL_OLD hands us the live balance to surface.
-        return { ok: false, reason: "insufficient", balanceCents: Number(reasons[0].Item?.balanceCents?.N ?? 0) };
+        return { ok: false, reason: "insufficient", balanceMillicents: Number(reasons[0].Item?.balanceMillicents?.N ?? 0) };
       }
     }
     throw err;
   }
 
   // Committed: a genuinely new charge. Read back the authoritative balance.
-  return { ok: true, balanceCents: await readBalance(accountId), charged: true };
+  return { ok: true, balanceMillicents: await readBalance(accountId), charged: true };
 }
 
 /** Conditionally debit one metered minute AND record its METER event in a single
@@ -139,14 +163,14 @@ async function debitWithMeterEvent(
  *  → projector → DSQL ledger; the command path itself never touches DSQL. */
 export async function debitMinute(input: DebitInput): Promise<DebitResult> {
   const minuteEpoch = input.minuteEpoch ?? currentMinuteEpoch();
-  return debitWithMeterEvent(input.accountId, input.amountCents, meterEventItem(input, minuteEpoch));
+  return debitWithMeterEvent(input.accountId, input.amountMillicents, meterEventItem(input, minuteEpoch));
 }
 
 export interface DebitLikeInput {
   accountId: string;
   trackId: string;
   artistId: string;
-  amountCents: number;
+  amountMillicents: number;
 }
 
 /** Charge a like — a once-EVER tip toward a track — debiting the balance and
@@ -162,27 +186,27 @@ export async function debitLike(input: DebitLikeInput): Promise<DebitResult> {
     accountId: input.accountId,
     trackId: input.trackId,
     artistId: input.artistId,
-    amountCents: input.amountCents,
+    amountMillicents: input.amountMillicents,
     idempotencyKey: `${input.accountId}#${input.trackId}#like`,
     skSuffix: "like",
     // Durable: the guard must outlive METER_TTL_SECONDS so a like is once-EVER,
     // never re-charged on an unlike→re-like after the minute-TTL window.
     noTtl: true,
   });
-  return debitWithMeterEvent(input.accountId, input.amountCents, item);
+  return debitWithMeterEvent(input.accountId, input.amountMillicents, item);
 }
 
 export interface CreditInput {
   accountId: string;
   paymentRef: string;
-  amountCents: number;
+  amountMillicents: number;
   method: string;
   status: string;
   /** Optional: persisted on the TOPUP event so the projector can fill
    *  `wallet_topups.fee_cents`. Not part of the §5 contract; defaults to 0. */
   feeCents?: number;
 }
-export type CreditResult = { credited: boolean; balanceCents: number };
+export type CreditResult = { credited: boolean; balanceMillicents: number };
 
 /** Credit the authoritative balance and emit a TOPUP event, idempotent on
  *  `paymentRef`. The TOPUP event drives the projector's DSQL reconciliation +
@@ -207,7 +231,7 @@ export async function creditBalance(input: CreditInput): Promise<CreditResult> {
                 type: { S: "TOPUP" }, // the stream filter the projector subscribes to
                 paymentRef: { S: input.paymentRef },
                 userId: { S: input.accountId },
-                amountCents: { N: String(input.amountCents) },
+                amountMillicents: { N: String(input.amountMillicents) },
                 feeCents: { N: String(input.feeCents ?? 0) },
                 method: { S: input.method },
                 status: { S: input.status },
@@ -221,8 +245,8 @@ export async function creditBalance(input: CreditInput): Promise<CreditResult> {
             Update: {
               TableName: TABLE,
               Key: balanceKey(input.accountId),
-              UpdateExpression: "ADD balanceCents :credit",
-              ExpressionAttributeValues: { ":credit": { N: String(input.amountCents) } },
+              UpdateExpression: "ADD balanceMillicents :credit",
+              ExpressionAttributeValues: { ":credit": { N: String(input.amountMillicents) } },
             },
           },
         ],
@@ -232,12 +256,12 @@ export async function creditBalance(input: CreditInput): Promise<CreditResult> {
     const cancel = isCanceled(err);
     if (cancel?.CancellationReasons?.[0]?.Code === "ConditionalCheckFailed") {
       // Already credited (idempotent replay) — return the live balance, no credit.
-      return { credited: false, balanceCents: await readBalance(input.accountId) };
+      return { credited: false, balanceMillicents: await readBalance(input.accountId) };
     }
     throw err;
   }
 
-  return { credited: true, balanceCents: await readBalance(input.accountId) };
+  return { credited: true, balanceMillicents: await readBalance(input.accountId) };
 }
 
 /** The authoritative real-time balance (DynamoDB BAL item). Returns 0 when the

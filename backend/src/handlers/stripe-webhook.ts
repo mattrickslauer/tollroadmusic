@@ -4,7 +4,7 @@
 import { type Handler, header } from "../lib/http.ts";
 import { dsqlConfigured } from "../lib/dsql.ts";
 import { stripe, stripeConfigured, webhookSecret } from "../domain/stripe.ts";
-import { creditTopup } from "../domain/billing.ts";
+import { creditTopup, stripeCentsToMillicents } from "../domain/billing.ts";
 import { notifyPayment } from "../domain/notify.ts";
 import type Stripe from "stripe";
 
@@ -36,7 +36,8 @@ export const webhook: Handler = async (req) => {
         result = await creditTopup({
           accountId: meta.accountId,
           paymentRef: pi.id,
-          amountCents: Number(meta.creditCents) || 0,
+          // Stripe metadata stores creditCents (whole cents); convert to millicents.
+          amountMillicents: stripeCentsToMillicents(Number(meta.creditCents) || 0),
           feeCents: Number(meta.feeCents) || 0,
           method,
           status: pi.status,
@@ -55,7 +56,7 @@ export const webhook: Handler = async (req) => {
           method,
           status: pi.status,
           account: meta.accountId,
-          "new balance": `$${(result.balanceCents / 100).toFixed(2)}`,
+          "new balance": `$${(result.balanceMillicents / 100_000).toFixed(2)}`,
           ref: pi.id,
         });
       }

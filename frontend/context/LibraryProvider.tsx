@@ -79,7 +79,7 @@ export default function LibraryProvider({ children }: { children: React.ReactNod
           next.delete(trackId);
           return next;
         });
-        window.dispatchEvent(new CustomEvent("tollroad:balance", { detail: { balanceCents: res.balanceCents, needFunds: true } }));
+        window.dispatchEvent(new CustomEvent("tollroad:balance", { detail: { balanceMillicents: res.balanceMillicents, needFunds: true } }));
         return;
       }
       setLikedIds((prev) => {
@@ -89,8 +89,8 @@ export default function LibraryProvider({ children }: { children: React.ReactNod
         return next;
       });
       // A like debits 1¢ — keep the wallet display in sync with the new balance.
-      if (typeof res.balanceCents === "number") {
-        window.dispatchEvent(new CustomEvent("tollroad:balance", { detail: { balanceCents: res.balanceCents } }));
+      if (typeof res.balanceMillicents === "number") {
+        window.dispatchEvent(new CustomEvent("tollroad:balance", { detail: { balanceMillicents: res.balanceMillicents } }));
       }
     } catch {
       // revert on failure

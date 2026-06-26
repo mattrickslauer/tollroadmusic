@@ -11,8 +11,8 @@ import { claimOnboardingGift } from "@/lib/api/client";
 interface Props {
   /** Dismiss without (further) action — the gift stays claimable next time. */
   onClose: () => void;
-  /** Called with the new balance (cents) once the gift is credited. */
-  onClaimed: (balanceCents: number) => void;
+  /** Called with the new balance (millicents) once the gift is credited. */
+  onClaimed: (balanceMillicents: number) => void;
 }
 
 const SLIDES = [
@@ -100,8 +100,8 @@ export default function OnboardingFlow({ onClose, onClaimed }: Props) {
     setClaiming(true);
     setError(null);
     try {
-      const { balanceCents } = await claimOnboardingGift();
-      onClaimed(balanceCents);
+      const { balanceMillicents } = await claimOnboardingGift();
+      onClaimed(balanceMillicents);
     } catch {
       setError("Couldn't add your credit — you can still start listening.");
       setClaiming(false);

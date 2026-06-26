@@ -3,7 +3,7 @@
 import ArtistLink from "./ArtistLink";
 import type { CatalogTrack } from "@/lib/api/types";
 import { usePlayer } from "@/context/PlayerProvider";
-import { clock } from "./format";
+import { clock, formatRate } from "./format";
 import LikeButton from "./LikeButton";
 import AddToPlaylist from "./AddToPlaylist";
 import CoverImage from "./CoverImage";
@@ -38,7 +38,7 @@ export default function TrackCard({ track, queue }: { track: CatalogTrack; queue
         <LikeButton trackId={track.id} />
         <ShareButton path={songPath(track)} title={`${track.title} — ${track.artistName}`} />
         <AddToPlaylist trackId={track.id} />
-        <span className="lx-card-rate">{track.pricePerMinuteCents}¢/min</span>
+        <span className="lx-card-rate">{formatRate(track.pricePerMinuteMillicents)}</span>
         <span className="lx-card-dur">{clock(track.durationSeconds)}</span>
       </div>
     </article>

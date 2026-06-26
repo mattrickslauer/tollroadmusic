@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import ArtistLink from "./ArtistLink";
 import { usePlayer } from "@/context/PlayerProvider";
-import { clock, usd } from "./format";
+import { clock, usdM } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
 import VolumeControl from "./VolumeControl";
@@ -15,7 +15,7 @@ import { Sk } from "./Skeleton";
  *  the same global player as PlayerBar, so play/pause/seek/volume stay in
  *  lock-step between the two. Available at every width; PlayerBar opens it. */
 export default function FullscreenPlayer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { current, playing, cur, dur, sessionCost, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
 
@@ -103,8 +103,8 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
         <VolumeControl className="lx-full-volume" />
 
         <button className="lx-meter lx-full-meter" onClick={openTopUp} title="Add funds">
-          <span className="lx-meter-bal" data-low={balanceReady && balanceCents <= 0}>
-            {balanceReady ? usd(balanceCents) : <Sk h={17} w={56} radius={4} style={{ marginBottom: 3 }} />}
+          <span className="lx-meter-bal" data-low={balanceReady && balanceMillicents <= 0}>
+            {balanceReady ? usdM(balanceMillicents) : <Sk h={17} w={56} radius={4} style={{ marginBottom: 3 }} />}
             <small>balance</small>
           </span>
           <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>

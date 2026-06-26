@@ -5,7 +5,7 @@ import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import * as lib from "../domain/library.ts";
 import { getTrackBilling } from "../domain/tracks.ts";
-import { chargeLike, LIKE_COST_CENTS, localDsqlBilling } from "../domain/billing.ts";
+import { chargeLike, LIKE_COST_MILLICENTS, localDsqlBilling } from "../domain/billing.ts";
 import { walletStoreConfigured } from "../domain/wallet-store.ts";
 import { paymentRequired } from "../lib/x402.ts";
 
@@ -27,7 +27,7 @@ export const getLikes: Handler = async (req) => {
   return ok({ tracks, likedIds: ids });
 };
 
-// Toggle a like. Liking tips LIKE_COST_CENTS toward the song (once per track,
+// Toggle a like. Liking tips LIKE_COST_MILLICENTS toward the song (once per track,
 // ever); unliking is free and never refunds. A like with too small a balance gets
 // the same x402 402 the /charge endpoint returns, so the client can prompt a top-up.
 export const postLike: Handler = async (req) => {
@@ -51,17 +51,17 @@ export const postLike: Handler = async (req) => {
     const res = paymentRequired({
       resource: `/v1/library/likes`,
       trackId: track.id,
-      pricePerMinuteCents: LIKE_COST_CENTS,
+      pricePerMinuteMillicents: LIKE_COST_MILLICENTS,
       reason: "insufficient balance",
     });
-    (res.body as Record<string, unknown>).balanceCents = result.balanceCents;
+    (res.body as Record<string, unknown>).balanceMillicents = result.balanceMillicents;
     return res;
   }
 
   // The wallet debit already wrote the METER event transactionally (prod) or the
   // royalty_ledger row directly (local), so artist earnings update via the
   // projector — there is no separate best-effort emit to mirror anymore.
-  return ok({ liked: true, charged: result.charged, balanceCents: result.balanceCents });
+  return ok({ liked: true, charged: result.charged, balanceMillicents: result.balanceMillicents });
 };
 
 export const deleteLike: Handler = async (req) => {

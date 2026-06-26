@@ -56,7 +56,7 @@ export async function serverArtistProfile(id: string): Promise<ArtistProfile | n
   if (!res.ok) throw new Error(`backend ${path} -> ${res.status}`);
   return (await res.json()) as ArtistProfile;
 }
-export const serverBalance = () => serverGet<{ balanceCents: number; history: HistoryRow[] }>("/balance", { auth: true });
+export const serverBalance = () => serverGet<{ balanceMillicents: number; history: HistoryRow[] }>("/balance", { auth: true });
 
 /** The signed-in artist's royalty summary, or null if the account has no artist
  *  profile / the backend can't serve it (so the page can prompt to join). */

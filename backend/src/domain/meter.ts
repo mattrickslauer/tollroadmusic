@@ -22,7 +22,8 @@ export interface MeterEvent {
   accountId: string;
   trackId: string;
   artistId: string;
-  amountCents: number;
+  /** Charge amount in millicents for this metered minute. */
+  amountMillicents: number;
   /** Wall-clock minute the charge billed; pin the SAME value the debit used so
    *  the idempotency key lines up. Defaults to the current minute. */
   minuteEpoch?: number;
@@ -66,7 +67,7 @@ export function meterEventItem(
     trackId: { S: e.trackId },
     artistId: { S: e.artistId },
     minuteEpoch: { N: String(minuteEpoch) },
-    amountCents: { N: String(e.amountCents) },
+    amountMillicents: { N: String(e.amountMillicents) },
     // GSI1 — reverse lookup ARTIST#<id> → recent metered events.
     GSI1PK: { S: `ARTIST#${e.artistId}` },
     GSI1SK: { S: `EVT#${minuteEpoch}#${e.accountId}` },

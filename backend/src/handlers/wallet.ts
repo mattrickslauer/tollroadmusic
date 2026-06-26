@@ -5,24 +5,33 @@ import { type Handler, ok, error, requireSession } from "../lib/http.ts";
 import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import { stripe, stripeConfigured, publishableKey } from "../domain/stripe.ts";
-import { TOPUP_CENTS, cardFeeCents, creditTopup, creditOnboardingGift, getBalanceCents, getListeningHistory } from "../domain/billing.ts";
+import {
+  TOPUP_MILLICENTS,
+  cardFeeCents,
+  creditTopup,
+  creditOnboardingGift,
+  getBalanceMillicents,
+  getListeningHistory,
+  millicentsToStripeCents,
+  stripeCentsToMillicents,
+} from "../domain/billing.ts";
 import { walletStoreConfigured, getRealtimeBalance } from "../domain/wallet-store.ts";
 
 // The displayed balance is the AUTHORITATIVE real-time balance (DynamoDB) when
 // the wallet store is configured; only the laptop-demo fallback reads the DSQL
 // reconciliation balance. History is always the DSQL read model.
 async function liveBalance(accountId: string): Promise<number> {
-  return walletStoreConfigured() ? getRealtimeBalance(accountId) : getBalanceCents(accountId);
+  return walletStoreConfigured() ? getRealtimeBalance(accountId) : getBalanceMillicents(accountId);
 }
 
 export const balance: Handler = async (req) => {
   if (!sessionConfigured() || !dsqlConfigured()) return error(503, "billing not configured");
   const session = await requireSession(req);
-  const [balanceCents, history] = await Promise.all([
+  const [balanceMillicents, history] = await Promise.all([
     liveBalance(session.sub),
     getListeningHistory(session.sub),
   ]);
-  return ok({ balanceCents, history });
+  return ok({ balanceMillicents, history });
 };
 
 /** POST /v1/wallet/topup { method } — start a $10 top-up (or signal demo mode). */
@@ -32,7 +41,8 @@ export const topup: Handler = async (req) => {
   const b = (req.body ?? {}) as Record<string, unknown>;
   const method = b.method === "card" ? "card" : "ach";
 
-  const creditCents = TOPUP_CENTS;
+  // Stripe operates in whole cents; convert millicents at the boundary.
+  const creditCents = millicentsToStripeCents(TOPUP_MILLICENTS);
   const feeCents = method === "card" ? cardFeeCents(creditCents) : 0;
   const chargeCents = creditCents + feeCents;
 
@@ -73,17 +83,18 @@ export const demoCredit: Handler = async (req) => {
   const session = await requireSession(req);
   const b = (req.body ?? {}) as Record<string, unknown>;
   const method = b.method === "card" ? "card" : "ach";
-  const feeCents = method === "card" ? cardFeeCents(TOPUP_CENTS) : 0;
+  const creditCents = millicentsToStripeCents(TOPUP_MILLICENTS);
+  const feeCents = method === "card" ? cardFeeCents(creditCents) : 0;
 
-  const { balanceCents } = await creditTopup({
+  const { balanceMillicents } = await creditTopup({
     accountId: session.sub,
     paymentRef: `demo#${randomUUID()}`,
-    amountCents: TOPUP_CENTS,
+    amountMillicents: TOPUP_MILLICENTS,
     feeCents,
     method: "demo",
     status: "succeeded",
   });
-  return ok({ balanceCents, demo: true });
+  return ok({ balanceMillicents, demo: true });
 };
 
 /** POST /v1/wallet/onboarding-gift — grant the one-time $3 welcome balance.
@@ -91,8 +102,8 @@ export const demoCredit: Handler = async (req) => {
 export const onboardingGift: Handler = async (req) => {
   if (!sessionConfigured() || !dsqlConfigured()) return error(503, "billing not configured");
   const session = await requireSession(req);
-  const { credited, balanceCents } = await creditOnboardingGift(session.sub);
-  return ok({ credited, balanceCents });
+  const { credited, balanceMillicents } = await creditOnboardingGift(session.sub);
+  return ok({ credited, balanceMillicents });
 };
 
 const CREDITABLE = new Set(["succeeded", "processing", "requires_capture"]);
@@ -119,17 +130,18 @@ export const confirm: Handler = async (req) => {
     return json409(intent.status, await liveBalance(session.sub));
   }
 
-  const { balanceCents } = await creditTopup({
+  const { balanceMillicents } = await creditTopup({
     accountId: session.sub,
     paymentRef: intent.id,
-    amountCents: Number(meta.creditCents) || 0,
+    // Convert Stripe cents from metadata back to millicents at the boundary.
+    amountMillicents: stripeCentsToMillicents(Number(meta.creditCents) || 0),
     feeCents: Number(meta.feeCents) || 0,
     method: meta.method === "card" ? "card" : "ach",
     status: intent.status,
   });
-  return ok({ balanceCents, status: intent.status });
+  return ok({ balanceMillicents, status: intent.status });
 };
 
-function json409(status: string, balanceCents: number) {
-  return { status: 409, body: { error: "payment not complete", status, balanceCents } };
+function json409(status: string, balanceMillicents: number) {
+  return { status: 409, body: { error: "payment not complete", status, balanceMillicents } };
 }

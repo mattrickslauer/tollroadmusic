@@ -4,7 +4,7 @@ import { useState } from "react";
 import ArtistLink from "./ArtistLink";
 import BondMeter from "@/components/bond/BondMeter";
 import { usePlayer } from "@/context/PlayerProvider";
-import { clock, usd } from "./format";
+import { clock, usdM } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
 import FullscreenPlayer from "./FullscreenPlayer";
@@ -19,7 +19,7 @@ import { Sk } from "./Skeleton";
  *  Tapping the track info (or the expand button) opens the full-screen player —
  *  available at every width, not just phones. */
 export default function PlayerBar() {
-  const { current, playing, cur, dur, sessionCost, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
   const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
@@ -94,8 +94,8 @@ export default function PlayerBar() {
         <VolumeControl />
         <span className="lx-live" data-on={playing}><span className="lx-live-dot" />{playing ? "METERING" : "PAUSED"}</span>
         <button className="lx-meter" onClick={openTopUp} title="Add funds">
-          <span className="lx-meter-bal" data-low={balanceReady && balanceCents <= 0}>
-            {balanceReady ? usd(balanceCents) : <Sk h={15} w={48} radius={4} style={{ marginBottom: 3 }} />}
+          <span className="lx-meter-bal" data-low={balanceReady && balanceMillicents <= 0}>
+            {balanceReady ? usdM(balanceMillicents) : <Sk h={15} w={48} radius={4} style={{ marginBottom: 3 }} />}
             <small>balance</small>
           </span>
           <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>

@@ -77,6 +77,7 @@ const ROUTES: Route[] = [
   compile("POST", "/artist/avatar/commit", artistContent.avatarCommit),
   compile("POST", "/artist/cover/presign", artistContent.coverPresign),
   compile("POST", "/artist/cover/commit", artistContent.coverCommit),
+  compile("POST", "/artist/track/rate", artistContent.rateUpdate),
   compile("POST", "/artist/profile", artistContent.profileUpdate),
 
   compile("GET", "/superfan/bond/{artistId}", superfan.bond),
