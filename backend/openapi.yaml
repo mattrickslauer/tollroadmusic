@@ -40,7 +40,7 @@ components:
         mimeType: { type: string }
         payTo: { type: string, description: Endpoint to pay (the charge route). }
         topUpUrl: { type: string }
-        pricePerMinuteCents: { type: integer }
+        pricePerMinuteMillicents: { type: integer, description: "Millicents (cents × 1000) to satisfy this request (one minute)." }
     PaymentRequired:
       type: object
       properties:
@@ -58,7 +58,7 @@ components:
         artistName: { type: string }
         genre: { type: string, nullable: true }
         durationSeconds: { type: integer }
-        pricePerMinuteCents: { type: integer }
+        pricePerMinuteMillicents: { type: integer, description: "Millicents (cents × 1000)." }
         coverImageKey: { type: string, nullable: true }
     Catalog:
       type: object
@@ -69,7 +69,7 @@ components:
     ChargeResult:
       type: object
       properties:
-        balanceCents: { type: integer }
+        balanceMillicents: { type: integer, description: "Millicents (cents × 1000)." }
         charged: { type: boolean }
     StreamGrant:
       type: object
@@ -242,6 +242,28 @@ paths:
     post:
       summary: Record that a track was played (upsert).
       responses: { "200": { description: OK } }
+
+  /artist/track/rate:
+    post:
+      summary: Set the per-minute rate (millicents) on a track you own
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [trackId, ratePerMinuteMillicents]
+              properties:
+                trackId: { type: string }
+                ratePerMinuteMillicents:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
+                  description: 0 (free) to 100000 ($1.00/min), in 100-millicent (0.1¢) steps
+      responses:
+        "200": { description: Rate updated }
+        "400": { description: Invalid rate }
+        "403": { description: Not your track }
 
   /artist/summary:
     get:
