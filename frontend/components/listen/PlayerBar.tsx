@@ -15,11 +15,10 @@ import { Sk } from "./Skeleton";
  *  navigation. Shows the live meter: balance + this-session cost.
  *  On phones, tapping the track info expands into the full-screen player. */
 export default function PlayerBar() {
-  const { current, playing, cur, dur, billedSec, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
   const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
-  const cost = current ? (billedSec / 60) * current.pricePerMinuteCents / 100 : 0;
 
   // Tapping the track info opens the full-screen view — phones only; on wider
   // screens the bar already shows everything, so the gesture is a no-op there.
@@ -95,7 +94,7 @@ export default function PlayerBar() {
             {balanceReady ? usd(balanceCents) : <Sk h={15} w={48} radius={4} style={{ marginBottom: 3 }} />}
             <small>balance</small>
           </span>
-          <span className="lx-meter-cost">${cost.toFixed(4)}<small>session</small></span>
+          <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>
         </button>
       </div>
 
