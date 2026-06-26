@@ -8,10 +8,12 @@ import {
   artistIdForAccount,
   ownsTrack,
   setTrackCover,
+  setTrackRate,
   setArtistAvatar,
   updateArtistProfile,
   sanitizeProfile,
 } from "../domain/artist-content.ts";
+import { isValidRateMillicents } from "../domain/billing.ts";
 
 function rand(): string { return Math.random().toString(36).slice(2, 10); }
 
@@ -72,6 +74,20 @@ export const coverCommit: Handler = async (req) => {
   const okUpd = await setTrackCover(artistId, trackId, key);
   if (!okUpd) return error(403, "not your track");
   return ok({ ok: true, coverImageKey: key }, NO_STORE);
+};
+
+export const rateUpdate: Handler = async (req) => {
+  if (!dsqlConfigured()) return error(503, "not configured");
+  const s = await requireSession(req);
+  const artistId = await requireArtist(s.sub);
+  const b = (req.body ?? {}) as any;
+  const trackId = String(b.trackId ?? "");
+  if (!trackId) return error(400, "trackId required");
+  const rate = b.ratePerMinuteMillicents;
+  if (!isValidRateMillicents(rate)) return error(400, "invalid rate");
+  const okUpd = await setTrackRate(artistId, trackId, rate);
+  if (!okUpd) return error(403, "not your track");
+  return ok({ ok: true, ratePerMinuteMillicents: rate }, NO_STORE);
 };
 
 export const profileUpdate: Handler = async (req) => {
