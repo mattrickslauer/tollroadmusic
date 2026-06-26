@@ -6,7 +6,7 @@ import type { Catalog, CatalogArtist, CatalogTrack } from "@/lib/api/types";
 import { slugify } from "./slug.ts";
 
 // Matches the root layout's metadataBase. Overridable for preview deploys.
-export const SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "https://tollroad.music").replace(/\/+$/, "");
+export const SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_ORIGIN ?? "https://www.tollroadmusic.xyz").replace(/\/+$/, "");
 
 /** The id's hex, dashes stripped — used both to build and to resolve song slugs. */
 function normId(id: string): string {
