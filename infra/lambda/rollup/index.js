@@ -47,17 +47,17 @@ async function getClient() {
 
 const LEDGER_SQL = `
   INSERT INTO royalty_ledger
-    (idempotency_key, user_id, track_id, artist_id, minute_epoch, amount_cents)
+    (idempotency_key, user_id, track_id, artist_id, minute_epoch, amount_millicents)
   VALUES ($1, $2, $3, $4, $5, $6)
   ON CONFLICT (idempotency_key) DO NOTHING
   RETURNING idempotency_key`;
 
 const SUMMARY_SQL = `
-  INSERT INTO artist_daily_summary (artist_id, day, minutes, amount_cents)
+  INSERT INTO artist_daily_summary (artist_id, day, minutes, amount_millicents)
   VALUES ($1, to_timestamp($2 * 60)::date, 1, $3)
   ON CONFLICT (artist_id, day)
   DO UPDATE SET minutes = artist_daily_summary.minutes + 1,
-                amount_cents = artist_daily_summary.amount_cents + EXCLUDED.amount_cents`;
+                amount_millicents = artist_daily_summary.amount_millicents + EXCLUDED.amount_millicents`;
 
 async function creditOnce(db, e) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -69,11 +69,11 @@ async function creditOnce(db, e) {
         e.trackId,
         e.artistId,
         e.minuteEpoch,
-        e.amountCents,
+        e.amountMillicents,
       ]);
       // Only bump the summary if this minute was genuinely new (not a replay).
       if (r.rowCount === 1) {
-        await db.query(SUMMARY_SQL, [e.artistId, e.minuteEpoch, e.amountCents]);
+        await db.query(SUMMARY_SQL, [e.artistId, e.minuteEpoch, e.amountMillicents]);
       }
       await db.query("COMMIT");
       return;
@@ -100,7 +100,7 @@ function parseEvent(record) {
     trackId: s("trackId"),
     artistId: s("artistId"),
     minuteEpoch: n("minuteEpoch"),
-    amountCents: n("amountCents"),
+    amountMillicents: n("amountMillicents") ?? (n("amountCents") != null ? n("amountCents") * 1000 : 0),
   };
   if (!e.idempotencyKey || !e.artistId || e.minuteEpoch == null) return null;
   return e;
