@@ -1,9 +1,21 @@
-// The listener wallet — charge a metered minute, credit a top-up, read balance
-// and history. Ported verbatim from the front-end's lib/server/billing.ts; only
-// the DSQL import path changed. The balance lives in
-// listener_profiles.balance_cents; every charge also writes the append-only
-// royalty_ledger. Idempotency key: '<user>#<track>#<minuteEpoch>'.
+// The listener wallet — DSQL READ models + the local-dev billing fallback.
+//
+// After the polyglot-CQRS split (design §2) the authoritative balance and the
+// per-minute money path live in DynamoDB (domain/wallet-store.ts); DSQL is the
+// eventually-consistent read model built ONLY by the projector. So this module
+// now does two things:
+//   1. DSQL READ helpers — getListeningHistory + getBalanceCents (the
+//      reconciliation balance) — used by dashboards / history.
+//   2. The top-up + onboarding-gift entry points (creditTopup,
+//      creditOnboardingGift) which CREDIT THE DYNAMO BALANCE when the wallet
+//      store is configured, and only fall back to a direct DSQL write for a
+//      laptop demo with no DynamoDB (see localDsqlBilling below).
+//
+// The synchronous DSQL royalty_ledger write is GONE from the command path: the
+// old chargeMinute is now chargeMinuteLocalDsql, reached only under the explicit
+// TOLLROAD_LOCAL_DSQL_BILLING=1 opt-in. Idempotency key: '<user>#<track>#<minuteEpoch>'.
 import { withDsql, query } from "../lib/dsql.ts";
+import { creditBalance, debitLike, walletStoreConfigured } from "./wallet-store.ts";
 
 export const TOPUP_CENTS = 1000;
 
@@ -21,6 +33,15 @@ export function cardFeeCents(amountCents: number): number {
 
 export function currentMinuteEpoch(): number {
   return Math.floor(Date.now() / 1000 / 60);
+}
+
+/** Local-dev escape hatch. When DynamoDB (TOLLROAD_TABLE) is NOT configured, an
+ *  explicit `TOLLROAD_LOCAL_DSQL_BILLING=1` keeps the legacy DSQL-direct billing
+ *  path so a laptop demo with no DynamoDB still works. In every other (prod) case
+ *  the command path writes ONLY DynamoDB and DSQL is built by the projector — so
+ *  the handlers 503 "billing not configured" rather than silently writing DSQL. */
+export function localDsqlBilling(): boolean {
+  return process.env.TOLLROAD_LOCAL_DSQL_BILLING === "1";
 }
 
 const SERIALIZATION_FAILURE = "40001";
@@ -50,7 +71,11 @@ export type ChargeResult =
   | { ok: true; balanceCents: number; charged: boolean }
   | { ok: false; reason: "insufficient"; balanceCents: number };
 
-export async function chargeMinute(input: ChargeInput): Promise<ChargeResult> {
+/** LOCAL-DEV ONLY: the legacy synchronous DSQL charge (conditional balance debit
+ *  + royalty_ledger INSERT). Reached only via the TOLLROAD_LOCAL_DSQL_BILLING
+ *  opt-in when DynamoDB is unconfigured. The prod command path uses
+ *  wallet-store.debitMinute and never writes the ledger synchronously. */
+export async function chargeMinuteLocalDsql(input: ChargeInput): Promise<ChargeResult> {
   const minuteEpoch = input.minuteEpoch ?? currentMinuteEpoch();
   const key = `${input.accountId}#${input.trackId}#${minuteEpoch}`;
   const amt = input.amountCents;
@@ -111,19 +136,50 @@ export interface LikeChargeInput {
   artistId: string;
 }
 export type LikeChargeResult =
-  | { ok: true; liked: true; charged: boolean; balanceCents: number; minuteEpoch: number }
+  | { ok: true; liked: true; charged: boolean; balanceCents: number }
   | { ok: false; reason: "insufficient"; balanceCents: number };
 
 /** Like a track, charging LIKE_COST_CENTS toward it exactly once — ever.
  *
- *  The `likes` row is inserted in the SAME transaction as the wallet debit and
- *  ledger write, so a charge always corresponds to a like and vice-versa. The
- *  idempotency key (`<user>#<track>#like`, no minute) makes the charge a
- *  once-per-track event: unliking never refunds, and a later re-like is free —
- *  the existing ledger row short-circuits to a no-charge insert. The ledger row
- *  mirrors a metered minute (amount=1, current minute_epoch for day bucketing),
- *  so a like flows into artist earnings exactly like a stream does. */
+ *  PROD: the wallet debit + METER event are written together in DynamoDB
+ *  (wallet-store.debitLike); the METER event streams to the projector, which
+ *  builds the DSQL royalty_ledger row, so a like flows into artist earnings just
+ *  like a metered minute. The DynamoDB `attribute_not_exists` guard is the
+ *  once-per-track gate — unliking never refunds, and a re-like after an unlike
+ *  replays as `charged:false` (free). The `likes` membership row is the read-model
+ *  record the UI lists; we write it to DSQL (idempotent ON CONFLICT) once the
+ *  authoritative charge has committed. Falls back to the legacy DSQL-direct path
+ *  for the laptop demo. */
 export async function chargeLike(input: LikeChargeInput): Promise<LikeChargeResult> {
+  if (walletStoreConfigured()) {
+    const result = await debitLike({
+      accountId: input.accountId,
+      trackId: input.trackId,
+      artistId: input.artistId,
+      amountCents: LIKE_COST_CENTS,
+    });
+    if (!result.ok) return { ok: false, reason: "insufficient", balanceCents: result.balanceCents };
+    // Charge committed (or was already paid on a prior like) — mirror the
+    // membership row the UI reads. The royalty_ledger row is the projector's job,
+    // driven by the METER event the debit just wrote.
+    await query(
+      `INSERT INTO likes (account_id, track_id) VALUES ($1, $2)
+         ON CONFLICT (account_id, track_id) DO NOTHING`,
+      [input.accountId, input.trackId],
+    );
+    return { ok: true, liked: true, charged: result.charged, balanceCents: result.balanceCents };
+  }
+  return chargeLikeLocalDsql(input);
+}
+
+/** LOCAL-DEV ONLY: the legacy synchronous DSQL like-charge — conditional balance
+ *  debit + royalty_ledger INSERT + likes row, all in one transaction. Reached only
+ *  when DynamoDB is unconfigured (the laptop demo). The idempotency key
+ *  (`<user>#<track>#like`, no minute) makes it once-per-track: unliking never
+ *  refunds, a re-like is free (the existing ledger row short-circuits), and the
+ *  ledger row mirrors a metered minute (amount=1, current minute_epoch) so a like
+ *  flows into artist earnings like a stream. */
+export async function chargeLikeLocalDsql(input: LikeChargeInput): Promise<LikeChargeResult> {
   const key = `${input.accountId}#${input.trackId}#like`;
   const minuteEpoch = currentMinuteEpoch();
 
@@ -148,7 +204,7 @@ export async function chargeLike(input: LikeChargeInput): Promise<LikeChargeResu
             [input.accountId],
           );
           await db.query("COMMIT");
-          return { ok: true, liked: true, charged: false, balanceCents: Number(bal.rows[0]?.balance_cents ?? 0), minuteEpoch };
+          return { ok: true, liked: true, charged: false, balanceCents: Number(bal.rows[0]?.balance_cents ?? 0) };
         }
 
         const upd = await db.query<{ balance_cents: string }>(
@@ -179,7 +235,7 @@ export async function chargeLike(input: LikeChargeInput): Promise<LikeChargeResu
           [input.accountId, input.trackId],
         );
         await db.query("COMMIT");
-        return { ok: true, liked: true, charged: true, balanceCents: Number(upd.rows[0]!.balance_cents), minuteEpoch };
+        return { ok: true, liked: true, charged: true, balanceCents: Number(upd.rows[0]!.balance_cents) };
       } catch (err) {
         await db.query("ROLLBACK").catch(() => {});
         throw err;
@@ -212,7 +268,27 @@ export interface CreditInput {
 }
 export type CreditResult = { credited: boolean; balanceCents: number };
 
+/** Credit a top-up. The LIVE credit hits the authoritative DynamoDB balance
+ *  (idempotent on paymentRef) and emits a TOPUP event the projector reconciles
+ *  into DSQL. Falls back to a direct DSQL write only for the laptop demo. The
+ *  Stripe webhook + wallet handlers call this unchanged. */
 export async function creditTopup(input: CreditInput): Promise<CreditResult> {
+  if (walletStoreConfigured()) {
+    return creditBalance({
+      accountId: input.accountId,
+      paymentRef: input.paymentRef,
+      amountCents: input.amountCents,
+      method: input.method,
+      status: input.status,
+      feeCents: input.feeCents,
+    });
+  }
+  return creditTopupLocalDsql(input);
+}
+
+/** LOCAL-DEV ONLY: legacy DSQL-direct top-up credit (wallet_topups + balance).
+ *  In prod this is projector territory; the live credit hits Dynamo above. */
+export async function creditTopupLocalDsql(input: CreditInput): Promise<CreditResult> {
   return withRetry(() =>
     withDsql(async (db) => {
       try {
@@ -253,10 +329,27 @@ export async function creditTopup(input: CreditInput): Promise<CreditResult> {
 
 export type GiftResult = { credited: boolean; balanceCents: number };
 
-/** Credit the one-time onboarding gift exactly once per account. Idempotent on
+/** Credit the one-time onboarding gift exactly once per account. When the wallet
+ *  store is configured the gift credits the authoritative DynamoDB balance,
+ *  idempotent on a FIXED paymentRef (`onboarding-gift#<account>`) so a replay is a
+ *  no-op; otherwise it falls back to the legacy DSQL path below. */
+export async function creditOnboardingGift(accountId: string): Promise<GiftResult> {
+  if (walletStoreConfigured()) {
+    return creditBalance({
+      accountId,
+      paymentRef: `onboarding-gift#${accountId}`,
+      amountCents: ONBOARDING_GIFT_CENTS,
+      method: "demo",
+      status: "onboarding_gift",
+    });
+  }
+  return creditOnboardingGiftLocalDsql(accountId);
+}
+
+/** LOCAL-DEV ONLY: legacy onboarding gift. Idempotent on
  *  listener_profiles.onboarding_gift_claimed_at: the first call credits and
  *  stamps the column; any replay returns credited:false with the live balance. */
-export async function creditOnboardingGift(accountId: string): Promise<GiftResult> {
+export async function creditOnboardingGiftLocalDsql(accountId: string): Promise<GiftResult> {
   return withRetry(() =>
     withDsql(async (db) => {
       try {

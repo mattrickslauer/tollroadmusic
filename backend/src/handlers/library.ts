@@ -5,8 +5,8 @@ import { dsqlConfigured } from "../lib/dsql.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import * as lib from "../domain/library.ts";
 import { getTrackBilling } from "../domain/tracks.ts";
-import { chargeLike, LIKE_COST_CENTS } from "../domain/billing.ts";
-import { emitMeterEvent } from "../domain/meter.ts";
+import { chargeLike, LIKE_COST_CENTS, localDsqlBilling } from "../domain/billing.ts";
+import { walletStoreConfigured } from "../domain/wallet-store.ts";
 import { paymentRequired } from "../lib/x402.ts";
 
 async function guard(req: ApiRequest) {
@@ -32,6 +32,10 @@ export const getLikes: Handler = async (req) => {
 // the same x402 402 the /charge endpoint returns, so the client can prompt a top-up.
 export const postLike: Handler = async (req) => {
   const s = await guard(req);
+  // A like costs money, so it needs a billing backend: DynamoDB (prod) or, only
+  // under the explicit local opt-in, the legacy DSQL-direct path — same gate as
+  // POST /v1/charge.
+  if (!walletStoreConfigured() && !localDsqlBilling()) return error(503, "billing not configured");
   const trackId = trackIdFrom(req);
   if (!trackId) return error(400, "trackId required");
 
@@ -54,21 +58,9 @@ export const postLike: Handler = async (req) => {
     return res;
   }
 
-  // Mirror the charge into the metering hot path so the rollup updates artist
-  // earnings, exactly as /charge does. Keyed '<user>#<track>#like' to match the
-  // ledger row; best-effort (the listener is already billed durably in DSQL).
-  if (result.charged) {
-    await emitMeterEvent({
-      accountId: s.sub,
-      trackId: track.id,
-      artistId: track.artistId,
-      amountCents: LIKE_COST_CENTS,
-      minuteEpoch: result.minuteEpoch,
-      idempotencyKey: `${s.sub}#${track.id}#like`,
-      skSuffix: "like",
-    });
-  }
-
+  // The wallet debit already wrote the METER event transactionally (prod) or the
+  // royalty_ledger row directly (local), so artist earnings update via the
+  // projector — there is no separate best-effort emit to mirror anymore.
   return ok({ liked: true, charged: result.charged, balanceCents: result.balanceCents });
 };
 
