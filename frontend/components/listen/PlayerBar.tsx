@@ -8,23 +8,23 @@ import { clock, usd } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
 import FullscreenPlayer from "./FullscreenPlayer";
+import VolumeControl from "./VolumeControl";
 import { Sk } from "./Skeleton";
 
 /** The persistent now-playing bar, lifted out of Catalog into the (listen)
  *  layout. It consumes the global player, so it stays live and docked across
  *  navigation. Shows the live meter: balance + this-session cost.
- *  On phones, tapping the track info expands into the full-screen player. */
+ *  Tapping the track info (or the expand button) opens the full-screen player —
+ *  available at every width, not just phones. */
 export default function PlayerBar() {
   const { current, playing, cur, dur, sessionCost, balanceCents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
   const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
 
-  // Tapping the track info opens the full-screen view — phones only; on wider
-  // screens the bar already shows everything, so the gesture is a no-op there.
-  const expand = () => {
-    if (current && window.matchMedia("(max-width: 640px)").matches) setExpanded(true);
-  };
+  // Open the full-screen "now playing" view. Works at every width now: phones
+  // tap the track info, desktop clicks the cover or the dedicated expand button.
+  const expand = () => { if (current) setExpanded(true); };
 
   return (
     <footer className="lx-player" data-empty={!current}>
@@ -88,6 +88,7 @@ export default function PlayerBar() {
       </div>
 
       <div className="lx-player-right">
+        <VolumeControl />
         <span className="lx-live" data-on={playing}><span className="lx-live-dot" />{playing ? "METERING" : "PAUSED"}</span>
         <button className="lx-meter" onClick={openTopUp} title="Add funds">
           <span className="lx-meter-bal" data-low={balanceReady && balanceCents <= 0}>
@@ -95,6 +96,9 @@ export default function PlayerBar() {
             <small>balance</small>
           </span>
           <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>
+        </button>
+        <button className="lx-expand" onClick={expand} disabled={!current} aria-label="Open full-screen player" title="Full screen">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14h6v6M20 10h-6V4M4 20l6-6M20 4l-6 6" /></svg>
         </button>
       </div>
 
