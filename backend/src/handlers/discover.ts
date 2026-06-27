@@ -1,43 +1,32 @@
-// POST /v1/discover { vibe, limit?, bpmMin?, bpmMax?, maxEnergy?, allowExplicit? }
-// Embeds the natural-language "vibe", runs a pgvector ANN search over track_vectors,
-// then hydrates each returned track_id into a full CatalogTrack via getCatalog().
+// POST /v1/discover { vibe, limit? }
+// Embeds the natural-language "vibe", runs app-side cosine similarity over track
+// vectors stored in DynamoDB (TVEC partition), then hydrates each trackId into a
+// full CatalogTrack via getCatalog().
 import { type Handler, ok, error } from "../lib/http.ts";
-import { vectorConfigured, vquery, toVectorLiteral } from "../lib/vectordb.ts";
+import { vectorConfigured, getAllTrackVectors } from "../domain/vector-store.ts";
 import { embed } from "../lib/embeddings.ts";
 import { getCatalog, type CatalogTrack } from "../domain/catalog.ts";
-import { parseConstraints, buildDiscoverSql, type DiscoverBody } from "../domain/discovery.ts";
+import { parseConstraints, rankBySimilarity } from "../domain/discovery.ts";
 
-/** Shared discovery helper: embed vibe → vector ANN search → hydrated CatalogTrack list.
- *  Called by both the /discover handler and the DJ session endpoints to avoid duplication.
+/** Shared discovery helper: embed vibe → DynamoDB cosine search → hydrated CatalogTrack list.
+ *  Called by both the /discover handler and the DJ session endpoints.
  *  Callers are responsible for the vectorConfigured() guard before calling this. */
 export async function runDiscovery(
   vibe: string,
-  opts: {
-    limit?: number;
-    bpmMin?: number;
-    bpmMax?: number;
-    maxEnergy?: number;
-    allowExplicit?: boolean;
-  } = {},
+  opts: { limit?: number } = {},
 ): Promise<Array<CatalogTrack & { score: number }>> {
-  const constraints = parseConstraints({
-    vibe,
-    limit: opts.limit,
-    bpmMin: opts.bpmMin,
-    bpmMax: opts.bpmMax,
-    maxEnergy: opts.maxEnergy,
-    allowExplicit: opts.allowExplicit,
-  } as DiscoverBody);
+  const { limit } = parseConstraints({ vibe, limit: opts.limit });
 
-  // 1. Embed the vibe string → vector literal
-  const embedding = await embed(vibe);
-  const vectorLiteral = toVectorLiteral(embedding);
+  // 1. Embed the vibe string → 1024-dim vector via Bedrock Titan v2
+  const queryVec = await embed(vibe);
 
-  // 2. Run pgvector ANN search — returns track_id + score (cosine distance)
-  const { sql, params } = buildDiscoverSql(constraints, vectorLiteral);
-  const { rows } = await vquery<{ track_id: string; score: number }>(sql, params);
+  // 2. Load all track vectors from DynamoDB (TVEC partition, paginated)
+  const candidates = await getAllTrackVectors();
 
-  // 3. Hydrate track_ids into CatalogTrack objects via the catalog.
+  // 3. Rank by cosine similarity (higher = more similar)
+  const ranked = rankBySimilarity(queryVec, candidates, limit);
+
+  // 4. Hydrate trackIds into CatalogTrack objects via the catalog.
   //    Build a Map for O(1) lookup; preserve vector-ranked order; drop unknown ids.
   const catalog = await getCatalog();
   const trackMap = new Map<string, CatalogTrack>(
@@ -45,9 +34,9 @@ export async function runDiscovery(
   );
 
   const results: Array<CatalogTrack & { score: number }> = [];
-  for (const row of rows) {
-    const track = trackMap.get(row.track_id);
-    if (track) results.push({ ...track, score: row.score });
+  for (const { trackId, score } of ranked) {
+    const track = trackMap.get(trackId);
+    if (track) results.push({ ...track, score });
   }
 
   return results;
@@ -62,10 +51,6 @@ export const discover: Handler = async (req) => {
 
   const results = await runDiscovery(vibe, {
     limit: typeof b.limit === "number" ? b.limit : undefined,
-    bpmMin: typeof b.bpmMin === "number" ? b.bpmMin : undefined,
-    bpmMax: typeof b.bpmMax === "number" ? b.bpmMax : undefined,
-    maxEnergy: typeof b.maxEnergy === "number" ? b.maxEnergy : undefined,
-    allowExplicit: b.allowExplicit === true,
   });
 
   return ok({ results });

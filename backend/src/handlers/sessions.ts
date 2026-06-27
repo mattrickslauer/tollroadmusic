@@ -17,7 +17,7 @@ import { randomUUID } from "node:crypto";
 import { type Handler, ok, error, requireSession } from "../lib/http.ts";
 import { sessionConfigured } from "../lib/jwt.ts";
 import { walletStoreConfigured } from "../domain/wallet-store.ts";
-import { vectorConfigured } from "../lib/vectordb.ts";
+import { vectorConfigured } from "../domain/vector-store.ts";
 import { pickNext } from "../domain/dj.ts";
 import { runDiscovery } from "./discover.ts";
 import {
