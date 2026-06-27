@@ -1522,3 +1522,117 @@ h1.hero-title .serif {
 .topup-total span:first-child { color: var(--bone); }
 .topup-pay { margin-top: 6px; }
 .topup-pay .auth-link { margin-top: 12px; display: inline-block; }
+
+/* ============================================================
+   DEV STRIP — slim platform aside (consumer page, B2B accent)
+   ============================================================ */
+.dev-strip {
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--asphalt-850);
+}
+.dev-strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 22px;
+  padding-bottom: 22px;
+}
+.dev-strip-inner p {
+  margin: 0;
+  color: var(--bone-dim);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.dev-strip-inner .mono-label {
+  display: block;
+  margin-bottom: 4px;
+}
+@media (max-width: 720px) {
+  .dev-strip-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ============================================================
+   INFRASTRUCTURE — "any app, any agent" (B2B accent cards)
+   ============================================================ */
+.infra-card {
+  text-align: left;
+}
+.infra-card .ico {
+  margin: 0 0 18px;
+}
+.infra-card p {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  line-height: 1.55;
+  color: var(--bone-dim);
+}
+.infra-cta {
+  text-align: center;
+  margin-top: clamp(36px, 5vw, 56px);
+}
+
+/* ============================================================
+   DEVELOPERS PAGE (stub)
+   ============================================================ */
+.dev-page .sec-head {
+  max-width: 30em;
+}
+.dev-page h1 {
+  font-size: clamp(2.2rem, 5.2vw, 3.8rem);
+}
+.dev-lede {
+  margin-top: 18px;
+  color: var(--bone-dim);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.dev-code {
+  max-width: 760px;
+  margin: 0 auto clamp(40px, 6vw, 64px);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--asphalt-850);
+  overflow-x: auto;
+}
+.dev-code pre {
+  margin: 0;
+  padding: 22px 24px;
+}
+.dev-code code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--bone-dim);
+  white-space: pre;
+}
+.dev-points {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+@media (max-width: 720px) {
+  .dev-points { grid-template-columns: 1fr; }
+}
+.dev-point h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.dev-point p {
+  color: var(--bone-faint);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.dev-cta {
+  justify-content: center;
+  margin-top: clamp(44px, 6vw, 68px);
+}

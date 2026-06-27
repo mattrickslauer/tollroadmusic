@@ -9,6 +9,8 @@ export const ROUTES = {
   /** Artist path — sign up to bring a catalog, then the royalty dashboard. */
   signup: "/artist/join",
   artist: "/artist",
+  /** Developer / platform path — MCP server + embeddable player overview. */
+  developers: "/developers",
   /** Public artist profile page. */
   artistProfile: (id: string) => `/artists/${encodeURIComponent(id)}`,
 } as const;
