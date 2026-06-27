@@ -55,12 +55,8 @@ function buildServer(client: TollRoadClient): McpServer {
 
       const result = await client.call("POST", "/discover", body);
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result.data, null, 2),
-          },
-        ],
+        isError: result.status >= 400,
+        content: [{ type: "text", text: JSON.stringify({ status: result.status, data: result.data }, null, 2) }],
       };
     }
   );
@@ -75,12 +71,8 @@ function buildServer(client: TollRoadClient): McpServer {
     async ({ context }) => {
       const result = await client.call("POST", "/sessions", { context });
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result.data, null, 2),
-          },
-        ],
+        isError: result.status >= 400,
+        content: [{ type: "text", text: JSON.stringify({ status: result.status, data: result.data }, null, 2) }],
       };
     }
   );
@@ -99,12 +91,8 @@ function buildServer(client: TollRoadClient): McpServer {
 
       const result = await client.call("POST", `/sessions/${session}/next`, Object.keys(body).length ? body : undefined);
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result.data, null, 2),
-          },
-        ],
+        isError: result.status >= 400,
+        content: [{ type: "text", text: JSON.stringify({ status: result.status, data: result.data }, null, 2) }],
       };
     }
   );
@@ -119,12 +107,8 @@ function buildServer(client: TollRoadClient): McpServer {
     async ({ track_id }) => {
       const result = await client.call("GET", `/stream/${track_id}`);
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result.data, null, 2),
-          },
-        ],
+        isError: result.status >= 400,
+        content: [{ type: "text", text: JSON.stringify({ status: result.status, data: result.data }, null, 2) }],
       };
     }
   );
@@ -137,12 +121,8 @@ function buildServer(client: TollRoadClient): McpServer {
     async () => {
       const result = await client.call("GET", "/balance");
       return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result.data, null, 2),
-          },
-        ],
+        isError: result.status >= 400,
+        content: [{ type: "text", text: JSON.stringify({ status: result.status, data: result.data }, null, 2) }],
       };
     }
   );
