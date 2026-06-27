@@ -57,16 +57,16 @@ const vectorCluster = new rds.DatabaseCluster(this, "TollroadVector", {
 };
 ```
 
-- [ ] **Step 2: Allow the Lambda to reach the cluster + IAM connect.** The API Lambda is currently not in a VPC. Put it in `vpc` and open the SG from the Lambda SG on 5432, and grant IAM auth:
+- [ ] **Step 2: Allow the Lambda to reach the cluster + IAM connect.** **Keep the API Lambda OUT of the VPC** — it already reaches DSQL/DynamoDB/S3/Bedrock over public endpoints, and putting it in a NAT-less VPC would break that egress. The cluster is `publiclyAccessible` in public subnets; the Lambda connects over the public endpoint, secured by **IAM auth + required TLS**. Open the SG on 5432 and grant IAM connect:
 
 ```typescript
-// where apiFn is created, add: vpc, vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC }
-vectorCluster.connections.allowDefaultPortFrom(apiFn, "API Lambda to vector DB");
+vectorCluster.connections.allowFrom(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432), "vector DB (IAM+TLS gated)");
 apiFn.addToRolePolicy(new iam.PolicyStatement({
   actions: ["rds-db:connect"],
   resources: [`arn:aws:rds-db:${region}:${this.account}:dbuser:${vectorCluster.clusterResourceIdentifier}/vector_app`],
 }));
 ```
+Do NOT add `vpc`/`vpcSubnets`/`allowPublicSubnet` to `apiFn`. Security rests on IAM auth (`rds_iam`) + TLS, matching the app's existing public-endpoint posture.
 
 - [ ] **Step 3: Add env vars to `apiEnv`.**
 
