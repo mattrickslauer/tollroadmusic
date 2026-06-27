@@ -1,21 +1,27 @@
 // Apply the TollRoad vector schema. Run once after the cluster is up:
-//   TOLLROAD_VECTOR_HOST=<endpoint> node scripts/migrate-vector.mjs
+//   TOLLROAD_VECTOR_HOST=<endpoint> TOLLROAD_VECTOR_MASTER_PASSWORD=<pw> node scripts/migrate-vector.mjs
 //
-// Auth is an IAM token used as the password (standard `pg` works, RDS Signer).
+// Auth uses the Aurora master-user password (IAM database auth cannot be used
+// for the Aurora master user, so we use plain password auth for bootstrap DDL).
 // The DDL adds pgvector support + track embeddings table + HNSW index +
 // vector_app role with IAM auth and ALL privileges on the table.
 
 import { Client } from "pg";
-import { Signer } from "@aws-sdk/rds-signer";
 
 const HOST = process.env.TOLLROAD_VECTOR_HOST;
 const PORT = Number(process.env.TOLLROAD_VECTOR_PORT ?? "5432");
 const DB = process.env.TOLLROAD_VECTOR_DB ?? "tollroad";
 const ADMIN_USER = process.env.TOLLROAD_VECTOR_ADMIN_USER ?? "postgres";
+const MASTER_PASSWORD = process.env.TOLLROAD_VECTOR_MASTER_PASSWORD;
 const REGION = process.env.TOLLROAD_VECTOR_REGION ?? "us-east-1";
 
 if (!HOST) {
   console.error("Set TOLLROAD_VECTOR_HOST (RDS endpoint)");
+  process.exit(1);
+}
+
+if (!MASTER_PASSWORD) {
+  console.error("Set TOLLROAD_VECTOR_MASTER_PASSWORD (Aurora master user password from Secrets Manager)");
   process.exit(1);
 }
 
@@ -36,20 +42,13 @@ const STATEMENTS = [
   `GRANT ALL ON track_vectors TO vector_app`,
 ];
 
-const signer = new Signer({
-  hostname: HOST,
-  port: PORT,
-  username: ADMIN_USER,
-  region: REGION,
-});
-
-const token = await signer.getAuthToken();
 const client = new Client({
   host: HOST,
   port: PORT,
   user: ADMIN_USER,
   database: DB,
-  password: token,
+  password: MASTER_PASSWORD,
+  // TODO: pin Amazon RDS global-bundle.pem CA for cert verification before production
   ssl: { rejectUnauthorized: false },
 });
 
