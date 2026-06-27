@@ -67,6 +67,8 @@ async function embed(text) {
   const command = new InvokeModelCommand({
     modelId: BEDROCK_MODEL_ID,
     body,
+    contentType: "application/json",
+    accept: "application/json",
   });
 
   const response = await bedrockClient.send(command);
@@ -159,20 +161,22 @@ async function main() {
   `;
 
   let done = 0;
-  for (const track of tracks) {
-    const descriptor = buildDescriptor(track);
-    const embedding = await embed(descriptor);
-    const vectorLiteral = toVectorLiteral(embedding);
+  try {
+    for (const track of tracks) {
+      const descriptor = buildDescriptor(track);
+      const embedding = await embed(descriptor);
+      const vectorLiteral = toVectorLiteral(embedding);
 
-    await vectorClient.query(UPSERT_SQL, [track.id, vectorLiteral]);
+      await vectorClient.query(UPSERT_SQL, [track.id, vectorLiteral]);
 
-    done++;
-    if (done % 10 === 0 || done === tracks.length) {
-      console.log(`embedded ${done}/${tracks.length} — last: "${descriptor}"`);
+      done++;
+      if (done % 10 === 0 || done === tracks.length) {
+        console.log(`embedded ${done}/${tracks.length} — last: "${descriptor}"`);
+      }
     }
+  } finally {
+    await vectorClient.end();
   }
-
-  await vectorClient.end();
   console.log(`Done. Upserted ${done} track vectors.`);
 }
 

@@ -54,6 +54,8 @@ export async function embed(text: string): Promise<number[]> {
   const command = new InvokeModelCommand({
     modelId: MODEL_ID,
     body,
+    contentType: "application/json",
+    accept: "application/json",
   });
 
   const response = await client.send(command);
