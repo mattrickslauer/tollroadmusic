@@ -6,6 +6,34 @@
 
 ---
 
+## Amendment (2026-06-27): vector store → DynamoDB + app-side cosine
+
+**As-built divergence from the original design (§3.2, §6).**
+
+The AWS Free Plan blocks standard Aurora PostgreSQL clusters — `WithExpressConfiguration`
+is required for free-tier Aurora, and that mode does not support `pgvector`. As a
+result, the vector store was changed from **Aurora PostgreSQL Serverless v2 + pgvector**
+to **DynamoDB + app-side cosine similarity**:
+
+- Vectors are stored in the existing DynamoDB single-table under `PK="TVEC"`,
+  `SK=<trackId>`, `embedding` number[1024], `updatedAt`.
+- At query time the Lambda loads all TVEC items from DynamoDB and computes cosine
+  similarity in-process, returning top-k results. No Aurora cluster, no VPC, no
+  pg connection, no scale-to-zero resume latency.
+- The `/discover` contract is unchanged: `POST /discover { vibe, limit }` →
+  `{ results: [ { ...track, score } ] }` where `score` is cosine similarity (higher = better).
+- The backfill script (`scripts/enrich-catalog.mjs`) reads DSQL tracks, embeds via
+  Bedrock Titan v2, and writes vectors to DynamoDB TVEC. Needs
+  `TOLLROAD_DSQL_ENDPOINT` + `TOLLROAD_TABLE` (+ optional `TOLLROAD_DSQL_REGION`).
+- Hackathon permitted databases in use: **DynamoDB** (hot meter + vector store) +
+  **Aurora DSQL** (relational SoR). Same external behavior; runs fully on free-tier
+  serverless.
+
+Sections §3.2, §3.6, §6, and the architecture diagram below reflect the original
+design intent. The as-built implementation follows this amendment.
+
+---
+
 ## 1. Vision
 
 Let **any app or AI agent** score its experience with **metered, direct-licensed music** by describing *intent* — "tense final boss, 140 BPM synthwave" or "calm Sunday brunch, jazzy, low energy" — and get back a live, per-minute-billed stream.
