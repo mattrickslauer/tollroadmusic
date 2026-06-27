@@ -38,21 +38,21 @@ export default function DevelopersPage() {
 
         <div className="dev-points">
           <Reveal className="dev-point">
-            <h3>Agentic MCP DJ</h3>
+            <h2>Agentic MCP DJ</h2>
             <p>
               The agent describes a vibe, gets ranked licensed tracks, and pays
               from its own wallet — no login, no checkout.
             </p>
           </Reveal>
           <Reveal className="dev-point" delay={100}>
-            <h3>Embeddable player</h3>
+            <h2>Embeddable player</h2>
             <p>
               Instant browser listening you can place anywhere. No install for
               your users.
             </p>
           </Reveal>
           <Reveal className="dev-point" delay={200}>
-            <h3>Metered by the minute</h3>
+            <h2>Metered by the minute</h2>
             <p>
               Idempotent metering to the millicent, with an auditable royalty
               ledger behind every play.

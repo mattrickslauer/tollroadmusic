@@ -25,14 +25,14 @@ const CARDS: { icon: ReactNode; title: string; body: string }[] = [
 /** Light infrastructure accent on the consumer landing page. */
 export default function Infrastructure() {
   return (
-    <section className="section infra" id="infra">
+    <section className="section" id="infra">
       <div className="wrap">
         <Reveal className="sec-head">
           <span className="mono-label kicker amber">Built as infrastructure</span>
           <h2>Any app, any agent.</h2>
         </Reveal>
 
-        <div className="chips infra-grid">
+        <div className="chips">
           {CARDS.map((card, i) => (
             <Reveal key={card.title} className="chip infra-card" delay={i * 120}>
               <div className="ico">{card.icon}</div>

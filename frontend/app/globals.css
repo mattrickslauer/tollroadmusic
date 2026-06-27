@@ -1621,7 +1621,7 @@ h1.hero-title .serif {
 @media (max-width: 720px) {
   .dev-points { grid-template-columns: 1fr; }
 }
-.dev-point h3 {
+.dev-point h2 {
   font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
