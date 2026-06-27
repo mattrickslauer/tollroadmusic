@@ -5,6 +5,7 @@ import MiddlemanFlow from "@/components/MiddlemanFlow";
 import Outcomes from "@/components/Outcomes";
 import MeteredSteps from "@/components/MeteredSteps";
 import DevStrip from "@/components/DevStrip";
+import Infrastructure from "@/components/Infrastructure";
 import Closer from "@/components/Closer";
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
       <hr className="lane" />
       <MeteredSteps />
       <DevStrip />
+      <Infrastructure />
       <Closer />
     </>
   );
