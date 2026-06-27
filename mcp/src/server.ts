@@ -39,18 +39,12 @@ function buildServer(client: TollRoadClient): McpServer {
     {
       vibe: z.string().describe("Mood or vibe to search for, e.g. 'calm focus', 'energetic workout'"),
       limit: z.number().int().min(1).max(50).optional().describe("Max number of tracks to return (default: 10)"),
-      bpmMin: z.number().int().min(0).optional().describe("Minimum BPM"),
-      bpmMax: z.number().int().min(0).optional().describe("Maximum BPM"),
-      maxEnergy: z.number().min(0).max(1).optional().describe("Maximum energy level 0–1"),
       allowExplicit: z.boolean().optional().describe("Whether to allow explicit tracks (default: false)"),
     },
     async (args) => {
-      const { vibe, limit, bpmMin, bpmMax, maxEnergy, allowExplicit } = args;
+      const { vibe, limit, allowExplicit } = args;
       const body: Record<string, unknown> = { vibe };
       if (limit !== undefined) body["limit"] = limit;
-      if (bpmMin !== undefined) body["bpmMin"] = bpmMin;
-      if (bpmMax !== undefined) body["bpmMax"] = bpmMax;
-      if (maxEnergy !== undefined) body["maxEnergy"] = maxEnergy;
       if (allowExplicit !== undefined) body["allowExplicit"] = allowExplicit;
 
       const result = await client.call("POST", "/discover", body);

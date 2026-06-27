@@ -24,11 +24,10 @@ test("parseConstraints accepts allowExplicit: true", () => {
   assert.equal(c.allowExplicit, true);
 });
 
-test("parseConstraints passes through optional numeric fields", () => {
-  const c = parseConstraints({ vibe: "x", bpmMin: 120, bpmMax: 140, maxEnergy: 0.8 });
-  assert.equal(c.bpmMin, 120);
-  assert.equal(c.bpmMax, 140);
-  assert.equal(c.maxEnergy, 0.8);
+test("buildDiscoverSql does not emit bpm or energy in SQL", () => {
+  const { sql } = buildDiscoverSql({ limit: 10, allowExplicit: false }, "[0.1,0.2]");
+  assert.doesNotMatch(sql, /bpm/i);
+  assert.doesNotMatch(sql, /energy/i);
 });
 
 test("buildDiscoverSql filters explicit and orders by cosine distance", () => {
@@ -41,24 +40,6 @@ test("buildDiscoverSql filters explicit and orders by cosine distance", () => {
 test("buildDiscoverSql omits explicit filter when allowExplicit is true", () => {
   const { sql } = buildDiscoverSql({ limit: 10, allowExplicit: true }, "[0.1,0.2]");
   assert.doesNotMatch(sql, /explicit = false/);
-});
-
-test("buildDiscoverSql includes bpmMin filter when provided", () => {
-  const { sql, params } = buildDiscoverSql({ limit: 10, allowExplicit: false, bpmMin: 120 }, "[0.1]");
-  assert.match(sql, /bpm >= \$\d+/);
-  assert.ok(params.includes(120));
-});
-
-test("buildDiscoverSql includes bpmMax filter when provided", () => {
-  const { sql, params } = buildDiscoverSql({ limit: 10, allowExplicit: false, bpmMax: 140 }, "[0.1]");
-  assert.match(sql, /bpm <= \$\d+/);
-  assert.ok(params.includes(140));
-});
-
-test("buildDiscoverSql includes maxEnergy filter when provided", () => {
-  const { sql, params } = buildDiscoverSql({ limit: 10, allowExplicit: false, maxEnergy: 0.8 }, "[0.1]");
-  assert.match(sql, /energy <= \$\d+/);
-  assert.ok(params.includes(0.8));
 });
 
 test("buildDiscoverSql selects track_id and score", () => {

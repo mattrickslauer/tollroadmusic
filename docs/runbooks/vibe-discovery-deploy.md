@@ -230,8 +230,6 @@ Optional filters accepted by `/v1/discover`:
 |---|---|---|
 | `vibe` | string (required) | `"chill lo-fi study beats"` |
 | `limit` | int 1–50 | `10` |
-| `bpmMin` / `bpmMax` | int | `120` / `140` |
-| `maxEnergy` | float 0–1 | `0.7` |
 | `allowExplicit` | bool | `false` |
 
 If the Aurora cluster was idle, the first request may time out or take 10–15 seconds
@@ -284,7 +282,7 @@ In `claude_desktop_config.json` (or your client's equivalent):
 
 | Tool | Description |
 |---|---|
-| `search_music` | Discover tracks by vibe/mood with optional BPM/energy/explicit filters. Calls `POST /v1/discover`. |
+| `search_music` | Discover tracks by vibe/mood with optional limit/explicit filters. Calls `POST /v1/discover`. |
 | `start_session` | Start a DJ session queue. Calls `POST /v1/sessions`. Returns a `session` ID. |
 | `next_track` | Advance the session to the next track (optional `signal` hint). Calls `POST /v1/sessions/{id}/next`. |
 | `get_stream` | Get a signed CloudFront URL for a track. Calls `GET /v1/stream/{trackId}`. Returns 402 if the balance is zero. |

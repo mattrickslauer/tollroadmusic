@@ -4,17 +4,11 @@
 export interface DiscoverBody {
   vibe: string;
   limit?: number;
-  bpmMin?: number;
-  bpmMax?: number;
-  maxEnergy?: number;
   allowExplicit?: boolean;
 }
 
 export interface Constraints {
   limit: number;
-  bpmMin?: number;
-  bpmMax?: number;
-  maxEnergy?: number;
   allowExplicit: boolean;
 }
 
@@ -25,9 +19,6 @@ export function parseConstraints(body: DiscoverBody): Constraints {
 
   return {
     limit,
-    bpmMin: typeof body.bpmMin === "number" ? body.bpmMin : undefined,
-    bpmMax: typeof body.bpmMax === "number" ? body.bpmMax : undefined,
-    maxEnergy: typeof body.maxEnergy === "number" ? body.maxEnergy : undefined,
     allowExplicit: body.allowExplicit === true,
   };
 }
@@ -51,21 +42,6 @@ export function buildDiscoverSql(constraints: Constraints, vectorLiteral: string
 
   if (!constraints.allowExplicit) {
     filters.push("explicit = false");
-  }
-
-  if (constraints.bpmMin !== undefined) {
-    params.push(constraints.bpmMin);
-    filters.push(`bpm >= $${params.length}`);
-  }
-
-  if (constraints.bpmMax !== undefined) {
-    params.push(constraints.bpmMax);
-    filters.push(`bpm <= $${params.length}`);
-  }
-
-  if (constraints.maxEnergy !== undefined) {
-    params.push(constraints.maxEnergy);
-    filters.push(`energy <= $${params.length}`);
   }
 
   params.push(constraints.limit);
