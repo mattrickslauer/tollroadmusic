@@ -1,51 +1,58 @@
-TOLLROAD VIBE DJ — VOICEOVER ONLY (read script)
-Target runtime ~2:45. Delivery: calm, certain, never over-hyped. Pause where marked.
+TOLLROAD — VOICEOVER ONLY (read script)
+Target runtime ~2:45. Delivery: warm, certain, a little understated.
+This is about fans and their favorite artists. Let the heart show; don't oversell.
+Pause where marked.
 
 
 [ACT 1 — HOOK]
 
-(cold open — no narration; let the music land)
+(cold open — no narration; a fan presses play, the song starts)
 
 
-This isn't a person searching a music library. It's an AI agent —
-and it's about to buy music by the minute.
+You've listened to this artist for years.
+For the first time, it counts for something.
 
 
 (FOUNDER, to camera)
-The agent doesn't have a login. It has a wallet.
-
-
-(beat — music only; the track starts playing)
+We're building a place where being a fan is finally rewarded —
+your listening, tracked and turned into something real.
 
 
 [ACT 2 — PROOF]
 
-Every minute that plays, the meter charges the agent's wallet —
-idempotent, to the millicent. This is metering that already runs in production.
+Every minute you listen builds your streak —
+and earns rewards you actually keep.
 
 
-One event, three AWS databases — each doing the one job it's best at.
-The hot meter, the system of record, and semantic vibe search.
+Climb the leaderboard for the artists you love.
+Real fandom, finally ranked — and seen.
 
 
 (FOUNDER, to camera)
-Every minute played, a real artist gets paid for the seconds people
-actually listened. That royalty ledger isn't a mock-up — it's live right now.
+And every second you listen is tracked —
+so artists get paid for real engagement,
+and finally see exactly who their superfans are.
 
 
-(beat — fast cut, music only)
+(beat — vibe search, music only)
 
 
 [ACT 3 — VISION]
 
-Any app. Any agent. Score the moment with licensed music —
-just by describing the vibe.
+A new kind of music platform —
+where listening rewards fans,
+and engagement pays the artists who earned it.
+
+
+(brisk — one line, a side note, then move on)
+It's metered to the second — so it's ready for apps
+and AI agents to license this music too.
 
 
 (FOUNDER, to camera)
-The model is simple: real creators, direct-licensed, paid per second of use —
-distributed to the agents that are becoming the customers.
-The rails are already running. That's the moat.
+We're redefining how fans and artists connect —
+listening that rewards you,
+and a fanbase artists can finally build on.
 
 
 (end card — music resolves)
