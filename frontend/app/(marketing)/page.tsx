@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import MiddlemanFlow from "@/components/MiddlemanFlow";
 import Outcomes from "@/components/Outcomes";
 import MeteredSteps from "@/components/MeteredSteps";
+import DevStrip from "@/components/DevStrip";
 import Closer from "@/components/Closer";
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <Outcomes />
       <hr className="lane" />
       <MeteredSteps />
+      <DevStrip />
       <Closer />
     </>
   );

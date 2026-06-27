@@ -1522,3 +1522,36 @@ h1.hero-title .serif {
 .topup-total span:first-child { color: var(--bone); }
 .topup-pay { margin-top: 6px; }
 .topup-pay .auth-link { margin-top: 12px; display: inline-block; }
+
+/* ============================================================
+   DEV STRIP — slim platform aside (consumer page, B2B accent)
+   ============================================================ */
+.dev-strip {
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--asphalt-850);
+}
+.dev-strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 22px;
+  padding-bottom: 22px;
+}
+.dev-strip-inner p {
+  margin: 0;
+  color: var(--bone-dim);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.dev-strip-inner .mono-label {
+  display: block;
+  margin-bottom: 4px;
+}
+@media (max-width: 720px) {
+  .dev-strip-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
