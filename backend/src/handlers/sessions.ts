@@ -54,6 +54,7 @@ function sessionKey(sessionId: string): Record<string, AttributeValue> {
 interface SessionState {
   context: string;
   played: string[];
+  ownerId: string;
 }
 
 async function loadSession(sessionId: string): Promise<SessionState | null> {
@@ -69,10 +70,11 @@ async function loadSession(sessionId: string): Promise<SessionState | null> {
   return {
     context: res.Item.context?.S ?? "",
     played: res.Item.played?.L?.map((v) => v.S ?? "") ?? [],
+    ownerId: res.Item.ownerId?.S ?? "",
   };
 }
 
-async function saveSession(sessionId: string, context: string, played: string[]): Promise<void> {
+async function saveSession(sessionId: string, context: string, played: string[], ownerId: string): Promise<void> {
   const { client, m } = await getSdk();
   await client.send(
     new m.PutItemCommand({
@@ -81,6 +83,7 @@ async function saveSession(sessionId: string, context: string, played: string[])
         ...sessionKey(sessionId),
         context: { S: context },
         played: { L: played.map((id) => ({ S: id })) },
+        ownerId: { S: ownerId },
         updatedAt: { N: String(Date.now()) },
       },
     }),
@@ -115,7 +118,7 @@ function configGuard(): ReturnType<typeof error> | null {
 export const startSession: Handler = async (req) => {
   const guard = configGuard();
   if (guard) return guard;
-  await requireSession(req);
+  const principal = await requireSession(req);
 
   const b = (req.body ?? {}) as Record<string, unknown>;
   const context = typeof b.context === "string" ? b.context.trim() : "";
@@ -132,9 +135,9 @@ export const startSession: Handler = async (req) => {
   );
   if (!trackId) return error(404, "no tracks found for context");
 
-  // Persist session state.
+  // Persist session state, recording the owner so nextTrack can enforce access.
   const sessionId = randomUUID();
-  await saveSession(sessionId, context, [trackId]);
+  await saveSession(sessionId, context, [trackId], principal.sub);
 
   const track = candidates.find((c) => c.id === trackId)!;
 
@@ -154,13 +157,14 @@ export const startSession: Handler = async (req) => {
 export const nextTrack: Handler = async (req) => {
   const guard = configGuard();
   if (guard) return guard;
-  await requireSession(req);
+  const principal = await requireSession(req);
 
   const sessionId = req.params.id;
   if (!sessionId) return error(400, "session id required");
 
   const session = await loadSession(sessionId);
   if (!session) return error(404, "session not found");
+  if (session.ownerId !== principal.sub) return error(403, "not your session");
 
   const b = (req.body ?? {}) as Record<string, unknown>;
   // Use the caller's signal text if provided; fall back to the original context.
@@ -180,7 +184,7 @@ export const nextTrack: Handler = async (req) => {
   }
 
   // Append to played list and persist.
-  await saveSession(sessionId, session.context, [...session.played, trackId]);
+  await saveSession(sessionId, session.context, [...session.played, trackId], session.ownerId);
 
   const track = candidates.find((c) => c.id === trackId)!;
 
