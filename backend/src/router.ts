@@ -14,6 +14,7 @@ import { summary as artistSummary, create as artistCreate } from "./handlers/art
 import * as artistContent from "./handlers/artist-content.ts";
 import * as superfan from "./handlers/superfan.ts";
 import { discover } from "./handlers/discover.ts";
+import { startSession, nextTrack } from "./handlers/sessions.ts";
 
 interface Route {
   method: string;
@@ -42,6 +43,9 @@ const ROUTES: Route[] = [
   compile("POST", "/auth/logout", auth.logout),
 
   compile("POST", "/discover", discover),
+
+  compile("POST", "/sessions", startSession),
+  compile("POST", "/sessions/{id}/next", nextTrack),
 
   compile("GET", "/catalog", catalog.catalog),
   compile("GET", "/tracks/{trackId}", catalog.track),

@@ -7,20 +7,26 @@ import { embed } from "../lib/embeddings.ts";
 import { getCatalog, type CatalogTrack } from "../domain/catalog.ts";
 import { parseConstraints, buildDiscoverSql, type DiscoverBody } from "../domain/discovery.ts";
 
-export const discover: Handler = async (req) => {
-  if (!vectorConfigured()) return error(503, "vector search not configured");
-
-  const b = (req.body ?? {}) as Record<string, unknown>;
-  const vibe = typeof b.vibe === "string" ? b.vibe.trim() : "";
-  if (!vibe) return error(400, "vibe required");
-
+/** Shared discovery helper: embed vibe → vector ANN search → hydrated CatalogTrack list.
+ *  Called by both the /discover handler and the DJ session endpoints to avoid duplication.
+ *  Callers are responsible for the vectorConfigured() guard before calling this. */
+export async function runDiscovery(
+  vibe: string,
+  opts: {
+    limit?: number;
+    bpmMin?: number;
+    bpmMax?: number;
+    maxEnergy?: number;
+    allowExplicit?: boolean;
+  } = {},
+): Promise<Array<CatalogTrack & { score: number }>> {
   const constraints = parseConstraints({
     vibe,
-    limit: typeof b.limit === "number" ? b.limit : undefined,
-    bpmMin: typeof b.bpmMin === "number" ? b.bpmMin : undefined,
-    bpmMax: typeof b.bpmMax === "number" ? b.bpmMax : undefined,
-    maxEnergy: typeof b.maxEnergy === "number" ? b.maxEnergy : undefined,
-    allowExplicit: b.allowExplicit === true,
+    limit: opts.limit,
+    bpmMin: opts.bpmMin,
+    bpmMax: opts.bpmMax,
+    maxEnergy: opts.maxEnergy,
+    allowExplicit: opts.allowExplicit,
   } as DiscoverBody);
 
   // 1. Embed the vibe string → vector literal
@@ -41,10 +47,26 @@ export const discover: Handler = async (req) => {
   const results: Array<CatalogTrack & { score: number }> = [];
   for (const row of rows) {
     const track = trackMap.get(row.track_id);
-    if (track) {
-      results.push({ ...track, score: row.score });
-    }
+    if (track) results.push({ ...track, score: row.score });
   }
+
+  return results;
+}
+
+export const discover: Handler = async (req) => {
+  if (!vectorConfigured()) return error(503, "vector search not configured");
+
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const vibe = typeof b.vibe === "string" ? b.vibe.trim() : "";
+  if (!vibe) return error(400, "vibe required");
+
+  const results = await runDiscovery(vibe, {
+    limit: typeof b.limit === "number" ? b.limit : undefined,
+    bpmMin: typeof b.bpmMin === "number" ? b.bpmMin : undefined,
+    bpmMax: typeof b.bpmMax === "number" ? b.bpmMax : undefined,
+    maxEnergy: typeof b.maxEnergy === "number" ? b.maxEnergy : undefined,
+    allowExplicit: b.allowExplicit === true,
+  });
 
   return ok({ results });
 };
