@@ -66,7 +66,7 @@ Each unit has one job, a defined interface, and isolated internals.
 **Job:** turn natural-language *intent* into ranked, licensed, streamable tracks — and sequence them as a reactive DJ.
 
 - **Enrichment pipeline:** on track upload (S3 event → Lambda), derive structured metadata (mood, genre, BPM, musical key, energy, instrumentation, use-case tags) and a **text embedding** of that descriptor (Amazon Bedrock — Titan/Cohere embeddings). Idempotent, re-runnable.
-- **Vector index as a CQRS read projection:** the same projector pattern that feeds the DSQL ledger feeds a **vector read-store**. This keeps the index consistent with the existing event flow rather than being a bolt-on. Production store options, decided by ops fit (see §6): pgvector on Aurora PostgreSQL, OpenSearch Serverless vector, or S3 Vectors. For the catalog scale at launch, vectors may also live in DSQL/DynamoDB with cosine ranked in the query Lambda — same external behavior.
+- **Vector index as a CQRS read projection:** the same projector pattern that feeds the DSQL ledger feeds a **vector read-store** — committed to **Aurora PostgreSQL Serverless v2 + `pgvector`** (HNSW index), running **scale-to-zero** (min 0 ACU, auto-pause). The projector writes Bedrock Titan v2 embeddings (1024-dim) there on track upsert; discovery reads via `ORDER BY embedding <=> $query` with metadata filters. Keeps the index consistent with the existing event flow and meaningfully uses a *second* permitted AWS database (see §6).
 - **Query path:** NL scene → embed → vector nearest-neighbour → metadata re-rank/filter (BPM range, energy, explicit-content, duration, licensing scope) → ranked candidates with scores + reasons.
 - **DJ session layer:** stateful. Maintains an energy curve, no-repeat window, and transition timing; given a *signal* (game event, time of day, "raise the energy") it picks the *next* track and a transition. This is the differentiator over a static playlist — it reads the moment and reacts.
 
@@ -131,8 +131,8 @@ Right database per job, unified by one event flow:
                               │ Streams                   │ projection
                               ▼                           ▼
                        ┌──────────────┐         ┌────────────────────┐
-                       │  Projector   │────────▶│  Vector read-store  │
-                       │  (sole writer)│        │  (semantic index)   │
+                       │  Projector   │────────▶│  Aurora PG SLSv2   │
+                       │  (sole writer)│        │  pgvector (→0 ACU) │
                        └──────┬───────┘         └────────────────────┘
                               │
                               ▼
@@ -147,7 +147,7 @@ Right database per job, unified by one event flow:
 
 - **DynamoDB** — hot command path: meter events, wallet balances, idempotency, DJ session state. Single-digit-ms, scales to millions of concurrent metered streams (the "million-scale" narrative).
 - **Aurora DSQL** — relational system of record: tenants, catalog + enrichment, append-only royalty ledger, usage rollups, payouts. Distributed, serverless, active-active.
-- **Vector read-store** — semantic discovery projection (the new read model).
+- **Aurora PostgreSQL Serverless v2 + pgvector** — semantic discovery read projection (HNSW ANN, Titan v2 1024-dim), **scale-to-zero** (min 0 ACU). A *permitted* hackathon database, used as a true CQRS read model fed by the projector; Lambda reads via the RDS Data API.
 - **S3 + CloudFront** — encrypted, signed audio delivery; bytes never touch Lambda in prod.
 
 ---
@@ -185,7 +185,14 @@ Aurora DSQL is Postgres-*compatible* but supports only a subset of extensions; *
 | **OpenSearch Serverless (vector)** | Scales, managed, strong semantic story | Cost; another service |
 | **S3 Vectors** | Cheap, novel, fresh AWS angle | Newest/least proven |
 
-**Decision:** launch with **app-side cosine over vectors stored in the existing primary DB** (no new infra, identical external behavior), and document pgvector/OpenSearch as the named scale path in the architecture diagram. Revisit when catalog size warrants.
+**Decision (committed): Aurora PostgreSQL Serverless v2 + `pgvector`, scale-to-zero.** Real pgvector, running, serverless to ~$0 idle:
+
+- **Serverless + scale-to-zero:** capacity range **min 0 ACU** → max N. After an inactivity window the cluster **auto-pauses to 0 ACU** (storage-only cost) and resumes on the next connection. Honest caveat: the first query after a pause pays a **resume latency (~10–15s)** — mitigate with a low-frequency warm-ping or a 0.5-ACU floor where cold starts are unacceptable.
+- **pgvector:** `CREATE EXTENSION vector;`, `track_vectors(track_id uuid pk, embedding vector(1024), bpm int, energy real, explicit bool, …)`, **HNSW** index for high-recall ANN. Embeddings from **Bedrock Titan Text Embeddings V2 @ 1024 dims**.
+- **Lambda access:** the **RDS Data API** (HTTP, IAM-auth, no persistent connections) — the right fit for Lambda + scale-to-zero, since there is no connection pool to strand when the cluster pauses. RDS Proxy is the alternative when warm latency matters more than connection-free simplicity.
+- **Why this, not DSQL:** Aurora DSQL does not expose arbitrary extensions like pgvector; Aurora PostgreSQL does. Running both is deliberate — the platform uses **three** permitted AWS databases, each for the job it is best at: DynamoDB (hot meter), DSQL (relational SoR), Aurora PG (vector read-model).
+
+OpenSearch Serverless and S3 Vectors remain documented alternates for very large catalogs.
 
 ---
 
