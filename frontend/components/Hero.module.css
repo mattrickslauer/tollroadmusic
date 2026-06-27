@@ -1,0 +1,207 @@
+/* ================================================================
+   Night Drive Hero — co-located CSS Module
+   All colours via --nd-* tokens from styles/tokens.css.
+   Keyframes + marquee/pulse utilities come from styles/landing.css
+   (imported globally by the marketing layout — no re-import needed).
+   RULE: zero overrides of existing global selectors.
+   ================================================================ */
+
+/* ------------------------------------------------------------------
+   Section shell
+   ------------------------------------------------------------------ */
+
+.hero {
+  position: relative;
+  background: var(--nd-bg);
+  overflow: hidden;
+  border-bottom: 1px solid var(--nd-line);
+}
+
+/* Ambient radial glow — amber behind copy, faint lime behind meter */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 75% 55% at 22% 42%, rgba(255, 194, 75, 0.08) 0%, transparent 68%),
+    radial-gradient(ellipse 50% 40% at 78% 80%,  rgba(198, 255, 74, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Lane-stripe texture layer — using the nd-lane-bg global utility class  */
+.laneLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.28;
+}
+
+/* ------------------------------------------------------------------
+   Main content grid
+   ------------------------------------------------------------------ */
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.18fr 0.82fr;
+  gap: clamp(2.5rem, 6vw, 5rem);
+  align-items: start;
+  padding-top: clamp(5rem, 10vw, 9rem);
+  padding-bottom: clamp(4rem, 8vw, 7rem);
+}
+
+@media (max-width: 860px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: clamp(2.5rem, 6vw, 4rem);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Left column — editorial copy
+   ------------------------------------------------------------------ */
+
+.copy {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Eyebrow: mono, uppercase, amber, with live-status dot */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nd-amber);
+  margin-bottom: 1.1rem;
+}
+
+.eyebrowDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nd-lime);
+  flex-shrink: 0;
+  /* nd-meter-pulse animation applied via global utility class */
+}
+
+/* Oversized display headline — Fraunces, tight, graphic */
+.headline {
+  font-family: var(--font-display);
+  font-size: var(--nd-display);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  color: var(--nd-ink);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* Line 2 of headline in amber — "Artists keep the rest." */
+.headlineAccent {
+  display: block;
+  color: var(--nd-amber);
+  text-shadow: 0 0 60px var(--nd-amber-glow);
+}
+
+/* Subhead — honest-cut framing, body font */
+.subhead {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--nd-ink-dim);
+  max-width: 46ch;
+  margin-bottom: 0.5rem;
+}
+
+.subhead strong {
+  color: var(--nd-ink);
+  font-weight: 600;
+}
+
+/* Rate note — mono data annotation, below subhead */
+.rateNote {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  font-weight: 400;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--nd-ink-faint);
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--nd-line);
+}
+
+.rateNoteAmount {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--nd-blue);
+  text-shadow: 0 0 12px var(--nd-blue-glow);
+}
+
+.rateNoteDivider {
+  color: var(--nd-line-2);
+}
+
+/* CTA row */
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------
+   Right column — live Meter
+   ------------------------------------------------------------------ */
+
+.meterCol {
+  position: relative;
+  padding-top: 0.25rem;
+}
+
+/* ------------------------------------------------------------------
+   Marquee ticker strip at the hero bottom
+   ------------------------------------------------------------------ */
+
+.ticker {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--nd-line);
+  background: var(--nd-bg-2);
+  padding: 0.8rem 0;
+}
+
+/* Each item inside the marquee track */
+.tickerItem {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nd-ink-faint);
+  white-space: nowrap;
+}
+
+/* Amber diamond separator between ticker items */
+.tickerSep {
+  display: inline-block;
+  color: var(--nd-amber);
+  margin: 0 1.4rem;
+  font-size: 0.55rem;
+  line-height: 1;
+  vertical-align: middle;
+  opacity: 0.7;
+}

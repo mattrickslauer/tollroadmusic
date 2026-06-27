@@ -1,0 +1,342 @@
+/* ============================================================
+   MeteredSteps — Night Drive bold utility framing
+   All tokens from --nd-* (tokens.css). Motion in landing.css.
+   ============================================================ */
+
+.section {
+  background: var(--nd-bg);
+  border-top: 1px solid var(--nd-line);
+  border-bottom: 1px solid var(--nd-line);
+  padding: clamp(5rem, 10vw, 9rem) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle vertical lane stripes */
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,0.025) 0px,
+    rgba(255,255,255,0.025) 1px,
+    transparent 1px,
+    transparent 80px
+  );
+  pointer-events: none;
+}
+
+/* ---- Header ---- */
+
+.head {
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--nd-blue);
+  margin-bottom: 0.75rem;
+}
+
+.eyebrowDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nd-blue);
+  margin-right: 0.6rem;
+  vertical-align: middle;
+  box-shadow: 0 0 8px 2px var(--nd-blue-glow);
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-size: var(--nd-display);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  color: var(--nd-ink);
+  margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+}
+
+.headlineAccent {
+  color: var(--nd-amber);
+}
+
+.subhead {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--nd-ink-dim);
+  max-width: 52ch;
+  margin: 0;
+}
+
+/* ---- Steps grid ---- */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid var(--nd-line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.step {
+  padding: clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--nd-bg-2);
+  border-right: 1px solid var(--nd-line);
+  transition: background 0.3s ease;
+}
+
+.step:last-child {
+  border-right: none;
+}
+
+.step:hover {
+  background: var(--nd-bg-3);
+}
+
+/* ---- Step number (oversized, bleeds) ---- */
+
+.stepNum {
+  font-family: var(--font-display);
+  font-size: var(--nd-stat);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--nd-line-2);
+  margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+  user-select: none;
+  transition: color 0.3s ease;
+}
+
+.step:hover .stepNum {
+  color: rgba(255,255,255,0.12);
+}
+
+.stepNumAmber {
+  color: var(--nd-amber-glow);
+}
+
+.stepNumBlue {
+  color: var(--nd-blue-glow);
+}
+
+.stepNumLime {
+  color: var(--nd-lime-glow);
+}
+
+/* ---- Icon row ---- */
+
+.iconRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.iconWrap {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.iconWrap svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Icon colors per step */
+.stepAmber .iconWrap { color: var(--nd-amber); }
+.stepBlue .iconWrap  { color: var(--nd-blue); }
+.stepLime .iconWrap  { color: var(--nd-lime); }
+
+/* ---- Label / caption above title ---- */
+
+.stepLabel {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.stepAmber .stepLabel { color: var(--nd-amber); }
+.stepBlue .stepLabel  { color: var(--nd-blue); }
+.stepLime .stepLabel  { color: var(--nd-lime); }
+
+/* ---- Title ---- */
+
+.stepTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  color: var(--nd-ink);
+  margin: 0.5rem 0 clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+/* ---- Body copy ---- */
+
+.stepBody {
+  font-family: var(--font-body);
+  font-size: 0.97rem;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--nd-ink-dim);
+  margin: 0 0 1.25rem;
+  flex-grow: 1;
+}
+
+/* ---- Stat callout ---- */
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--nd-line);
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.stepAmber .statValue { color: var(--nd-amber); }
+.stepBlue .statValue  { color: var(--nd-blue); }
+.stepLime .statValue  { color: var(--nd-lime); }
+
+.statCaption {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--nd-ink-faint);
+}
+
+/* ---- Live meter dot (step 2 only) ---- */
+
+.liveDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nd-blue);
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  box-shadow: 0 0 6px 2px var(--nd-blue-glow);
+}
+
+/* ---- Artist cut badge (step 3) ---- */
+
+.cutBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(198,255,74,0.08);
+  border: 1px solid rgba(198,255,74,0.22);
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--nd-lime);
+  margin-top: 0.75rem;
+  width: fit-content;
+}
+
+/* ---- Footer pull-quote ---- */
+
+.pullQuote {
+  margin-top: clamp(3rem, 5vw, 4.5rem);
+  padding: clamp(1.5rem, 3vw, 2rem) clamp(1.5rem, 3vw, 2.5rem);
+  border: 1px solid var(--nd-line);
+  border-radius: var(--r-lg);
+  background: var(--nd-bg-2);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.pullQuoteBar {
+  width: 3px;
+  height: 100%;
+  min-height: 3rem;
+  background: var(--nd-amber);
+  border-radius: 2px;
+  box-shadow: 0 0 8px 2px var(--nd-amber-glow);
+  align-self: stretch;
+}
+
+.pullQuoteText {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.15rem, 2.5vw, 1.7rem);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--nd-ink-dim);
+  margin: 0;
+}
+
+.pullQuoteEmph {
+  color: var(--nd-ink);
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 860px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .step {
+    border-right: none;
+    border-bottom: 1px solid var(--nd-line);
+  }
+
+  .step:last-child {
+    border-bottom: none;
+  }
+
+  .pullQuote {
+    grid-template-columns: 1fr;
+  }
+
+  .pullQuoteBar {
+    width: 100%;
+    height: 3px;
+    min-height: unset;
+  }
+}
+
+@media (max-width: 600px) {
+  .stepNum {
+    font-size: clamp(2.5rem, 15vw, 4.5rem);
+  }
+}

@@ -1,0 +1,574 @@
+/* ============================================================
+   MiddlemanFlow.module.css — "The Honest Cut" section
+   Consumes: --nd-* tokens from tokens.css, keyframe utils from landing.css
+   Scope: co-located with MiddlemanFlow.tsx; zero overlap with global selectors.
+   ============================================================ */
+
+/* ─── Root section ─────────────────────────────────────────── */
+
+.root {
+  background: var(--nd-bg);
+  padding: clamp(5rem, 10vw, 9rem) 0;
+  border-top: 1px solid var(--nd-line);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle lane-stripe texture via pseudo — no extra DOM node */
+.root::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent calc(50% - 0.5px),
+    var(--nd-line) calc(50% - 0.5px),
+    var(--nd-line) 50%,
+    transparent 50%
+  );
+  background-size: 80px 100%;
+  background-repeat: repeat-x;
+  background-position: center top;
+  opacity: 0.35;
+}
+
+/* ─── Header ────────────────────────────────────────────────── */
+
+.header {
+  max-width: 760px;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+  position: relative;
+}
+
+.eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nd-amber);
+  margin-bottom: 0.65rem;
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-size: var(--nd-display);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--nd-ink);
+  margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+}
+
+.headline em {
+  font-style: italic;
+  color: var(--nd-amber);
+  font-weight: 700;
+}
+
+.intro {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: var(--nd-ink-dim);
+  max-width: 600px;
+  margin: 0;
+}
+
+/* ─── Comparisons container ─────────────────────────────────── */
+
+.comparisons {
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  position: relative;
+}
+
+/* ─── Scenario panel ────────────────────────────────────────── */
+
+.scenario {
+  background: var(--nd-bg-2);
+  border: 1px solid var(--nd-line);
+  border-radius: 12px;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  opacity: 0.72; /* old-way: intentionally dimmed */
+}
+
+.scenarioNew {
+  opacity: 1;
+  border-color: var(--nd-line-2);
+  position: relative;
+  overflow: hidden;
+}
+
+/* warm gradient wash — amber top-left → lime bottom-right */
+.scenarioNew::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 194, 75, 0.04) 0%,
+    transparent 50%,
+    rgba(198, 255, 74, 0.05) 100%
+  );
+}
+
+.scenarioHead {
+  margin-bottom: 1.25rem;
+}
+
+.tagOld {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nd-ink-faint);
+  padding: 0.28rem 0.65rem;
+  border: 1px solid var(--nd-line);
+  border-radius: 4px;
+}
+
+.tagNew {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nd-amber);
+  padding: 0.28rem 0.65rem;
+  border: 1px solid var(--nd-amber);
+  border-radius: 4px;
+  background: rgba(255, 194, 75, 0.08);
+  text-shadow: 0 0 12px var(--nd-amber-glow);
+}
+
+/* ─── Flow row (5-col grid: node · conn · node · conn · node) ── */
+
+.flowRow {
+  display: grid;
+  grid-template-columns: 1fr 2.5rem 1.5fr 2.5rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 620px) {
+  .flowRow {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
+
+/* ─── Node ──────────────────────────────────────────────────── */
+
+.node {
+  background: var(--nd-bg-3, rgba(21, 21, 36, 0.6));
+  border: 1px solid var(--nd-line);
+  border-radius: 10px;
+  padding: 1rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+  position: relative;
+}
+
+.ico {
+  width: 1.875rem;
+  height: 1.875rem;
+  color: var(--nd-ink-faint);
+  margin-bottom: 0.1rem;
+}
+
+.icoNew {
+  color: var(--nd-ink-dim);
+}
+
+.icoLime {
+  color: var(--nd-lime);
+}
+
+.nodeLabel {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nd-ink);
+}
+
+.nodeData {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--nd-ink-dim);
+}
+
+.nodeDataBlue {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--nd-blue);
+}
+
+.nodeDataLime {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--nd-lime);
+}
+
+.nodeDataPennies {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--nd-ink-faint);
+}
+
+.nodeDataMystery {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--nd-ink-faint);
+}
+
+.nodeSub {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--nd-ink-faint);
+  letter-spacing: 0.05em;
+  margin-top: 0.05rem;
+}
+
+/* Old platform node — mystery/opaque treatment */
+.nodePool {
+  border-style: dashed;
+  border-color: var(--nd-ink-faint);
+  background: rgba(10, 10, 15, 0.8);
+}
+
+/* New You node */
+.nodeYouNew {
+  border-color: rgba(90, 215, 255, 0.16);
+}
+
+/* New Artist node */
+.nodeArtistNew {
+  border-color: rgba(198, 255, 74, 0.2);
+  background: rgba(198, 255, 74, 0.04);
+}
+
+/* ─── TollRoad "honest cut" node ────────────────────────────── */
+
+.nodeToll {
+  border-color: var(--nd-line-2);
+  background: var(--nd-bg-2);
+  padding: 0.75rem 0.875rem;
+  gap: 0.4rem;
+}
+
+/* Split bar: amber (our cut) | lime (to artist) */
+.splitBar {
+  display: flex;
+  width: 100%;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid var(--nd-line-2);
+  height: 4.25rem;
+}
+
+.splitAmber {
+  flex: 0 0 36%;
+  background: rgba(255, 194, 75, 0.14);
+  border-right: 1px solid rgba(255, 194, 75, 0.32);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.4rem 0.3rem;
+}
+
+.splitLime {
+  flex: 1;
+  background: rgba(198, 255, 74, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.4rem 0.3rem;
+}
+
+.splitLabelAmber {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nd-amber);
+  line-height: 1;
+}
+
+.splitLabelLime {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--nd-lime);
+  line-height: 1;
+}
+
+.splitSub {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  color: var(--nd-ink-faint);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.tollLabel {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nd-ink-dim);
+}
+
+.tollSub {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--nd-ink-faint);
+  letter-spacing: 0.07em;
+}
+
+/* ─── Connectors ────────────────────────────────────────────── */
+
+.connOld,
+.connNew {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.connDirect {
+  gap: 0.15rem;
+}
+
+/* On mobile, connectors become vertical separators */
+@media (max-width: 620px) {
+  .connOld,
+  .connNew,
+  .connDirect {
+    align-items: center;
+    padding: 0.1rem 0;
+    min-height: 1.25rem;
+  }
+}
+
+.connLine {
+  position: relative;
+  height: 2px;
+  width: 100%;
+  min-width: 1.5rem;
+  background: var(--nd-line);
+}
+
+/* Rightward arrowhead via border trick */
+.connLine::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--nd-line);
+}
+
+/* Mobile: vertical arrow pointing down */
+@media (max-width: 620px) {
+  .connLine {
+    width: 2px;
+    height: 1.25rem;
+    min-width: unset;
+    margin: 0 auto;
+  }
+
+  .connLine::after {
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: -4px;
+    transform: translateX(-50%);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--nd-line);
+    border-bottom: none;
+  }
+}
+
+.connShrink .connLine {
+  opacity: 0.32;
+  width: 55%;
+}
+
+.connLineAmber {
+  background: rgba(255, 194, 75, 0.45);
+}
+
+.connLineAmber::after {
+  border-left-color: rgba(255, 194, 75, 0.45);
+}
+
+@media (max-width: 620px) {
+  .connLineAmber::after {
+    border-top-color: rgba(255, 194, 75, 0.45);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: none;
+  }
+}
+
+.connLineLime {
+  background: var(--nd-lime);
+  opacity: 0.7;
+}
+
+.connLineLime::after {
+  border-left-color: var(--nd-lime);
+}
+
+@media (max-width: 620px) {
+  .connLineLime::after {
+    border-top-color: var(--nd-lime);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: none;
+  }
+}
+
+.directLabel {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--nd-lime);
+  text-align: center;
+  line-height: 1;
+}
+
+/* ─── Scenario caption ─────────────────────────────────────── */
+
+.scenarioCaption {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--nd-ink-faint);
+  border-top: 1px solid var(--nd-line);
+  padding-top: 1rem;
+  margin: 0;
+}
+
+.scenarioCaptionNew {
+  color: var(--nd-ink-dim);
+}
+
+/* ─── VS divider ────────────────────────────────────────────── */
+
+.vsRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.vsLine {
+  flex: 1;
+  height: 1px;
+  background: var(--nd-line);
+  display: block;
+}
+
+.vsLabel {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--nd-ink-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ─── Pull-quote ────────────────────────────────────────────── */
+
+.pullquote {
+  margin: clamp(2rem, 5vw, 4rem) 0;
+  padding: clamp(1.5rem, 3vw, 2.5rem) 0;
+  border-top: 1px solid var(--nd-line);
+  border-bottom: 1px solid var(--nd-line);
+}
+
+.pullquote blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+.pullquote p {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.5vw, 2.6rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--nd-ink-dim);
+  margin: 0;
+  max-width: 900px;
+}
+
+/* ─── Editorial columns ─────────────────────────────────────── */
+
+.editorial {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+@media (max-width: 680px) {
+  .editorial {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+.editCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.editHead {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--nd-amber);
+  margin: 0;
+}
+
+.editBody {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.72;
+  color: var(--nd-ink-dim);
+  margin: 0;
+}
