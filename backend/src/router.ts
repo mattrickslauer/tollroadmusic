@@ -13,6 +13,7 @@ import * as library from "./handlers/library.ts";
 import { summary as artistSummary, create as artistCreate } from "./handlers/artist.ts";
 import * as artistContent from "./handlers/artist-content.ts";
 import * as superfan from "./handlers/superfan.ts";
+import { discover } from "./handlers/discover.ts";
 
 interface Route {
   method: string;
@@ -39,6 +40,8 @@ const ROUTES: Route[] = [
   compile("POST", "/auth/otp/verify", auth.otpVerify),
   compile("GET", "/auth/me", auth.me),
   compile("POST", "/auth/logout", auth.logout),
+
+  compile("POST", "/discover", discover),
 
   compile("GET", "/catalog", catalog.catalog),
   compile("GET", "/tracks/{trackId}", catalog.track),
