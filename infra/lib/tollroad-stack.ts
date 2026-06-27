@@ -542,6 +542,10 @@ export class TollroadStack extends cdk.Stack {
       value: dsqlEndpoint,
       description: "Set as TOLLROAD_DSQL_ENDPOINT for the app + migration",
     });
+    new cdk.CfnOutput(this, "VectorHost", {
+      value: vectorCluster.clusterEndpoint.hostname,
+      description: "Aurora vector cluster endpoint hostname (set as TOLLROAD_VECTOR_HOST)",
+    });
     new cdk.CfnOutput(this, "AudioBucketName", {
       value: audioBucket.bucketName,
       description: "Set as TOLLROAD_AUDIO_BUCKET for presigned uploads",
