@@ -26,6 +26,34 @@
   --bond-tier4-glow: rgba(255, 77, 114, 0.45);
 }
 
+/* ============================================================
+   Night Drive — bold consumer-section identity (additive)
+   These --nd-* tokens are ONLY for the 5 consumer landing sections.
+   Infra/dev sections continue to use the tokens above.
+   ============================================================ */
+:root {
+  --nd-bg: #0a0a0f;
+  --nd-bg-2: #0e0e18;
+  --nd-bg-3: #15152499;       /* translucent card over bg */
+  --nd-line: rgba(255,255,255,0.10);
+  --nd-line-2: rgba(255,255,255,0.18);
+  --nd-ink: #f4f4fb;
+  --nd-ink-dim: #a8a8c6;
+  --nd-ink-faint: #70708e;
+  --nd-amber: #ffc24b;        /* electric gold — energy/headlines */
+  --nd-amber-deep: #e09a16;
+  --nd-lime: #c6ff4a;         /* acid lime — earned / artist money */
+  --nd-lime-deep: #97d800;
+  --nd-blue: #5ad7ff;         /* electric blue — data / labels */
+  --nd-amber-glow: rgba(255,194,75,0.22);
+  --nd-lime-glow: rgba(198,255,74,0.20);
+  --nd-blue-glow: rgba(90,215,255,0.16);
+  --nd-display: clamp(2.8rem, 7vw, 6.6rem);   /* oversized headlines */
+  --nd-h2: clamp(2rem, 5vw, 4.1rem);
+  --nd-stat: clamp(3rem, 9vw, 8rem);          /* big number graphics */
+  --nd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .app-dark {
   /* surfaces — near-black, layered for depth */
   --app-bg: #060608;

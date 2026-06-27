@@ -1,0 +1,157 @@
+/* ============================================================
+   landing.css — Night Drive shared keyframes + utility classes
+   Consumed by: Hero, MiddlemanFlow, Outcomes, MeteredSteps, Closer
+   Rule: NO specific-section styles here. NO overrides of existing
+   global selectors. Primitives only.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   Keyframes — all motion gated by prefers-reduced-motion below
+   ---------------------------------------------------------- */
+
+@keyframes nd-marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes nd-meter-pulse-kf {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--nd-lime-glow, rgba(198,255,74,0.20));
+  }
+  50% {
+    opacity: 0.78;
+    box-shadow: 0 0 18px 4px var(--nd-lime-glow, rgba(198,255,74,0.20));
+  }
+}
+
+@keyframes nd-amber-pulse-kf {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--nd-amber-glow); }
+  50%       { opacity: 0.82; box-shadow: 0 0 16px 4px var(--nd-amber-glow); }
+}
+
+@keyframes nd-fade-up-kf {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ----------------------------------------------------------
+   Marquee / ticker utility
+   Usage: wrap the track in .nd-marquee-wrap; put duplicate
+   content side-by-side inside .nd-marquee-track so the scroll
+   is seamless. Set --nd-marquee-duration to taste (default 28s).
+   ---------------------------------------------------------- */
+
+.nd-marquee-wrap {
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.nd-marquee-track {
+  display: inline-flex;
+  gap: 0;
+  /* animation applied below, outside reduced-motion guard */
+}
+
+/* ----------------------------------------------------------
+   Meter pulse utility
+   Usage: add .nd-meter-pulse to any element (a live counter,
+   a lime badge, a dot indicator). Pulses with lime glow.
+   ---------------------------------------------------------- */
+
+.nd-meter-pulse {
+  /* animation applied below */
+}
+
+/* ----------------------------------------------------------
+   Amber glow pulse — for amber highlights / active energy
+   ---------------------------------------------------------- */
+.nd-amber-pulse {
+  /* animation applied below */
+}
+
+/* ----------------------------------------------------------
+   Toll-lane marking background helper
+   Usage: add .nd-lane-bg to a section or wrapper to get the
+   subtle lane-stripe motif. Can be combined with a background-color.
+   ---------------------------------------------------------- */
+
+.nd-lane-bg {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent calc(50% - 1px),
+    var(--nd-line, rgba(255,255,255,0.10)) calc(50% - 1px),
+    var(--nd-line, rgba(255,255,255,0.10)) 50%,
+    transparent 50%
+  );
+  background-size: 80px 100%;
+  background-repeat: repeat-x;
+  background-position: center top;
+}
+
+/* Dashed centre-line variant (more road-like) */
+.nd-lane-dash {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--nd-amber, #ffc24b) 0,
+    var(--nd-amber, #ffc24b) 32px,
+    transparent 32px,
+    transparent 64px
+  );
+  background-size: 64px 2px;
+  background-repeat: repeat-x;
+  background-position: center center;
+}
+
+/* ----------------------------------------------------------
+   Fade-up animation utility (scroll reveal supplement)
+   Usage: add .nd-fade-up; optionally set --nd-fade-delay (e.g. 0.1s)
+   ---------------------------------------------------------- */
+
+.nd-fade-up {
+  /* applied below */
+}
+
+/* ----------------------------------------------------------
+   Motion — enabled only when user has no reduced-motion preference
+   ---------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .nd-marquee-track {
+    animation: nd-marquee-scroll var(--nd-marquee-duration, 28s) linear infinite;
+    will-change: transform;
+  }
+
+  .nd-meter-pulse {
+    animation: nd-meter-pulse-kf 2s ease-in-out infinite;
+  }
+
+  .nd-amber-pulse {
+    animation: nd-amber-pulse-kf 2.4s ease-in-out infinite;
+  }
+
+  .nd-fade-up {
+    animation: nd-fade-up-kf 0.55s var(--nd-ease, cubic-bezier(0.22, 1, 0.36, 1))
+               var(--nd-fade-delay, 0s) both;
+  }
+}
+
+/* Reduced-motion: keep static indicator so content is still legible */
+@media (prefers-reduced-motion: reduce) {
+  .nd-marquee-track {
+    animation: none;
+    /* show a static first-half so text is visible */
+  }
+  .nd-meter-pulse,
+  .nd-amber-pulse {
+    animation: none;
+  }
+  .nd-fade-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
