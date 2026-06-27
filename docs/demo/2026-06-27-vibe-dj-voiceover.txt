@@ -1,0 +1,51 @@
+TOLLROAD VIBE DJ — VOICEOVER ONLY (read script)
+Target runtime ~2:45. Delivery: calm, certain, never over-hyped. Pause where marked.
+
+
+[ACT 1 — HOOK]
+
+(cold open — no narration; let the music land)
+
+
+This isn't a person searching a music library. It's an AI agent —
+and it's about to buy music by the minute.
+
+
+(FOUNDER, to camera)
+The agent doesn't have a login. It has a wallet.
+
+
+(beat — music only; the track starts playing)
+
+
+[ACT 2 — PROOF]
+
+Every minute that plays, the meter charges the agent's wallet —
+idempotent, to the millicent. This is metering that already runs in production.
+
+
+One event, three AWS databases — each doing the one job it's best at.
+The hot meter, the system of record, and semantic vibe search.
+
+
+(FOUNDER, to camera)
+Every minute played, a real artist gets paid for the seconds people
+actually listened. That royalty ledger isn't a mock-up — it's live right now.
+
+
+(beat — fast cut, music only)
+
+
+[ACT 3 — VISION]
+
+Any app. Any agent. Score the moment with licensed music —
+just by describing the vibe.
+
+
+(FOUNDER, to camera)
+The model is simple: real creators, direct-licensed, paid per second of use —
+distributed to the agents that are becoming the customers.
+The rails are already running. That's the moat.
+
+
+(end card — music resolves)
