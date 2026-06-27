@@ -1,18 +1,13 @@
 // Catalog embedding backfill — reads every track from Aurora DSQL,
 // builds a text descriptor, embeds it with Amazon Bedrock Titan v2,
-// and upserts the vector into the pgvector cluster.
+// and writes the vector into the DynamoDB single-table (TVEC partition).
 //
-// Idempotent: ON CONFLICT (track_id) DO UPDATE — safe to re-run.
+// Idempotent: DynamoDB PutItem overwrites any existing item — safe to re-run.
 //
 // Usage:
-//   TOLLROAD_DSQL_ENDPOINT=<endpoint>            \
-//   TOLLROAD_VECTOR_HOST=<rds-endpoint>          \
-//   TOLLROAD_VECTOR_MASTER_PASSWORD=<password>   \
-//   [TOLLROAD_DSQL_REGION=us-east-1]             \
-//   [TOLLROAD_VECTOR_REGION=us-east-1]           \
-//   [TOLLROAD_VECTOR_PORT=5432]                  \
-//   [TOLLROAD_VECTOR_DB=tollroad]                \
-//   [TOLLROAD_VECTOR_ADMIN_USER=postgres]        \
+//   TOLLROAD_DSQL_ENDPOINT=<endpoint>   \
+//   TOLLROAD_TABLE=<dynamodb-table>     \
+//   [TOLLROAD_DSQL_REGION=us-east-1]   \
 //   node scripts/enrich-catalog.mjs
 
 import { Client } from "pg";
@@ -21,6 +16,8 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -28,13 +25,7 @@ import {
 
 const DSQL_ENDPOINT = process.env.TOLLROAD_DSQL_ENDPOINT;
 const DSQL_REGION = process.env.TOLLROAD_DSQL_REGION ?? "us-east-1";
-
-const VECTOR_HOST = process.env.TOLLROAD_VECTOR_HOST;
-const VECTOR_PORT = Number(process.env.TOLLROAD_VECTOR_PORT ?? "5432");
-const VECTOR_DB = process.env.TOLLROAD_VECTOR_DB ?? "tollroad";
-const VECTOR_ADMIN_USER = process.env.TOLLROAD_VECTOR_ADMIN_USER ?? "postgres";
-const VECTOR_MASTER_PASSWORD = process.env.TOLLROAD_VECTOR_MASTER_PASSWORD;
-const VECTOR_REGION = process.env.TOLLROAD_VECTOR_REGION ?? "us-east-1";
+const TABLE = process.env.TOLLROAD_TABLE;
 
 const BEDROCK_MODEL_ID = "amazon.titan-embed-text-v2:0";
 
@@ -42,12 +33,8 @@ if (!DSQL_ENDPOINT) {
   console.error("Set TOLLROAD_DSQL_ENDPOINT (from CDK DsqlEndpoint output)");
   process.exit(1);
 }
-if (!VECTOR_HOST) {
-  console.error("Set TOLLROAD_VECTOR_HOST (RDS pgvector endpoint)");
-  process.exit(1);
-}
-if (!VECTOR_MASTER_PASSWORD) {
-  console.error("Set TOLLROAD_VECTOR_MASTER_PASSWORD (Aurora master user password)");
+if (!TABLE) {
+  console.error("Set TOLLROAD_TABLE (DynamoDB single-table name)");
   process.exit(1);
 }
 
@@ -55,7 +42,7 @@ if (!VECTOR_MASTER_PASSWORD) {
 // Bedrock embed — constructed ONCE outside the loop (mirrors embeddings.ts)
 // ---------------------------------------------------------------------------
 
-const bedrockClient = new BedrockRuntimeClient({ region: VECTOR_REGION });
+const bedrockClient = new BedrockRuntimeClient({ region: DSQL_REGION });
 
 async function embed(text) {
   const body = JSON.stringify({
@@ -82,14 +69,6 @@ async function embed(text) {
 }
 
 // ---------------------------------------------------------------------------
-// pgvector literal: [v1,v2,...] (the format accepted by $2::vector)
-// ---------------------------------------------------------------------------
-
-function toVectorLiteral(embedding) {
-  return `[${embedding.join(",")}]`;
-}
-
-// ---------------------------------------------------------------------------
 // Descriptor builder — mirrors the brief's example + all readily available
 // catalog fields from the TRACKS_SQL join in catalog.ts.
 // ---------------------------------------------------------------------------
@@ -98,6 +77,13 @@ function buildDescriptor(row) {
   const genre = row.genre ? ` Genre: ${row.genre}.` : "";
   return `${row.title} by ${row.artist_name}.${genre}`;
 }
+
+// ---------------------------------------------------------------------------
+// DynamoDB doc-client — constructed ONCE, uses default credential chain
+// ---------------------------------------------------------------------------
+
+const dynamoClient = new DynamoDBClient({ region: DSQL_REGION });
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
 // ---------------------------------------------------------------------------
 // Main
@@ -137,47 +123,35 @@ async function main() {
     return;
   }
 
-  // --- 2. Connect to pgvector target (master password — mirrors migrate-vector.mjs) ---
-  const vectorClient = new Client({
-    host: VECTOR_HOST,
-    port: VECTOR_PORT,
-    user: VECTOR_ADMIN_USER,
-    database: VECTOR_DB,
-    password: VECTOR_MASTER_PASSWORD,
-    // TODO: pin Amazon RDS global-bundle.pem CA for cert verification before production
-    ssl: { rejectUnauthorized: false },
-  });
-
-  await vectorClient.connect();
-  console.log("Connected to pgvector target.");
-
-  // --- 3. Embed each track and upsert ---
-  const UPSERT_SQL = `
-    INSERT INTO track_vectors (track_id, embedding, updated_at)
-    VALUES ($1, $2::vector, now())
-    ON CONFLICT (track_id) DO UPDATE
-      SET embedding   = EXCLUDED.embedding,
-          updated_at  = now()
-  `;
+  // --- 2. Embed each track and write to DynamoDB (TVEC partition) ---
+  // Item shape matches backend/src/domain/vector-store.ts:
+  //   PK = "TVEC", SK = trackId, embedding = number[], updatedAt = ISO string
+  // DocumentClient marshals the number[] to DynamoDB List of Number automatically.
 
   let done = 0;
-  try {
-    for (const track of tracks) {
-      const descriptor = buildDescriptor(track);
-      const embedding = await embed(descriptor);
-      const vectorLiteral = toVectorLiteral(embedding);
+  for (const track of tracks) {
+    const descriptor = buildDescriptor(track);
+    const embedding = await embed(descriptor);
 
-      await vectorClient.query(UPSERT_SQL, [track.id, vectorLiteral]);
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE,
+        Item: {
+          PK: "TVEC",
+          SK: track.id,
+          embedding,
+          updatedAt: new Date().toISOString(),
+        },
+      }),
+    );
 
-      done++;
-      if (done % 10 === 0 || done === tracks.length) {
-        console.log(`embedded ${done}/${tracks.length} — last: "${descriptor}"`);
-      }
+    done++;
+    if (done % 10 === 0 || done === tracks.length) {
+      console.log(`embedded ${done}/${tracks.length} → DynamoDB`);
     }
-  } finally {
-    await vectorClient.end();
   }
-  console.log(`Done. Upserted ${done} track vectors.`);
+
+  console.log(`Done. Wrote ${done} track vectors to DynamoDB table "${TABLE}".`);
 }
 
 main().catch((err) => {

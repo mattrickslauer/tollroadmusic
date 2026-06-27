@@ -12,8 +12,6 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction, OutputFormat } from "aws-cdk-lib/aws-lambda-nodejs";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as rds from "aws-cdk-lib/aws-rds";
 
 /**
  * TollRoad data + billing layer.
@@ -88,37 +86,6 @@ export class TollroadStack extends cdk.Stack {
       actions: ["dsql:DbConnect"],
       resources: [dsqlCluster.attrResourceArn],
     });
-
-    // ---------------------------------------------------------------------
-    // VPC — minimal (no NAT cost); used by Aurora vector cluster + API Lambda
-    // ---------------------------------------------------------------------
-    const vpc = new ec2.Vpc(this, "TollroadVpc", { maxAzs: 2, natGateways: 0 });
-
-    // ---------------------------------------------------------------------
-    // Aurora PostgreSQL Serverless v2 — vector read-store (pgvector)
-    // Scale-to-zero: L2 serverlessV2MinCapacity is set to 0.5 (CDK ^2.160
-    // minimum) and the CFN escape hatch overrides it to 0 for true
-    // scale-to-zero, preferred over bumping the lib version.
-    // ---------------------------------------------------------------------
-    const vectorCluster = new rds.DatabaseCluster(this, "TollroadVector", {
-      engine: rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_16_4,
-      }),
-      vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC }, // no NAT cost; lock SG instead
-      serverlessV2MinCapacity: 0.5, // L2 lower bound; CFN escape hatch sets true 0 below
-      serverlessV2MaxCapacity: 4,
-      writer: rds.ClusterInstance.serverlessV2("writer", { publiclyAccessible: true }),
-      defaultDatabaseName: "tollroad",
-      iamAuthentication: true,
-      enableDataApi: false,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-    // CFN escape hatch: sets minCapacity to 0 for true scale-to-zero without
-    // requiring a cdk-lib bump (L2 property floor is 0.5 on ^2.160).
-    (vectorCluster.node.defaultChild as rds.CfnDBCluster).serverlessV2ScalingConfiguration = {
-      minCapacity: 0, maxCapacity: 4, secondsUntilAutoPause: 300,
-    };
 
     // ---------------------------------------------------------------------
     // KMS — the CMK that protects audio at rest (the "stream keys")
@@ -362,13 +329,6 @@ export class TollroadStack extends cdk.Stack {
       // table; the Streams → projector pipeline then builds the DSQL read models
       // (backend/src/domain/wallet-store.ts).
       TOLLROAD_TABLE: table.tableName,
-      // Aurora PG Serverless v2 vector read-store (pgvector). IAM auth: the
-      // Lambda connects as vector_app using rds-db:connect (granted below).
-      TOLLROAD_VECTOR_HOST: vectorCluster.clusterEndpoint.hostname,
-      TOLLROAD_VECTOR_PORT: "5432",
-      TOLLROAD_VECTOR_DB: "tollroad",
-      TOLLROAD_VECTOR_USER: "vector_app",
-      TOLLROAD_VECTOR_REGION: region,
     };
     // Prefer a freshly-minted key group (when -c cfPublicKey is passed); otherwise
     // reuse an existing key-pair id supplied via -c TOLLROAD_CF_KEY_PAIR_ID. Without
@@ -433,13 +393,6 @@ export class TollroadStack extends cdk.Stack {
     // projector does. Email sign-in codes go out via ZeptoMail SMTP (plain
     // HTTPS/SMTP, no IAM needed), so SES permissions are no longer granted.
     apiFn.addToRolePolicy(dsqlConnectAdmin);
-    // Allow the API Lambda to reach the Aurora vector cluster on 5432 and
-    // authenticate via IAM (rds-db:connect as vector_app).
-    vectorCluster.connections.allowFrom(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432), "vector DB (IAM+TLS gated)");
-    apiFn.addToRolePolicy(new iam.PolicyStatement({
-      actions: ["rds-db:connect"],
-      resources: [`arn:aws:rds-db:${region}:${this.account}:dbuser:${vectorCluster.clusterResourceIdentifier}/vector_app`],
-    }));
     // Bedrock: embed text for vibe discovery (Task 4).
     apiFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ["bedrock:InvokeModel"],
@@ -541,10 +494,6 @@ export class TollroadStack extends cdk.Stack {
     new cdk.CfnOutput(this, "DsqlEndpoint", {
       value: dsqlEndpoint,
       description: "Set as TOLLROAD_DSQL_ENDPOINT for the app + migration",
-    });
-    new cdk.CfnOutput(this, "VectorHost", {
-      value: vectorCluster.clusterEndpoint.hostname,
-      description: "Aurora vector cluster endpoint hostname (set as TOLLROAD_VECTOR_HOST)",
     });
     new cdk.CfnOutput(this, "AudioBucketName", {
       value: audioBucket.bucketName,

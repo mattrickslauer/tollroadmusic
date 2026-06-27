@@ -52,142 +52,68 @@ node infra/scripts/deploy.mjs -- --require-approval never
 
 This deploy provisions or updates:
 - The existing DynamoDB table, Aurora DSQL cluster, S3/CloudFront audio pipeline.
-- **NEW:** a minimal VPC, an Aurora PostgreSQL Serverless v2 cluster (`TollroadVector`)
-  with scale-to-zero (`minCapacity: 0`, `secondsUntilAutoPause: 300`, `maxCapacity: 4`)
-  for the pgvector read-store.
-- The Lambda gets `TOLLROAD_VECTOR_HOST/PORT/DB/USER/REGION` injected automatically.
-- The Lambda's IAM role gets `rds-db:connect` for the `vector_app` database user.
-- The Aurora master-user credentials are stored in AWS Secrets Manager (auto-created
-  by CDK, tagged with the CloudFormation stack name).
+- **NEW:** a Bedrock `InvokeModel` IAM grant on the Lambda's execution role
+  (`amazon.titan-embed-text-v2:0`). No new database resources are added — vectors
+  live in the existing DynamoDB single-table under `PK="TVEC"`.
 
-CDK outputs the `ApiBaseUrl` and key IDs on completion — note them.
+CDK outputs the `ApiBaseUrl`, `DsqlEndpoint`, and `TableName` on completion — note them.
 
 ---
 
-## Step 2 — Retrieve the Aurora master password
+## Step 2 — Enable Bedrock model access
 
-The `DatabaseCluster` construct auto-creates a Secrets Manager secret for the
-master user (`postgres`). Fetch it to use in Steps 3 and 4.
+If not already enabled in the account, grant model access for the embedding model:
 
-**Find the secret ARN** (it lives in the CloudFormation resources for the stack):
+1. Open **AWS Console → Bedrock → Model access** in `us-east-1`.
+2. Enable **Titan Embed Text V2** (`amazon.titan-embed-text-v2:0`).
+3. Wait for status to show **Access granted** (usually under a minute).
 
-```bash
-aws cloudformation describe-stack-resources \
-  --stack-name TollroadStack \
-  --query "StackResourceSummaries[?ResourceType=='AWS::SecretsManager::Secret'].PhysicalResourceId" \
-  --output text
-```
-
-This prints one or more ARNs. The one for the vector cluster will contain
-`TollroadVector` in its name (e.g. `TollroadStack-TollroadVectorSecret<hash>-<id>`).
-
-**Retrieve the secret value:**
-
-```bash
-aws secretsmanager get-secret-value \
-  --secret-id <ARN-from-above> \
-  --query 'SecretString' --output text | python3 -m json.tool
-```
-
-The JSON will contain `{ "username": "postgres", "password": "...", "host": "...", ... }`.
-Copy the `password` value — this is `TOLLROAD_VECTOR_MASTER_PASSWORD` for Steps 3 and 4.
-The `host` value is the cluster endpoint (`TOLLROAD_VECTOR_HOST`).
-
-Alternatively, list all secrets tagged with the stack and filter by name:
-
-```bash
-aws secretsmanager list-secrets \
-  --filters Key=tag-key,Values=aws:cloudformation:stack-name \
-  Key=tag-value,Values=TollroadStack \
-  --query 'SecretList[*].{Name:Name,ARN:ARN}' --output table
-```
+This is a one-time, per-account step — skip if the model is already enabled.
 
 ---
 
-## Step 3 — Run the vector schema migration
-
-Applies the pgvector extension, `track_vectors` table, HNSW index, and the
-`vector_app` IAM role. Idempotent — safe to re-run.
-
-```bash
-TOLLROAD_VECTOR_HOST=<cluster-endpoint-from-step-2> \
-TOLLROAD_VECTOR_MASTER_PASSWORD=<password-from-step-2> \
-node infra/scripts/migrate-vector.mjs
-```
-
-Expected output:
-```
-ok: CREATE EXTENSION IF NOT EXISTS vector
-ok: CREATE TABLE IF NOT EXISTS track_vectors (
-ok: CREATE INDEX IF NOT EXISTS track_vectors_embedding_hnsw
-ok: DO $$ BEGIN CREATE ROLE vector_app WITH LOGIN; EXCEPTION WHEN dup...
-ok: GRANT rds_iam TO vector_app
-ok: GRANT ALL ON track_vectors TO vector_app
-Vector schema applied.
-```
-
-**Optional env overrides** (all have defaults shown):
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `TOLLROAD_VECTOR_PORT` | `5432` | Cluster port |
-| `TOLLROAD_VECTOR_DB` | `tollroad` | Database name |
-| `TOLLROAD_VECTOR_ADMIN_USER` | `postgres` | Master user for DDL |
-| `TOLLROAD_VECTOR_REGION` | `us-east-1` | AWS region |
-
-Note: the migration uses the master-user password (not IAM auth) because the master
-user cannot use `rds_iam`. The `vector_app` role it creates uses IAM auth for the
-Lambda's runtime queries.
-
----
-
-## Step 4 — Backfill catalog embeddings
+## Step 3 — Backfill catalog embeddings
 
 Reads every track from Aurora DSQL, builds a text descriptor (`"<title> by <artist>.
 Genre: <genre>."`), embeds it via Bedrock Titan v2 (`amazon.titan-embed-text-v2:0`,
-1024 dimensions), and upserts the vector into `track_vectors`. Idempotent (`ON
-CONFLICT DO UPDATE`) — safe to re-run or resume after a partial run.
+1024 dimensions), and writes the vector into the DynamoDB `TVEC` partition. Idempotent
+(PutItem overwrites on re-run) — safe to re-run or resume after a partial run.
 
 ```bash
-TOLLROAD_DSQL_ENDPOINT=<dsql-endpoint> \
-TOLLROAD_VECTOR_HOST=<cluster-endpoint-from-step-2> \
-TOLLROAD_VECTOR_MASTER_PASSWORD=<password-from-step-2> \
+TOLLROAD_DSQL_ENDPOINT=<DsqlEndpoint-from-cdk-output> \
+TOLLROAD_TABLE=<TableName-from-cdk-output> \
 node scripts/enrich-catalog.mjs
 ```
 
-The `TOLLROAD_DSQL_ENDPOINT` is the CDK output `DsqlEndpoint` (e.g.
-`<identifier>.dsql.us-east-1.on.aws`). Retrieve it:
+Retrieve the CDK outputs if you didn't copy them during deploy:
 
 ```bash
 aws cloudformation describe-stacks \
   --stack-name TollroadStack \
-  --query "Stacks[0].Outputs[?OutputKey=='DsqlEndpoint'].OutputValue" \
-  --output text
+  --query "Stacks[0].Outputs[?OutputKey=='DsqlEndpoint' || OutputKey=='TableName'].{Key:OutputKey,Value:OutputValue}" \
+  --output table
 ```
 
+Optional override:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `TOLLROAD_DSQL_REGION` | `us-east-1` | AWS region for DSQL + Bedrock |
+
 The script authenticates to DSQL using an IAM admin token (your shell's AWS creds)
-and to the vector cluster using the master password. It logs progress every 10
-tracks:
+and to Bedrock the same way. It logs progress every 10 tracks:
 
 ```
 Connected to DSQL source.
 Fetched 80 tracks from DSQL.
-Connected to pgvector target.
 embedded 10/80 — last: "Neon Drift by Axon Valley. Genre: Synthwave."
 ...
-Done. Upserted 80 track vectors.
+Done. Upserted 80 track vectors to DynamoDB.
 ```
-
-**All optional overrides for the vector target** are the same as in Step 3. The
-DSQL region can be overridden with `TOLLROAD_DSQL_REGION` (default `us-east-1`).
-
-**Bedrock access must be enabled** in the account before this step. If you see
-`AccessDeniedException: ... amazon.titan-embed-text-v2:0`, go to
-AWS Console → Bedrock → Model access → enable Titan Embed Text V2.
 
 ---
 
-## Step 5 — Verify the discovery endpoint
+## Step 4 — Verify the discovery endpoint
 
 ```bash
 API=https://<ApiBaseUrl-from-cdk-output>
@@ -195,7 +121,7 @@ API=https://<ApiBaseUrl-from-cdk-output>
 curl -s -XPOST "$API/v1/discover" \
   -H "x-api-key: <app-api-key>" \
   -H "content-type: application/json" \
-  -d '{"vibe":"tense boss fight, 140bpm synthwave"}' | python3 -m json.tool
+  -d '{"vibe":"tense boss fight synthwave"}' | python3 -m json.tool
 ```
 
 To fetch the app API key value:
@@ -224,20 +150,12 @@ Expected response shape:
 }
 ```
 
-Optional filters accepted by `/v1/discover`:
-
-| Field | Type | Example |
-|---|---|---|
-| `vibe` | string (required) | `"chill lo-fi study beats"` |
-| `limit` | int 1–50 | `10` |
-| `allowExplicit` | bool | `false` |
-
-If the Aurora cluster was idle, the first request may time out or take 10–15 seconds
-(see Step 7). Retry once if you get a 502/504.
+`score` is cosine similarity (higher = better match). Only `vibe` (required) and
+`limit` (int 1–50, optional) are accepted request fields.
 
 ---
 
-## Step 6 — Run the MCP server
+## Step 5 — Run the MCP server
 
 The MCP server (`mcp/`) exposes TollRoad's HTTP API as stdio tools for AI agent
 clients (Claude Desktop, Claude Code, etc.).
@@ -254,7 +172,8 @@ node --experimental-strip-types src/server.ts
 
 The server reads from stdin and writes to stdout (stdio transport). It stays alive
 until stdin closes or the process is killed. Add `TOLLROAD_TOKEN=<jwt>` for
-end-user session context (passes `Authorization: Bearer` on each tool call).
+end-user session context (passes `Authorization: Bearer` on each tool call — required
+for session tools that touch the user wallet).
 
 **Add to a MCP client (Claude Desktop / Claude Code):**
 
@@ -282,7 +201,7 @@ In `claude_desktop_config.json` (or your client's equivalent):
 
 | Tool | Description |
 |---|---|
-| `search_music` | Discover tracks by vibe/mood with optional limit/explicit filters. Calls `POST /v1/discover`. |
+| `search_music` | Discover tracks by vibe/mood with optional limit. Calls `POST /v1/discover`. |
 | `start_session` | Start a DJ session queue. Calls `POST /v1/sessions`. Returns a `session` ID. |
 | `next_track` | Advance the session to the next track (optional `signal` hint). Calls `POST /v1/sessions/{id}/next`. |
 | `get_stream` | Get a signed CloudFront URL for a track. Calls `GET /v1/stream/{trackId}`. Returns 402 if the balance is zero. |
@@ -291,7 +210,7 @@ In `claude_desktop_config.json` (or your client's equivalent):
 **Demo flow for a live session:**
 
 ```
-search_music(vibe="tense boss fight, 140bpm synthwave", limit=5)
+search_music(vibe="tense boss fight synthwave", limit=5)
   → pick a track id from results
 
 start_session(context="boss fight playlist")
@@ -306,30 +225,3 @@ get_stream(track_id="<trackId>")
 ```
 
 See `mcp/README.md` for the full API reference and how to add tools.
-
----
-
-## Step 7 — Cold-start note (read before a live demo)
-
-The Aurora Serverless v2 cluster is configured with `minCapacity: 0` and
-`secondsUntilAutoPause: 300`. After five minutes of inactivity it scales to zero ACU.
-
-The first `/discover` (or any query) after a pause pays a **~10–15 second resume
-latency** while Aurora spins back up. During resume the database connection hangs,
-and API Gateway may return a 502 or 504 before the cluster is ready.
-
-**Before a live demo:**
-
-```bash
-# Send a warm-ping 30 seconds before you need it on stage.
-curl -s -XPOST "$API/v1/discover" \
-  -H "x-api-key: <key>" \
-  -H "content-type: application/json" \
-  -d '{"vibe":"warm up ping","limit":1}' > /dev/null
-echo "Cluster warmed. Waiting 5s..."
-sleep 5
-# The cluster is now hot; subsequent calls are <200ms.
-```
-
-Alternatively, set `secondsUntilAutoPause` to a larger value (e.g. `3600`) in the
-CDK stack before a multi-hour demo session, then restore it to `300` afterward.
