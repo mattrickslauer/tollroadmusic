@@ -408,9 +408,6 @@ export class TollroadStack extends cdk.Stack {
       functionName: "tollroad-api",
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(__dirname, "..", "..", "backend", "src", "lambda.ts"),
-      vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-      allowPublicSubnet: true, // required when placing Lambda in a public subnet
       // The backend is a sibling package of infra/; bundle it from its own root
       // (where esbuild + its deps live).
       projectRoot: path.join(__dirname, "..", "..", "backend"),
@@ -438,7 +435,7 @@ export class TollroadStack extends cdk.Stack {
     apiFn.addToRolePolicy(dsqlConnectAdmin);
     // Allow the API Lambda to reach the Aurora vector cluster on 5432 and
     // authenticate via IAM (rds-db:connect as vector_app).
-    vectorCluster.connections.allowDefaultPortFrom(apiFn, "API Lambda to vector DB");
+    vectorCluster.connections.allowFrom(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432), "vector DB (IAM+TLS gated)");
     apiFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ["rds-db:connect"],
       resources: [`arn:aws:rds-db:${region}:${this.account}:dbuser:${vectorCluster.clusterResourceIdentifier}/vector_app`],
