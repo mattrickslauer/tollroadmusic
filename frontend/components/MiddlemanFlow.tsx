@@ -16,9 +16,9 @@ export default function MiddlemanFlow() {
               <em>The rest is theirs.</em>
             </h2>
             <p className={s.intro}>
-              We take one honest, openly-stated cut — no hiding it in fine print,
-              no burying it in a pool. Every other cent transfers directly to the
-              artist, per minute you actually played.
+              We take one honest, openly-stated cut — a flat 10%. No hiding it in
+              fine print, no burying it in a pool. The other 90% transfers directly
+              to the artist, per minute you actually played.
             </p>
           </div>
         </Reveal>
@@ -90,14 +90,17 @@ export default function MiddlemanFlow() {
 
                 {/* THE HONEST CUT NODE */}
                 <div className={`${s.node} ${s.nodeToll}`}>
+                  <div className={s.splitKey}>
+                    <span className={s.keyAmber}>our cut · 10%</span>
+                    <span className={s.keyLime}>to artist · 90%</span>
+                  </div>
                   <div className={s.splitBar}>
                     <div className={s.splitAmber}>
-                      <span className={s.splitLabelAmber}>our cut</span>
-                      <span className={s.splitSub}>openly stated</span>
+                      <span className={s.splitPctAmber}>10%</span>
                     </div>
                     <div className={`${s.splitLime} nd-meter-pulse`}>
-                      <span className={s.splitLabelLime}>to artist</span>
-                      <span className={s.splitSub}>everything else</span>
+                      <span className={s.splitPctLime}>90%</span>
+                      <span className={s.splitLabelLime}>to artist · direct</span>
                     </div>
                   </div>
                   <span className={s.tollLabel}>TollRoad</span>

@@ -282,15 +282,55 @@
 }
 
 .splitAmber {
-  flex: 0 0 36%;
-  background: rgba(255, 194, 75, 0.14);
-  border-right: 1px solid rgba(255, 194, 75, 0.32);
+  flex: 0 0 10%;
+  min-width: 1.75rem;
+  background: rgba(255, 194, 75, 0.18);
+  border-right: 1px solid rgba(255, 194, 75, 0.45);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.1rem;
-  padding: 0.4rem 0.3rem;
+  padding: 0.4rem 0.2rem;
+}
+
+/* Percentage legend above the split bar */
+.splitKey {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.keyAmber {
+  color: var(--nd-amber);
+}
+
+.keyLime {
+  color: var(--nd-lime);
+}
+
+/* Big percentage figure inside a bar segment */
+.splitPctAmber {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--nd-amber);
+}
+
+.splitPctLime {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--nd-lime);
 }
 
 .splitLime {
@@ -304,16 +344,6 @@
   padding: 0.4rem 0.3rem;
 }
 
-.splitLabelAmber {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--nd-amber);
-  line-height: 1;
-}
-
 .splitLabelLime {
   font-family: var(--font-mono);
   font-size: 0.6rem;
@@ -322,14 +352,6 @@
   letter-spacing: 0.08em;
   color: var(--nd-lime);
   line-height: 1;
-}
-
-.splitSub {
-  font-family: var(--font-body);
-  font-size: 0.55rem;
-  color: var(--nd-ink-faint);
-  text-align: center;
-  line-height: 1.3;
 }
 
 .tollLabel {
