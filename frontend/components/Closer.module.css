@@ -22,7 +22,7 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 90% 55% at 50% 115%, rgba(255, 194, 75, 0.22) 0%, transparent 65%),
+    radial-gradient(ellipse 90% 55% at 50% 115%, var(--nd-amber-glow) 0%, transparent 65%),
     radial-gradient(ellipse 60% 35% at 50% 105%, rgba(255, 194, 75, 0.10) 0%, transparent 55%),
     radial-gradient(ellipse 120% 40% at 50% 130%, rgba(198, 255, 74, 0.04) 0%, transparent 70%);
   z-index: 0;
@@ -155,11 +155,61 @@
    No content is conveyed via motion, so we only disable animation.
 */
 
+/* ── Stat callout ─────────────────────────────────────────── */
+
+.statCallout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.statCalloutFigure {
+  font-family: var(--font-display);
+  font-size: var(--nd-stat);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--nd-amber);
+  text-shadow: 0 0 60px var(--nd-amber-glow);
+}
+
+.statCalloutLabel {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nd-ink-faint);
+}
+
+/* ── Closer pull-quote ────────────────────────────────────── */
+
+.closerPull {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.05rem, 2.5vw, 1.55rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--nd-ink-dim);
+  max-width: 52ch;
+  margin: clamp(1.25rem, 2.5vw, 1.75rem) auto 0;
+}
+
+.closerPull em {
+  font-style: italic;
+  color: var(--nd-ink);
+  font-weight: 700;
+}
+
 /* ── Reveal helpers (complement .reveal transition) ─────── */
 
 .eyebrowReveal,
 .headlineReveal,
 .honestCutReveal,
+.statReveal,
+.pullReveal,
 .ctaReveal {
   /* spacing handled by children; reveal wrapper is block-level */
 }

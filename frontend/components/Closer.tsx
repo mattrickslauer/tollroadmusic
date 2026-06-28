@@ -47,10 +47,27 @@ export default function Closer() {
           </p>
         </Reveal>
 
+        {/* Stat callout — amber, anchored to ~$8 avg from Outcomes */}
+        <Reveal delay={200} className={styles.statReveal}>
+          <div className={styles.statCallout}>
+            <span className={`${styles.statCalloutFigure} nd-amber-pulse`}>~$8</span>
+            <span className={styles.statCalloutLabel}>avg / mo · metered listening</span>
+          </div>
+        </Reveal>
+
+        {/* Pull-quote — honest-cut reinforcement */}
+        <Reveal delay={230} className={styles.pullReveal}>
+          <p className={styles.closerPull}>
+            <em>One transparent cut — posted, never hidden.</em>{" "}
+            Every cent above it meters to the artist the moment you listen.
+            That&rsquo;s the whole model.
+          </p>
+        </Reveal>
+
         {/* Horizontal accent divider */}
         <div className={styles.divider} aria-hidden="true" />
 
-        <Reveal delay={260} className={styles.ctaReveal}>
+        <Reveal delay={300} className={styles.ctaReveal}>
           <div className={styles.ctaRow}>
             <Cta href={ROUTES.browse}>Start Listening →</Cta>
             <Cta href={ROUTES.signup} variant="green">Join as Artist →</Cta>

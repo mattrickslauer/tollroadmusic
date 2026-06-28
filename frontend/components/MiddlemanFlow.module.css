@@ -90,7 +90,7 @@
 .scenario {
   background: var(--nd-bg-2);
   border: 1px solid var(--nd-line);
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   padding: clamp(1.25rem, 2.5vw, 2rem);
   opacity: 0.72; /* old-way: intentionally dimmed */
 }
@@ -107,7 +107,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 12px;
+  border-radius: var(--r-lg);
   pointer-events: none;
   background: linear-gradient(
     135deg,
@@ -253,12 +253,12 @@
 
 /* New You node */
 .nodeYouNew {
-  border-color: rgba(90, 215, 255, 0.16);
+  border-color: var(--nd-blue-glow);
 }
 
 /* New Artist node */
 .nodeArtistNew {
-  border-color: rgba(198, 255, 74, 0.2);
+  border-color: var(--nd-lime-glow);
   background: rgba(198, 255, 74, 0.04);
 }
 

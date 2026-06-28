@@ -60,7 +60,7 @@ export default function MeteredSteps() {
                 <IconMeter />
               </div>
               <span className={s.stepLabel}>
-                <span className={`${s.liveDot} nd-meter-pulse`} />
+                <span className={s.liveDot} />
                 Live meter · Per minute
               </span>
             </div>

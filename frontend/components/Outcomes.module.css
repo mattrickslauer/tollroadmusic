@@ -46,7 +46,7 @@
 
 .sectionHeadline {
   font-family: var(--font-display);
-  font-size: var(--nd-h2);
+  font-size: var(--nd-display);
   font-weight: 900;
   line-height: 0.96;
   letter-spacing: -0.025em;
@@ -83,7 +83,7 @@
 .artistCard {
   background: var(--nd-bg-2);
   border: 1px solid var(--nd-line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   padding: clamp(2rem, 4vw, 2.8rem);
   display: flex;
   flex-direction: column;
@@ -176,9 +176,9 @@
 }
 
 .statLime {
-  font-family: var(--font-mono);
-  font-size: clamp(2.4rem, 6vw, 5.5rem);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--nd-stat);
+  font-weight: 900;
   line-height: 0.9;
   letter-spacing: -0.02em;
   color: var(--nd-lime);
