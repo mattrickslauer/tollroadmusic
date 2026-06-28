@@ -1,0 +1,364 @@
+/* ============================================================
+   Outcomes.module.css — Night Drive editorial-dense panels
+   All styles use --nd-* tokens + landing.css utilities.
+   Do NOT reference any global .outcomes / .panel / .section selectors.
+   ============================================================ */
+
+/* ---- Section wrapper ---- */
+.section {
+  background: var(--nd-bg);
+  border-top: 1px solid var(--nd-line);
+  padding: clamp(5rem, 10vw, 9rem) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle diagonal grain overlay for depth */
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    -55deg,
+    transparent 0,
+    transparent 3px,
+    rgba(255, 255, 255, 0.012) 3px,
+    rgba(255, 255, 255, 0.012) 4px
+  );
+  pointer-events: none;
+}
+
+/* ---- Section header ---- */
+.sectionHeader {
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.sectionEyebrow {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nd-amber);
+  margin-bottom: 0.6rem;
+}
+
+.sectionHeadline {
+  font-family: var(--font-display);
+  font-size: var(--nd-display);
+  font-weight: 900;
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  color: var(--nd-ink);
+  margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+}
+
+.sectionSub {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--nd-ink-dim);
+  max-width: 52ch;
+  margin: 0;
+}
+
+/* ---- Two-panel grid ---- */
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: start;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+@media (max-width: 760px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Cards (shared base) ---- */
+.listenerCard,
+.artistCard {
+  background: var(--nd-bg-2);
+  border: 1px solid var(--nd-line);
+  border-radius: var(--r-lg);
+  padding: clamp(2rem, 4vw, 2.8rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.2rem, 2.5vw, 1.8rem);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Diagonal accent stripe in the top-right corner */
+.listenerCard::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle at top right, var(--nd-amber-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.artistCard::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle at top right, var(--nd-lime-glow), transparent 70%);
+  pointer-events: none;
+}
+
+/* ---- Card top row (eyebrow + lane dash) ---- */
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cardEyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.listenerCard .cardEyebrow {
+  color: var(--nd-amber);
+}
+
+.artistCard .cardEyebrow {
+  color: var(--nd-lime);
+}
+
+.cardLane {
+  flex: 1;
+  height: 1px;
+  background: var(--nd-line-2);
+}
+
+/* ---- Card headline ---- */
+.cardHeadline {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  color: var(--nd-ink);
+  margin: 0;
+}
+
+/* ---- Stat block ---- */
+.statBlock {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.statAmber {
+  font-family: var(--font-display);
+  font-size: var(--nd-stat);
+  font-weight: 900;
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  color: var(--nd-amber);
+  text-shadow: 0 0 40px var(--nd-amber-glow);
+  flex-shrink: 0;
+}
+
+.statLime {
+  font-family: var(--font-display);
+  font-size: var(--nd-stat);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--nd-lime);
+  text-shadow: 0 0 32px var(--nd-lime-glow);
+  flex-shrink: 0;
+}
+
+.statAnnotation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-bottom: 0.4rem;
+}
+
+.statMain {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--nd-ink);
+  line-height: 1.3;
+}
+
+.statSub {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--nd-ink-faint);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+}
+
+/* ---- Body copy ---- */
+.body {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--nd-ink-dim);
+  margin: 0;
+}
+
+/* ---- Bar comparison (listener) ---- */
+.compareGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.compareRow {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr 4.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.compareLabel {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nd-ink-faint);
+  text-align: right;
+}
+
+.compareBar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.compareBarFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s var(--nd-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+/* flat plan bar — muted */
+.compareBarFill[data-bar="flat"] {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* metered bar — amber */
+.compareBarFill[data-bar="metered"] {
+  background: var(--nd-amber);
+}
+
+.comparePrice {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.comparePrice[data-old] {
+  color: var(--nd-ink-faint);
+  text-decoration: line-through;
+}
+
+.comparePrice[data-new] {
+  color: var(--nd-amber);
+}
+
+/* ---- Artist bullet callouts ---- */
+.artistCallouts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.calloutItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--nd-ink-dim);
+}
+
+.calloutDot {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--nd-lime);
+  margin-top: 0.46rem;
+  box-shadow: 0 0 6px var(--nd-lime-glow);
+}
+
+/* ---- Card footnote ---- */
+.footnote {
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  line-height: 1.55;
+  color: var(--nd-ink-faint);
+  letter-spacing: 0.04em;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--nd-line);
+  margin: 0;
+}
+
+/* ---- Full-width pull-quote ---- */
+.pullQuote {
+  margin: 0;
+  padding: clamp(2rem, 4vw, 3rem) 0;
+  border-top: 1px solid var(--nd-line);
+  border-bottom: 1px solid var(--nd-line);
+  text-align: center;
+}
+
+.pullQuoteText {
+  display: block;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.3rem, 3vw, 2.2rem);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--nd-ink-dim);
+  max-width: 56ch;
+  margin: 0 auto 0.8rem;
+}
+
+.pullCite {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nd-ink-faint);
+  font-style: normal;
+}
+
+/* ---- Reduced-motion: keep all content visible ---- */
+@media (prefers-reduced-motion: reduce) {
+  .statAmber,
+  .statLime {
+    text-shadow: none;
+  }
+  .calloutDot {
+    box-shadow: none;
+  }
+}
