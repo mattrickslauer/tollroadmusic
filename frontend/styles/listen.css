@@ -575,6 +575,9 @@ a.lx-share-mi:hover { color: var(--app-text); }
 .lx-pctrl svg { width: 18px; height: 18px; }
 .lx-pctrl:hover:not(:disabled) { color: var(--app-text); }
 .lx-pctrl:disabled { opacity: 0.3; cursor: default; }
+/* Repeat-on (all/one) glows the brand accent so the active mode is obvious. */
+.lx-pctrl[data-active="true"]:not(:disabled),
+.lx-pctrl[data-active="true"]:hover:not(:disabled) { color: var(--app-accent); }
 .lx-pctrl-main {
   width: 40px;
   height: 40px;

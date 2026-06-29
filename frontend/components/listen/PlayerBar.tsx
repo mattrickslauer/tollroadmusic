@@ -9,6 +9,7 @@ import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
 import FullscreenPlayer from "./FullscreenPlayer";
 import ShareButton from "./ShareButton";
+import RepeatButton from "./RepeatButton";
 import { songPath } from "@/lib/shareUrls";
 import VolumeControl from "./VolumeControl";
 import { Sk } from "./Skeleton";
@@ -19,7 +20,7 @@ import { Sk } from "./Skeleton";
  *  Tapping the track info (or the expand button) opens the full-screen player —
  *  available at every width, not just phones. */
 export default function PlayerBar() {
-  const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, repeatMode, cycleRepeat, openTopUp } = usePlayer();
   const [expanded, setExpanded] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
@@ -70,6 +71,7 @@ export default function PlayerBar() {
           <button className="lx-pctrl" onClick={next} disabled={!hasNext} aria-label="Next">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17 6v12h2V6zM5 6v12l9-6z" /></svg>
           </button>
+          <RepeatButton mode={repeatMode} onClick={cycleRepeat} disabled={!current} />
         </div>
         <div className="lx-player-seek">
           <span className="lx-player-t">{clock(cur)}</span>
