@@ -16,6 +16,9 @@ import type {
   MyBonds,
   ProfileBonds,
   PayoutStatus,
+  MoodTraceSubmit,
+  MoodTraceResult,
+  MoodConsensus,
 } from "./types";
 
 const BASE = "/api/v1";
@@ -162,6 +165,13 @@ export const updateTrack = (
 ) => req<{ ok: boolean }>(`/artist/tracks/${encodeURIComponent(trackId)}`, { method: "PUT", body: JSON.stringify(fields) });
 export const deleteTrack = (trackId: string) =>
   req<{ ok: boolean; deleted: boolean }>(`/artist/tracks/${encodeURIComponent(trackId)}`, { method: "DELETE" });
+
+// --- Vibe Pad (mood mini-game) ---------------------------------------------
+/** Submit a whole mood trace on song end; returns coverage, agreement + reward. */
+export const postMoodTrace = (body_: MoodTraceSubmit) => req<MoodTraceResult>("/mood/trace", body(body_));
+/** Fetch the crowd consensus for a song (the "ghost" trail + derived tags). */
+export const getMoodConsensus = (songId: string) =>
+  req<MoodConsensus>(`/mood/consensus/${encodeURIComponent(songId)}`);
 
 // Presign -> PUT the bytes straight to S3 -> commit. Returns the stored key.
 export async function uploadImage(

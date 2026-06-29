@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import ArtistLink from "./ArtistLink";
+import MoodPad from "./MoodPad/MoodPad";
 import { usePlayer } from "@/context/PlayerProvider";
 import { clock, usdM } from "./format";
 import LikeButton from "./LikeButton";
@@ -17,6 +18,7 @@ import { Sk } from "./Skeleton";
  *  lock-step between the two. Available at every width; PlayerBar opens it. */
 export default function FullscreenPlayer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, repeatMode, cycleRepeat, openTopUp } = usePlayer();
+  const [moodOpen, setMoodOpen] = useState(false);
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
 
@@ -104,6 +106,11 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
 
         <VolumeControl className="lx-full-volume" />
 
+        <button className="lx-full-vibe" onClick={() => setMoodOpen(true)} title="Set the tone — earn free minutes">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 3v18M3 12h18" /><circle cx="16" cy="8" r="2.4" fill="currentColor" stroke="none" /></svg>
+          Set the tone
+        </button>
+
         <button className="lx-meter lx-full-meter" onClick={openTopUp} title="Add funds">
           <span className="lx-meter-bal" data-low={balanceReady && balanceMillicents <= 0}>
             {balanceReady ? usdM(balanceMillicents) : <Sk h={17} w={56} radius={4} style={{ marginBottom: 3 }} />}
@@ -112,6 +119,8 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
           <span className="lx-meter-cost">${sessionCost.toFixed(4)}<small>session</small></span>
         </button>
       </div>
+
+      <MoodPad open={moodOpen} onClose={() => setMoodOpen(false)} />
     </div>,
     document.body,
   );

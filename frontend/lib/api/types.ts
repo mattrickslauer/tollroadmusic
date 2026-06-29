@@ -97,6 +97,51 @@ export type ArtistSummary = {
   uploadsConfigured?: boolean;
 };
 
+// --- Vibe Pad / mood-tagging mini-game --------------------------------------
+// A mood trace: a time-aligned path through the valence/energy plane for one
+// play of one song. Samples are parallel grid-aligned arrays (index = time bin,
+// bin = floor(ms / gridMs)); `null` = a gap (puck released / no signal); values
+// in [-1, 1]. Array length = ceil(durationMs / gridMs).
+export type MoodSamples = { v: (number | null)[]; e: (number | null)[] };
+
+/** POST /v1/mood/trace body — the whole trace, submitted once on song end. */
+export type MoodTraceSubmit = { songId: string; gridMs: number; durationMs: number; samples: MoodSamples };
+
+/** POST /v1/mood/trace result — coverage, agreement vs. crowd, and the reward. */
+export type MoodTraceResult = {
+  traceId: string;
+  coveragePct: number;
+  /** 0–1 agreement with the crowd consensus; null when bootstrapping (untrusted). */
+  agreement: number | null;
+  /** True when too few traces exist yet to trust agreement → flat bootstrap credit. */
+  bootstrap: boolean;
+  rewardMillicents: number;
+  rewardMinutes: number;
+  newBalanceMillicents: number;
+  /** True when this (user, song) was already rewarded — the trace updates, no new credit. */
+  alreadyRewarded: boolean;
+};
+
+export type MoodQuadrant = "hype" | "tense" | "sad" | "chill";
+
+export type MoodTags = {
+  dominantQuadrant: MoodQuadrant | null;
+  arcLabel: string | null;
+  valenceMean: number | null;
+  energyMean: number | null;
+  confidence: number;
+  source: "human" | "predicted";
+};
+
+/** GET /v1/mood/consensus/{songId} — the binned crowd curve (ghost source). */
+export type MoodConsensus = {
+  songId: string;
+  gridMs: number;
+  traceCount: number;
+  consensus: MoodSamples;
+  tags: MoodTags | null;
+};
+
 // --- Superfan Bond ----------------------------------------------------------
 // A listener's accrued relationship with one artist. `bondPoints` accrue at
 // BP_PER_MINUTE per metered minute heard; tiers/rank are derived server-side

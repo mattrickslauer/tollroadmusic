@@ -16,6 +16,7 @@ import * as payouts from "./handlers/payouts.ts";
 import * as superfan from "./handlers/superfan.ts";
 import { discover } from "./handlers/discover.ts";
 import { startSession, nextTrack } from "./handlers/sessions.ts";
+import * as mood from "./handlers/mood.ts";
 
 interface Route {
   method: string;
@@ -97,6 +98,9 @@ const ROUTES: Route[] = [
   compile("POST", "/artist/audio/commit", artistContent.audioCommit),
   compile("PUT", "/artist/tracks/{id}", artistContent.trackUpdate),
   compile("DELETE", "/artist/tracks/{id}", artistContent.trackDelete),
+
+  compile("POST", "/mood/trace", mood.trace),
+  compile("GET", "/mood/consensus/{songId}", mood.consensus),
 
   compile("GET", "/superfan/bond/{artistId}", superfan.bond),
   compile("GET", "/superfan/leaderboard/{artistId}", superfan.leaderboard),

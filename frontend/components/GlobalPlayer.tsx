@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import LibraryProvider from "@/context/LibraryProvider";
 import PlayerProvider, { usePlayer } from "@/context/PlayerProvider";
+import MoodProvider from "@/context/MoodProvider";
 import { BondProvider } from "@/context/BondProvider";
 import PlayerBar from "@/components/listen/PlayerBar";
 import TierUpCelebration from "@/components/bond/TierUpCelebration";
@@ -28,10 +29,13 @@ export default function GlobalPlayer({ children }: { children: React.ReactNode }
       <PlayerProvider>
         {/* Inside PlayerProvider so it can read the playing track + metered seconds. */}
         <BondProvider>
-          {children}
-          <GlobalBar />
-          {/* App-wide tier-up celebration — listens for bond tier crossings. */}
-          <TierUpCelebration />
+          {/* Owns the in-flight Vibe Pad trace; MoodPad (in the player portal) uses it. */}
+          <MoodProvider>
+            {children}
+            <GlobalBar />
+            {/* App-wide tier-up celebration — listens for bond tier crossings. */}
+            <TierUpCelebration />
+          </MoodProvider>
         </BondProvider>
       </PlayerProvider>
     </LibraryProvider>

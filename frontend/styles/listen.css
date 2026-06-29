@@ -856,6 +856,30 @@ a.lx-share-mi:hover { color: var(--app-text); }
 .lx-full-volume .lx-vol-fill { background: var(--app-accent); }
 .lx-full-volume .lx-vol-btn svg { width: 22px; height: 22px; }
 
+/* "Set the tone" — the Vibe Pad entry point on the full-screen player. */
+.lx-full-vibe {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 20px;
+  border-radius: 100px;
+  border: 1px solid var(--amber-deep);
+  background: radial-gradient(120% 120% at 50% 0%, var(--amber-glow), transparent), var(--asphalt-700);
+  color: var(--amber-bright);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.lx-full-vibe:hover {
+  border-color: var(--amber);
+  box-shadow: 0 10px 30px -10px var(--amber-glow), 0 0 0 3px var(--amber-glow);
+  transform: translateY(-1px);
+}
+.lx-full-vibe svg { width: 18px; height: 18px; }
+
 /* Desktop full-screen: the layout was tuned for a phone's narrow column. On
    wider viewports, cap the content width and size the cover to the viewport
    height so it doesn't stretch edge-to-edge. */
