@@ -1,141 +1,125 @@
-# TollRoad — Founder Speech Demo (shooting script)
+# TollRoad — "Amanda's Record" (cinematic doc, shooting script)
 
 **Date:** 2026-06-27
-**Runtime target:** ~3:30–3:45 (soft ceiling 4:00; trim the problem setup or scale lines if a slow delivery runs over)
-**Format:** One continuous founder speech to camera, cut up with app overlays, studio B-roll, and diagrams
-**Primary camera:** Sony A7III — founder to camera, locked-off or slow push, shallow DOF, soft key, simple backdrop. Shoot the whole speech in one take (multiple full takes for safety).
-**Featured artist:** Amanda Kurt — independent musician recording with the founder. Named in the speech and shown in studio B-roll. Her track is the song playing under the speech.
-**Overlay sources:** screen capture (real product), studio B-roll (Amanda + founder recording), AI visual / motion-gfx (diagrams + scale).
+**Runtime target:** ~2:15–2:30 (HARD ceiling 2:55 — hackathon requires < 3:00)
+**For:** H0 Hackathon — *Hack the Zero Stack with Vercel v0 and AWS Databases* (h01.devpost.com)
+**Format:** Short cinematic documentary about independent artist **Amanda Kurt**. Amanda's voice and music carry the film; the founder appears only at the end for the technical close.
+
+**What the judges need to see (build the cut around these):**
+- Footage of the **working app** (live demo — required).
+- The **problem + target audience**, told through Amanda (independent artists + their fans).
+- A clear explanation of the **AWS database** used — **Aurora DSQL** — named by the founder.
+- Technical implementation, design, real-world impact, originality — all four judging axes.
 
 ---
 
 ## How this video is built
 
-1. **Record the speech end-to-end.** The founder delivers the full speech below to camera, start to finish, several times. This is the spine and the audio bed for the entire film.
-2. **Cut it up in the edit.** Hold on the founder's face for the personal/conviction moments; cut away to app overlays, studio B-roll of the session with Amanda, and diagrams where marked, then come back to the founder for the close.
-3. **The audio never breaks.** Overlays and B-roll are picture-only; the founder's voice runs continuously underneath. No separate VO.
+1. **Shoot Amanda as a documentary subject**, not an actor. Verité B-roll of her making/playing music + a sit-down interview. Her best real soundbites become the spine. The lines below are the *target sense* — use her actual words.
+2. **Music is hers, wall-to-wall.** Her track is the score. Let it breathe; pull it down under interview, swell it on the visuals.
+3. **The app demo is the turn**, not a feature tour — show it changing what her music means to her and her fans (real screen capture).
+4. **The founder closes**, ~25s, to camera or VO over diagrams — the only "talking-head pitch" in the film, and it's technical.
 
-**Tone:** honest, conversational, founder-not-spokesperson. Conviction over polish. Let pauses sit. This is a person explaining why they built something, not an ad. The futurist beats should sound like genuine conviction about where music is heading — not a pitch deck.
-
-**Balance to hit (for the judges):** technical credibility AND market hype. The live product overlays and the per-second metering diagram are the proof it's real and it works; the "new kind of label" and "agents curating the future" beats are the proof it's a company that scales. Don't let either side win — the whole point is that the vision is already running.
+**Tone:** cinematic, intimate, earned. Think a Song-Exploder / mini-doc feel, not an ad. Quiet beginning, emotional middle, confident technical landing.
 
 ## Cue legend
-- **[ON CAM]** — hold on the founder's face
-- **[OVERLAY: …]** — cut to real app screen capture over the running audio
-- **[B-ROLL: …]** — cut to studio footage of the founder + Amanda recording, over the running audio
-- **[DIAGRAM: …]** — cut to an AI/motion-gfx diagram over the running audio
+- **[AMANDA — interview]** — sit-down soundbite (her words; lines below are target sense)
+- **[B-ROLL: …]** — cinematic footage of Amanda (no dialogue)
+- **[OVERLAY: …]** — real app screen capture
+- **[FOUNDER]** — founder to camera or VO
+- **[DIAGRAM: …]** — motion-gfx for the technical close
 
 ---
 
-## The speech, with cue annotations
+## The film
 
-> Deliver every word continuously. The brackets are edit cues, not pauses — don't read them.
+### 1 — Cold open (0:00–0:18)
+**[B-ROLL: Amanda alone — hands on the guitar/keys, late light, a room that's clearly hers] · her track comes up**
+> **[AMANDA — interview, over the visuals]:** I've been making music since before anyone was listening. You don't do it for the money — there basically isn't any. You do it because you can't not.
 
-**[ON CAM] (0:00–0:12)**
-> I want to tell you about something we've been building — and why.
->
-> Think about how much you listen to your favorite artist. Hundreds of hours a year. You stream them every day, you know every word.
+*(Hook. End the open on a held image + a swell of her song before the title.)*
 
-**[ON CAM — let it land] (0:12–0:30)**
-> And at the end of the year, what do you actually have to show for it? A screenshot you post once and forget. Meanwhile the artist you've supported all that time earns almost nothing from it — and has no idea you even exist.
+**[TITLE CARD: a single line — e.g. "Amanda Kurt is an independent artist." — quick, then gone]**
 
-**[ON CAM] (0:30–0:42)**
-> That always struck us as broken. The people who love music the most get nothing back. And the artists they love can't really reach them. So we set out to fix it.
+### 2 — The journey & the problem (0:18–0:55)
+**[B-ROLL: playing a small room; phone showing streaming numbers; the unglamorous parts]**
+> **[AMANDA — interview]:** I have people who know every word. They've listened for years. And at the end of it I make almost nothing — and I have no idea who they are. The platforms keep the relationship. I just… make the songs.
 
-**[B-ROLL: studio — founder + Amanda Kurt recording, warm and real] (0:42–0:58)**
-> I want you to meet Amanda Kurt. She's an independent artist — and right now, we're in the studio together, making this record. Amanda is exactly who we built this for: someone making real music who deserves to reach the people who love it, and get paid fairly for it.
+**[B-ROLL: Amanda scrolling her own streaming dashboard, unreadable splits]**
+> **[AMANDA — interview]:** That's the part that breaks you. Not that it's hard. That the people who love it most, and the person who made it, never actually meet.
 
-**[OVERLAY: app — Amanda's track playing] (0:58–1:12)**
-> We're building a new kind of music platform — one where your listening actually counts. Every minute you spend with an artist like Amanda is tracked, and it earns you something real.
+*(This is the problem statement + audience — independent artists and their fans — in her voice. Don't have the founder say it.)*
 
-**[OVERLAY: streak counter ticking up] → [OVERLAY: rewards unlocking] → [OVERLAY: leaderboard, your handle climbing] (1:12–1:28)**
-> You build a streak. You earn rewards you actually keep. You climb a leaderboard of that artist's biggest fans — so your fandom is finally seen.
-> *(Time the three overlay cuts to the three sentences — streak / rewards / leaderboard.)*
+### 3 — The turn: TollRoad, shown working (0:55–1:38)
+**[OVERLAY: her track playing in the real TollRoad app] → [B-ROLL: Amanda watching it on a laptop, reacting]**
+> **[AMANDA — interview, lifting]:** Then they showed me this. Every second someone listens to me, it's counted — and it actually pays me. Not a fraction of a fraction. Real.
 
-**[ON CAM] (1:28–1:38)**
-> And I want to be clear: this isn't a mockup. What you're looking at is the real product. The streaks, the leaderboards, the rewards — they're live today.
-> *(Optional: a quick [OVERLAY: live app, full screen] on "the real product," then back to face.)*
+**[OVERLAY: streak counter ticking up] → [OVERLAY: leaderboard, a fan's handle climbing] → [OVERLAY: rewards unlocking]**
+> **[AMANDA — interview]:** And I can finally *see* them. My biggest fans, by name. The ones who showed up every day — I can actually thank them.
 
-**[DIAGRAM: one second of listening → flows to Amanda] (1:38–2:00)**
-> For artists like Amanda, it's a new way to make a living, and a new way to connect. Because every second of listening is tracked, artists get paid for real engagement — not some opaque fraction of a cent — and for the first time, they can see exactly who their superfans are, and reward them directly.
+*(This is the required working-app footage. Keep it real, 60fps, keys hidden. Time the three overlays to streak / superfans / rewards.)*
 
-**[ON CAM] then [DIAGRAM: scale — many fans + artists] (2:00–2:20)**
-> That's the heart of it. A real bond between a fan and an artist, with value flowing both ways. And we think this scales — to millions of fans and artists. A new model for how music gets discovered, supported, and paid for. Honestly, a new kind of label.
+### 4 — The founder, technical close (1:38–2:05)
+**[FOUNDER — to camera, brief] then [DIAGRAM: one second of listening → metered → paid to Amanda, in real time]**
+> **[FOUNDER]:** Here's how it actually works. Every second of listening is metered and settled in real time on **Aurora DSQL** — that's the ledger that pays Amanda the instant you press play, and it's built to scale to millions of fans and artists.
 
-**[ON CAM — lean in, this is the futurist turn] (2:20–2:42)**
-> And here's where it's going. The way people find music is about to change completely. More and more, it won't be you scrolling a feed — it'll be AI agents curating the spaces you live in. Your morning. Your workout. The room you walk into. Those agents are going to need music — legally, fairly, metered to the moment.
-> *(This is futurist beat #1 — vision. Keep it on the founder's face; conviction, not hype.)*
+**[DIAGRAM: same metered rail → an app / an AI agent licensing the track]**
+> **[FOUNDER]:** And that same metered rail isn't just for our app. Any app — or any AI agent curating what you hear next — can license this catalog by the second, fairly. We're laying the rails so the future of music pays independent artists like Amanda first.
 
-**[OVERLAY: app/API — agent requesting a track] → [DIAGRAM: per-second metering · paid in real time] (2:42–3:02)**
-> So we built the rails for that. Any app, or any AI agent, can license this catalog — metered down to the second, paid in real time. It's the same engine that pays Amanda when you press play, opened up to the whole agentic web.
-> *(Technical-credibility beat: show the real metered-licensing path. This is the proof for technical judges.)*
+*(This single beat carries: the AWS database explanation the hackathon requires, the technical implementation, and the one futurist line. Keep it tight — no second take of the pitch.)*
 
-**[B-ROLL: Amanda in the booth] then [ON CAM] (3:02–3:18)**
-> That's the future we're laying track for. The licensing deals, the rails, the fair split — so when the future of music shows up, it's independent artists like Amanda who prosper from it. Not locked out of it again.
-> *(Futurist beat #2 — the rails payoff. Tie the future explicitly back to fair pay for independent artists.)*
+### 5 — Close (2:05–2:25)
+**[B-ROLL: Amanda back at the instrument, playing — the song resolves] then [AMANDA — interview, last line]**
+> **[AMANDA]:** I just want to make music and have it reach the people who love it. For the first time, that feels possible.
 
-**[ON CAM — locked, final] (3:18–3:38)**
-> We're redefining how fans and artists connect — listening that finally rewards you, a fanbase that artists can actually build on, and the rails for whatever music becomes next.
->
-> That's what we're here to do.
-
-**[END CARD] (3:38–3:45)**
-> **TollRoad** wordmark · one CTA line. Amanda's track (the song that's been under the speech) resolves and out.
+**[END CARD] TollRoad wordmark · one CTA line · "Built on Aurora DSQL + Vercel" · her track resolves and out.**
 
 ---
 
-## Overlay / B-roll / diagram capture checklist
+## Amanda interview — questions to ask on the day
+Capture far more than you need; cut to the truest 4–5 soundbites. Ask:
+1. When did you start making music, and why don't you stop?
+2. What's your relationship with the people who listen to you? Do you know who they are?
+3. What do you actually earn from streaming — and how does that feel?
+4. When you saw your plays metered and paid second-by-second, and saw your fans by name — what went through your head?
+5. What would it mean if the future of music actually paid artists like you first?
 
-**Real app screen captures (record clean, 60fps, hide any keys):**
-- [ ] Amanda's track playing in the player (0:58)
-- [ ] Streak counter ticking up (1:12) — *hero overlay, multiple takes*
-- [ ] Rewards unlocking / accruing (1:16)
-- [ ] Leaderboard with a handle climbing ranks (1:20)
-- [ ] Full app "real product" beat (1:32, optional)
-- [ ] Agent/API requesting + licensing a track (2:42) — the real metered-licensing path on screen
+## Shot / capture checklist
+**Amanda (cinematic — A7III, fast glass, shallow DOF, practical light):**
+- [ ] Hero B-roll: alone with the instrument, golden/late light (open + close)
+- [ ] Performance: small room / live take
+- [ ] Verité: the unglamorous reality (dashboards, the phone, the grind)
+- [ ] Sit-down interview, clean audio (lav + boom), eyeline just off lens
 
-**Studio B-roll (founder + Amanda Kurt):**
-- [ ] Founder + Amanda recording together — warm, real, not staged (0:42) — *hero B-roll*
-- [ ] Amanda in the booth / at the mic (3:02)
-- [ ] Detail shots: hands on the board, headphones, lyric sheet — texture for cutaways
+**Real app screen captures (60fps, hide keys):**
+- [ ] Amanda's track playing in the player
+- [ ] Streak counter ticking up — *hero overlay*
+- [ ] Leaderboard with a fan handle climbing
+- [ ] Rewards unlocking
+- [ ] Amanda reacting to the app on a laptop (B-roll, not screen)
 
-**Diagrams / motion-gfx (AI visual):**
-- [ ] One second of listening → flows to Amanda (1:38) — clean, friendly, not corporate
-- [ ] Scale: many fans + many artists, streaks/leaderboards everywhere (2:08)
-- [ ] AI agents curating environments → requesting music (2:20–2:42) — the futurist vision
-- [ ] Per-second metering · paid in real time (2:42) — the rails, shown as real plumbing
-- [ ] End card / wordmark (3:38)
+**Diagrams / motion-gfx (technical close):**
+- [ ] One second of listening → metered → paid to Amanda in real time (name Aurora DSQL)
+- [ ] Same rail → app / AI agent licensing by the second
+- [ ] End card / wordmark + "Built on Aurora DSQL + Vercel"
 
-**Founder (Sony A7III):**
-- [ ] Full speech, several complete takes, 2s of silence before/after each take for handles
-- [ ] A few "safety" close-up takes of the open, the futurist turn (2:20), and the close specifically
-
----
-
-## Audio plan
-- The **founder's voice is the bed** — recorded clean (lav + on-camera, or a boom). Everything else sits under it.
-- **Amanda Kurt's track** plays softly under the whole speech (the song "you love" — and the one being recorded in the B-roll), ducked ~8dB so the voice is always clear; let it rise slightly in the gaps and resolve on the end card.
-- No separate narrator. Overlays and B-roll are picture-only.
+**Founder (A7III):** one clean technical close, a couple of safety takes.
 
 ## Timing ledger
-| Section | Window | Note |
+| Section | Window | Carried by |
 |---|---|---|
-| Open — the problem | 0:00–0:42 | On camera, no overlays — earn trust first |
-| Meet Amanda (B-roll) | 0:42–0:58 | Name the artist; ground the vision in a real person |
-| The product (overlays) | 0:58–1:38 | Track / streak / rewards / leaderboard, then "it's real" |
-| The artist side + scale | 1:38–2:20 | Diagrams; "a new kind of label" |
-| Futurist #1 — vision | 2:20–2:42 | On camera: agents curating environments |
-| The rails (technical proof) | 2:42–3:02 | Real metered licensing on screen |
-| Futurist #2 — fair-pay payoff | 3:02–3:18 | Rails → independent artists prosper |
-| Close | 3:18–3:45 | Back on camera, end card |
+| Cold open | 0:00–0:18 | Amanda + her music |
+| Journey & problem (+ audience) | 0:18–0:55 | Amanda interview |
+| The turn — app demo (working app) | 0:55–1:38 | App overlays + Amanda |
+| Technical close (Aurora DSQL + rail) | 1:38–2:05 | Founder + diagrams |
+| Close | 2:05–2:25 | Amanda |
 
-~3:45 soft ceiling. If long, trim inside the problem setup (0:12–0:30) or the scale lines (2:08) — never the futurist payoff or the close. Protect both the live-demo overlays and the per-second metering shot; those are the technical proof.
+**< 3:00 is mandatory.** If long, trim inside section 2. Never cut the working-app demo (§3) or the Aurora DSQL line (§4) — those are scored hackathon requirements.
 
 ---
 
 ## What's real vs. illustrated (keep honest with judges)
-- **Real, on screen (overlays):** streaks, leaderboard, tracked rewards, the player streaming Amanda's real audio. Live today.
-- **Real, in the room (B-roll):** Amanda Kurt is a real independent artist recording with the founder. Not a stock model.
-- **Real backend, shown as a diagram:** per-second listening → artist payout. It runs; we depict it so we never imply a fake UI.
-- **Real, and the technical centerpiece:** the metered, per-second **licensing rail** for apps and AI agents — genuinely built and live. This is the "rails for the agentic web" claim, and it's true.
-- **Vision (diagram):** AI agents curating the environments you live in. The licensing rail exists today; the world of agents consuming it at scale is the future we're building toward — shown as illustration, framed as where it's going, not as already-everywhere.
+- **Real, in the room:** Amanda Kurt is a real independent artist. Her music is the score.
+- **Real, on screen (§3):** streaks, leaderboard, tracked rewards, the player streaming her real audio — live today.
+- **Real backend, explained (§4):** per-second listening metered and settled on **Aurora DSQL**; the app deploys on Vercel. The metered licensing rail for apps/agents is genuinely built.
+- **Vision (diagram):** AI agents curating what you hear at scale — the rail exists now; the agent-everywhere world is where it's going, shown as illustration, not as already-everywhere.

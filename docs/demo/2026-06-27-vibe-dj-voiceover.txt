@@ -1,65 +1,45 @@
-TOLLROAD — FOUNDER SPEECH (teleprompter read)
-One continuous take to camera, ~3:30–3:45 (slower if you let the pauses sit).
-App overlays, studio B-roll with
-Amanda Kurt, and diagrams are cut in afterward. Delivery: honest, conversational,
-conviction over polish — you're telling someone why this exists, not selling them.
-Slow down. Let the pauses sit. The futurist turn near the end is conviction, not
-hype — say it like you already know it's true.
+TOLLROAD — "Amanda's Record" (spoken lines)
+Cinematic documentary, ~2:15-2:30 (must be under 3:00 for the H0 hackathon).
+Amanda's lines are INTERVIEW soundbites — use her real words; the text below is
+the target sense, not a script to read flat. The founder's close IS a read:
+deliver it clean, technical, confident. Aurora DSQL must be named.
 
----
+================================================================
+AMANDA — interview soundbites (her words; capture, then cut to the truest takes)
+================================================================
 
+[COLD OPEN]
+I've been making music since before anyone was listening. You don't do it for the
+money — there basically isn't any. You do it because you can't not.
 
-I want to tell you about something we've been building — and why.
+[THE PROBLEM]
+I have people who know every word. They've listened for years. And at the end of
+it I make almost nothing — and I have no idea who they are. The platforms keep the
+relationship. I just make the songs.
 
-Think about how much you listen to your favorite artist. Hundreds of hours a
-year. You stream them every day, you know every word. And at the end of the
-year, what do you actually have to show for it? A screenshot you post once and
-forget. Meanwhile the artist you've supported all that time earns almost nothing
-from it — and has no idea you even exist.
+That's the part that breaks you. Not that it's hard. That the people who love it
+most, and the person who made it, never actually meet.
 
-That always struck us as broken. The people who love music the most get nothing
-back. And the artists they love can't really reach them. So we set out to fix it.
+[THE TURN — seeing TollRoad]
+Then they showed me this. Every second someone listens to me, it's counted — and
+it actually pays me. Not a fraction of a fraction. Real.
 
-I want you to meet Amanda Kurt. She's an independent artist — and right now,
-we're in the studio together, making this record. Amanda is exactly who we built
-this for: someone making real music who deserves to reach the people who love it,
-and get paid fairly for it.
+And I can finally see them. My biggest fans, by name. The ones who showed up every
+day — I can actually thank them.
 
-We're building a new kind of music platform — one where your listening actually
-counts. Every minute you spend with an artist like Amanda is tracked, and it
-earns you something real. You build a streak. You earn rewards you actually keep.
-You climb a leaderboard of that artist's biggest fans — so your fandom is finally
-seen.
+[CLOSE]
+I just want to make music and have it reach the people who love it. For the first
+time, that feels possible.
 
-And I want to be clear: this isn't a mockup. What you're looking at is the real
-product. The streaks, the leaderboards, the rewards — they're live today.
+================================================================
+FOUNDER — technical close (teleprompter read, ~25s)
+================================================================
 
-For artists like Amanda, it's a new way to make a living, and a new way to
-connect. Because every second of listening is tracked, artists get paid for real
-engagement — not some opaque fraction of a cent — and for the first time, they
-can see exactly who their superfans are, and reward them directly.
+Here's how it actually works. Every second of listening is metered and settled in
+real time on Aurora DSQL — that's the ledger that pays Amanda the instant you
+press play, and it's built to scale to millions of fans and artists.
 
-That's the heart of it. A real bond between a fan and an artist, with value
-flowing both ways. And we think this scales — to millions of fans and artists. A
-new model for how music gets discovered, supported, and paid for. Honestly, a new
-kind of label.
-
-And here's where it's going. The way people find music is about to change
-completely. More and more, it won't be you scrolling a feed — it'll be AI agents
-curating the spaces you live in. Your morning. Your workout. The room you walk
-into. Those agents are going to need music — legally, fairly, metered to the
-moment.
-
-So we built the rails for that. Any app, or any AI agent, can license this
-catalog — metered down to the second, paid in real time. It's the same engine
-that pays Amanda when you press play, opened up to the whole agentic web.
-
-That's the future we're laying track for. The licensing deals, the rails, the
-fair split — so when the future of music shows up, it's independent artists like
-Amanda who prosper from it. Not locked out of it again.
-
-We're redefining how fans and artists connect — listening that finally rewards
-you, a fanbase that artists can actually build on, and the rails for whatever
-music becomes next.
-
-That's what we're here to do.
+And that same metered rail isn't just for our app. Any app — or any AI agent
+curating what you hear next — can license this catalog by the second, fairly.
+We're laying the rails so the future of music pays independent artists like Amanda
+first.
