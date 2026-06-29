@@ -39,10 +39,26 @@ Each play flows into Aurora DSQL, which keeps the permanent record — every
 artist's earnings, already added up. So their dashboard loads instantly; it never
 has to crunch the numbers.
 
-[BEAT 4 — pay-to-play]
-And the music only plays once the second is paid. The moment your payment clears,
-the track unlocks.
+[BEAT 4 — encrypted, key on payment]
+And the track itself is locked — actually encrypted, not just hidden. Paying for
+the second is the only key, and that key expires in seconds. No copy ever sits in
+your browser to rip.
+  (🎧 on-screen caption, not spoken: "You can't keep the song. You're paying for
+   the moment you're hearing it.")
 
-[THE RAIL]
+================================================================
+FOUNDER — two things we're quietly proud of (senior, but for everyone)
+Each line has a 🔧 engineer's flex AND a 🎧 plain caption on screen.
+================================================================
+
+[PROUD #1 — HTTP 402 for agents]
+Here's the part we love. When an AI agent asks for a song it hasn't paid for, our
+server answers with HTTP 402 — Payment Required. It's a status code the web
+reserved thirty years ago and basically never used. We gave it a job: the agent
+reads the price, pays, and plays — no human, no checkout page.
+  (🎧 on-screen caption, not spoken: "For you it's a play button. For a machine
+   it's a price tag it can actually read.")
+
+[PROUD #2 — the rail]
 And that same metered rail isn't just our app. Any app — or any AI agent picking
-your next song — can license this catalog by the second, fairly.
+your next song — can license this whole catalog by the second, fairly.
