@@ -1,125 +1,115 @@
-# TollRoad — "Amanda's Record" (cinematic doc, shooting script)
+# TollRoad — "Metered by the Second" (architecture-forward demo, shooting script)
 
 **Date:** 2026-06-27
-**Runtime target:** ~2:15–2:30 (HARD ceiling 2:55 — hackathon requires < 3:00)
-**For:** H0 Hackathon — *Hack the Zero Stack with Vercel v0 and AWS Databases* (h01.devpost.com)
-**Format:** Short cinematic documentary about independent artist **Amanda Kurt**. Amanda's voice and music carry the film; the founder appears only at the end for the technical close.
+**Runtime target:** ~2:25–2:40 (HARD ceiling 2:55 — hackathon requires < 3:00)
+**For:** H0 Hackathon — *Hack the Zero Stack with Vercel v0 and AWS Databases* (h01.devpost.com). Track 3 (million-scale). **The judges are the AWS Databases bench — this cut is built for them.**
+**Format:** Fast, technical demo. Amanda Kurt opens it with the human hook and the live product; the spine is a founder-narrated walk through the **polyglot CQRS architecture**.
 
-**What the judges need to see (build the cut around these):**
-- Footage of the **working app** (live demo — required).
-- The **problem + target audience**, told through Amanda (independent artists + their fans).
-- A clear explanation of the **AWS database** used — **Aurora DSQL** — named by the founder.
-- Technical implementation, design, real-world impact, originality — all four judging axes.
+**What this cut optimizes for (the rubric):**
+- **Technological Implementation** — the deep architecture walk (this is now the majority of the runtime).
+- **Working app** — Amanda's live demo (required footage).
+- **AWS databases explained** — **DynamoDB** (command/hot path) + **Aurora DSQL** (query/system-of-record), named and justified.
+- **Originality / Impact** — per-second metering + the agent licensing rail.
 
 ---
 
 ## How this video is built
+1. **Amanda is the cold open and the demo — fast.** Three short, technical-flavored soundbites; her track is the score. She gets us into the product in ~30s, then steps aside.
+2. **The founder narrates the architecture** over motion-gfx diagrams — this is the bulk of the film and the reason the AWS bench leans in.
+3. **Cut fast.** Tight, confident pacing. No lingering. Every diagram earns its seconds.
 
-1. **Shoot Amanda as a documentary subject**, not an actor. Verité B-roll of her making/playing music + a sit-down interview. Her best real soundbites become the spine. The lines below are the *target sense* — use her actual words.
-2. **Music is hers, wall-to-wall.** Her track is the score. Let it breathe; pull it down under interview, swell it on the visuals.
-3. **The app demo is the turn**, not a feature tour — show it changing what her music means to her and her fans (real screen capture).
-4. **The founder closes**, ~25s, to camera or VO over diagrams — the only "talking-head pitch" in the film, and it's technical.
-
-**Tone:** cinematic, intimate, earned. Think a Song-Exploder / mini-doc feel, not an ad. Quiet beginning, emotional middle, confident technical landing.
+**Tone:** sharp, technical, proud of the build. Show the diagrams like you've shipped them — because you have.
 
 ## Cue legend
-- **[AMANDA — interview]** — sit-down soundbite (her words; lines below are target sense)
-- **[B-ROLL: …]** — cinematic footage of Amanda (no dialogue)
+- **[AMANDA]** — quick interview/demo soundbite (her words; lines = target sense)
 - **[OVERLAY: …]** — real app screen capture
-- **[FOUNDER]** — founder to camera or VO
-- **[DIAGRAM: …]** — motion-gfx for the technical close
+- **[FOUNDER]** — founder VO/to-camera (the architecture narration)
+- **[DIAGRAM: …]** — architecture motion-gfx (the heart of this cut)
 
 ---
 
 ## The film
 
-### 1 — Cold open (0:00–0:18)
-**[B-ROLL: Amanda alone — hands on the guitar/keys, late light, a room that's clearly hers] · her track comes up**
-> **[AMANDA — interview, over the visuals]:** I've been making music since before anyone was listening. You don't do it for the money — there basically isn't any. You do it because you can't not.
+### 1 — Cold open + live demo (0:00–0:32)
+**[AMANDA — to camera, fast, her track under] → [OVERLAY: her track playing in the real app]**
+> **[AMANDA]:** I'm Amanda Kurt. Independent artist. Every second you listen to me is now metered and paid — by the second. Watch.
 
-*(Hook. End the open on a held image + a swell of her song before the title.)*
+**[OVERLAY: streak ticking up] → [OVERLAY: leaderboard, a fan handle climbing] → [OVERLAY: balance debiting live]**
+> **[AMANDA]:** There's my track. There's the meter running. There are my superfans — by name. The money moves in real time.
 
-**[TITLE CARD: a single line — e.g. "Amanda Kurt is an independent artist." — quick, then gone]**
+*(Required working-app footage. Real capture, 60fps, keys hidden. Fast cuts — three overlays to three clauses.)*
 
-### 2 — The journey & the problem (0:18–0:55)
-**[B-ROLL: playing a small room; phone showing streaming numbers; the unglamorous parts]**
-> **[AMANDA — interview]:** I have people who know every word. They've listened for years. And at the end of it I make almost nothing — and I have no idea who they are. The platforms keep the relationship. I just… make the songs.
+### 2 — The architecture (the spine) (0:32–2:05)
 
-**[B-ROLL: Amanda scrolling her own streaming dashboard, unreadable splits]**
-> **[AMANDA — interview]:** That's the part that breaks you. Not that it's hard. That the people who love it most, and the person who made it, never actually meet.
+**[FOUNDER VO] + [DIAGRAM: system splits into two — "COMMAND: DynamoDB" | "QUERY: Aurora DSQL"]**
+> **[FOUNDER]:** Metering music by the second is a write-heavy money path, so we split the system in two — polyglot CQRS. Every charge writes to **DynamoDB**. Everything you read is served from **Aurora DSQL**. Each database picked for one access pattern, not as a default.
 
-*(This is the problem statement + audience — independent artists and their fans — in her voice. Don't have the founder say it.)*
+**[DIAGRAM: the atomic TransactWriteItems — conditional debit ⨝ guarded meter event, "all-or-nothing"]**
+> **[FOUNDER]:** The hot path is a single atomic DynamoDB transaction: a conditional debit that stops dead at a zero balance, committed together with one metered-minute event — keyed user-track-minute, one event per unique minute. It can't double-charge, and a balance can't go negative. Single-digit-millisecond writes.
 
-### 3 — The turn: TollRoad, shown working (0:55–1:38)
-**[OVERLAY: her track playing in the real TollRoad app] → [B-ROLL: Amanda watching it on a laptop, reacting]**
-> **[AMANDA — interview, lifting]:** Then they showed me this. Every second someone listens to me, it's counted — and it actually pays me. Not a fraction of a fraction. Real.
+**[DIAGRAM: DynamoDB Streams → projector Lambda → DSQL (append-only ledger + precomputed daily summary)]**
+> **[FOUNDER]:** That event fans out through DynamoDB Streams into a projector Lambda, which builds the system-of-record in Aurora DSQL — an append-only royalty ledger, and a precomputed per-artist daily summary. So an artist's earnings dashboard is a cheap point read. It never scans the ledger.
 
-**[OVERLAY: streak counter ticking up] → [OVERLAY: leaderboard, a fan's handle climbing] → [OVERLAY: rewards unlocking]**
-> **[AMANDA — interview]:** And I can finally *see* them. My biggest fans, by name. The ones who showed up every day — I can actually thank them.
+**[DIAGRAM: two balances — DynamoDB "authoritative / real-time" vs DSQL "reconciliation / audit"]**
+> **[FOUNDER]:** There are two balances by design. The authoritative one lives in DynamoDB and gates money and playback in real time. DSQL holds the reconciliation balance for audit and history. The projector is the *only* writer of that ledger — which makes the whole pipeline exactly-once, and the rollup correct by construction.
 
-*(This is the required working-app footage. Keep it real, 60fps, keys hidden. Time the three overlays to streak / superfans / rewards.)*
+**[DIAGRAM: DSQL grain — "no FKs · async indexes · append-only · scale-to-zero" + "16–23K writes/s · 1M streams"]**
+> **[FOUNDER]:** We built to Aurora DSQL's grain — no foreign keys, async indexes, an append-only ledger to dodge write contention — and it scales to zero between runs. The command side is sized for sixteen to twenty-three thousand writes a second. A million concurrent streams.
 
-### 4 — The founder, technical close (1:38–2:05)
-**[FOUNDER — to camera, brief] then [DIAGRAM: one second of listening → metered → paid to Amanda, in real time]**
-> **[FOUNDER]:** Here's how it actually works. Every second of listening is metered and settled in real time on **Aurora DSQL** — that's the ledger that pays Amanda the instant you press play, and it's built to scale to millions of fans and artists.
+**[DIAGRAM: stream gate — paid minute in DynamoDB → short-TTL signed CloudFront URL]**
+> **[FOUNDER]:** And the audio only unlocks once you've paid for the minute. The stream endpoint issues a short-lived signed CloudFront URL the instant DynamoDB confirms a recent paid minute. Pay-per-second, enforced at the edge.
 
-**[DIAGRAM: same metered rail → an app / an AI agent licensing the track]**
-> **[FOUNDER]:** And that same metered rail isn't just for our app. Any app — or any AI agent curating what you hear next — can license this catalog by the second, fairly. We're laying the rails so the future of music pays independent artists like Amanda first.
+### 3 — The rail + close (2:05–2:35)
+**[DIAGRAM: same metered rail → app / AI agent licensing by the second]**
+> **[FOUNDER]:** And that same metered rail isn't just our app. Any app — or any AI agent picking your next song — can license this catalog by the second, fairly.
 
-*(This single beat carries: the AWS database explanation the hackathon requires, the technical implementation, and the one futurist line. Keep it tight — no second take of the pitch.)*
+**[OVERLAY: live app] → [AMANDA — last line] → [END CARD]**
+> **[AMANDA]:** I get paid the instant you press play. I've never had that.
 
-### 5 — Close (2:05–2:25)
-**[B-ROLL: Amanda back at the instrument, playing — the song resolves] then [AMANDA — interview, last line]**
-> **[AMANDA]:** I just want to make music and have it reach the people who love it. For the first time, that feels possible.
-
-**[END CARD] TollRoad wordmark · one CTA line · "Built on Aurora DSQL + Vercel" · her track resolves and out.**
+**[END CARD] TollRoad wordmark · "Polyglot CQRS · DynamoDB + Aurora DSQL · Vercel" · her track resolves and out.**
 
 ---
 
-## Amanda interview — questions to ask on the day
-Capture far more than you need; cut to the truest 4–5 soundbites. Ask:
-1. When did you start making music, and why don't you stop?
-2. What's your relationship with the people who listen to you? Do you know who they are?
-3. What do you actually earn from streaming — and how does that feel?
-4. When you saw your plays metered and paid second-by-second, and saw your fans by name — what went through your head?
-5. What would it mean if the future of music actually paid artists like you first?
+## Amanda — keep it to 3 soundbites (capture more, cut to these)
+Faster and more technical than emotional. Ask her to say, in her own words: (1) who she is + that she's metered/paid by the second, (2) what she's pointing at in the live app, (3) that she's paid the instant you press play.
 
 ## Shot / capture checklist
-**Amanda (cinematic — A7III, fast glass, shallow DOF, practical light):**
-- [ ] Hero B-roll: alone with the instrument, golden/late light (open + close)
-- [ ] Performance: small room / live take
-- [ ] Verité: the unglamorous reality (dashboards, the phone, the grind)
-- [ ] Sit-down interview, clean audio (lav + boom), eyeline just off lens
-
-**Real app screen captures (60fps, hide keys):**
+**Real app screen captures (60fps, hide keys) — the working-app proof:**
 - [ ] Amanda's track playing in the player
-- [ ] Streak counter ticking up — *hero overlay*
+- [ ] Streak counter ticking up
 - [ ] Leaderboard with a fan handle climbing
-- [ ] Rewards unlocking
-- [ ] Amanda reacting to the app on a laptop (B-roll, not screen)
+- [ ] Balance debiting live (the meter moving)
 
-**Diagrams / motion-gfx (technical close):**
-- [ ] One second of listening → metered → paid to Amanda in real time (name Aurora DSQL)
+**Architecture diagrams / motion-gfx (the spine — make these crisp and real):**
+- [ ] CQRS split: COMMAND=DynamoDB | QUERY=Aurora DSQL
+- [ ] Atomic `TransactWriteItems`: conditional stop-at-zero debit ⨝ guarded meter event (idempotency key `user#track#minute`)
+- [ ] DynamoDB Streams → projector Lambda → DSQL append-only ledger + precomputed daily summary
+- [ ] Two-balance consistency rule (authoritative DynamoDB vs reconciliation DSQL)
+- [ ] DSQL grain (no FKs / async indexes / append-only / scale-to-zero) + 16–23K writes/s · 1M streams
+- [ ] Stream gate: paid minute → short-TTL signed CloudFront URL
 - [ ] Same rail → app / AI agent licensing by the second
-- [ ] End card / wordmark + "Built on Aurora DSQL + Vercel"
+- [ ] End card · "Polyglot CQRS · DynamoDB + Aurora DSQL · Vercel"
 
-**Founder (A7III):** one clean technical close, a couple of safety takes.
+**Talent (A7III):** Amanda fast soundbites + live-app reactions; founder clean architecture VO (a couple safety takes of the dense beats).
 
 ## Timing ledger
 | Section | Window | Carried by |
 |---|---|---|
-| Cold open | 0:00–0:18 | Amanda + her music |
-| Journey & problem (+ audience) | 0:18–0:55 | Amanda interview |
-| The turn — app demo (working app) | 0:55–1:38 | App overlays + Amanda |
-| Technical close (Aurora DSQL + rail) | 1:38–2:05 | Founder + diagrams |
-| Close | 2:05–2:25 | Amanda |
+| Cold open + live demo | 0:00–0:32 | Amanda + working app |
+| Architecture: CQRS split | 0:32–0:50 | Founder + diagram |
+| Architecture: atomic hot-path txn | 0:50–1:12 | Founder + diagram |
+| Architecture: Streams → projector → DSQL | 1:12–1:32 | Founder + diagram |
+| Architecture: two-balance rule | 1:32–1:48 | Founder + diagram |
+| Architecture: DSQL grain + scale | 1:48–2:00 | Founder + diagram |
+| Architecture: signed-URL stream gate | 2:00–2:05 | Founder + diagram |
+| The rail + close | 2:05–2:35 | Founder + Amanda |
 
-**< 3:00 is mandatory.** If long, trim inside section 2. Never cut the working-app demo (§3) or the Aurora DSQL line (§4) — those are scored hackathon requirements.
+**< 3:00 is mandatory.** If long, trim the rail line (§3) or tighten the cold open — never cut the working-app demo or any named-database architecture beat; those are the scored requirements.
 
 ---
 
 ## What's real vs. illustrated (keep honest with judges)
-- **Real, in the room:** Amanda Kurt is a real independent artist. Her music is the score.
-- **Real, on screen (§3):** streaks, leaderboard, tracked rewards, the player streaming her real audio — live today.
-- **Real backend, explained (§4):** per-second listening metered and settled on **Aurora DSQL**; the app deploys on Vercel. The metered licensing rail for apps/agents is genuinely built.
-- **Vision (diagram):** AI agents curating what you hear at scale — the rail exists now; the agent-everywhere world is where it's going, shown as illustration, not as already-everywhere.
+- **Real, on screen:** streaks, leaderboard, live balance debit, the player streaming Amanda's real audio.
+- **Real architecture (the diagrams depict the actual design):** polyglot CQRS — DynamoDB command path (atomic conditional debit + guarded meter event, idempotency key `user#track#minute`), DynamoDB Streams → projector Lambda → Aurora DSQL append-only `royalty_ledger` + `artist_daily_summary`, the two-balance consistency rule, signed-CloudFront stream gate. This is our data model, not a mockup.
+- **Honest framing of scale:** sized/architected for ~16–23K writes/sec and a million concurrent streams (justified by access pattern). Say "built for," not "currently serving."
+- **Vision (diagram):** AI agents licensing the catalog at scale — the metered rail is built; the agents-everywhere world is where it's going.

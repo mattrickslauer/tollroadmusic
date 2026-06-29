@@ -1,45 +1,63 @@
-TOLLROAD — "Amanda's Record" (spoken lines)
-Cinematic documentary, ~2:15-2:30 (must be under 3:00 for the H0 hackathon).
-Amanda's lines are INTERVIEW soundbites — use her real words; the text below is
-the target sense, not a script to read flat. The founder's close IS a read:
-deliver it clean, technical, confident. Aurora DSQL must be named.
+TOLLROAD — "Metered by the Second" (spoken lines)
+Architecture-forward demo, ~2:25-2:40 (must be under 3:00 for the H0 hackathon).
+Amanda = 3 fast, technical soundbites (her real words; text = target sense).
+Founder = the architecture narration; deliver it crisp and confident, like you
+shipped it. Named databases MUST land clearly: DynamoDB and Aurora DSQL.
 
 ================================================================
-AMANDA — interview soundbites (her words; capture, then cut to the truest takes)
+AMANDA — 3 soundbites (fast, technical, not sentimental)
 ================================================================
 
 [COLD OPEN]
-I've been making music since before anyone was listening. You don't do it for the
-money — there basically isn't any. You do it because you can't not.
+I'm Amanda Kurt. Independent artist. Every second you listen to me is now metered
+and paid — by the second. Watch.
 
-[THE PROBLEM]
-I have people who know every word. They've listened for years. And at the end of
-it I make almost nothing — and I have no idea who they are. The platforms keep the
-relationship. I just make the songs.
-
-That's the part that breaks you. Not that it's hard. That the people who love it
-most, and the person who made it, never actually meet.
-
-[THE TURN — seeing TollRoad]
-Then they showed me this. Every second someone listens to me, it's counted — and
-it actually pays me. Not a fraction of a fraction. Real.
-
-And I can finally see them. My biggest fans, by name. The ones who showed up every
-day — I can actually thank them.
+[OVER THE LIVE DEMO]
+There's my track. There's the meter running. There are my superfans — by name.
+The money moves in real time.
 
 [CLOSE]
-I just want to make music and have it reach the people who love it. For the first
-time, that feels possible.
+I get paid the instant you press play. I've never had that.
 
 ================================================================
-FOUNDER — technical close (teleprompter read, ~25s)
+FOUNDER — architecture narration (teleprompter; this is the spine, ~90s)
 ================================================================
 
-Here's how it actually works. Every second of listening is metered and settled in
-real time on Aurora DSQL — that's the ledger that pays Amanda the instant you
-press play, and it's built to scale to millions of fans and artists.
+[CQRS SPLIT]
+Metering music by the second is a write-heavy money path, so we split the system
+in two — polyglot CQRS. Every charge writes to DynamoDB. Everything you read is
+served from Aurora DSQL. Each database picked for one access pattern, not as a
+default.
 
-And that same metered rail isn't just for our app. Any app — or any AI agent
-curating what you hear next — can license this catalog by the second, fairly.
-We're laying the rails so the future of music pays independent artists like Amanda
-first.
+[ATOMIC HOT PATH]
+The hot path is a single atomic DynamoDB transaction: a conditional debit that
+stops dead at a zero balance, committed together with one metered-minute event —
+keyed user-track-minute, one event per unique minute. It can't double-charge, and
+a balance can't go negative. Single-digit-millisecond writes.
+
+[STREAMS -> PROJECTOR -> DSQL]
+That event fans out through DynamoDB Streams into a projector Lambda, which builds
+the system-of-record in Aurora DSQL — an append-only royalty ledger, and a
+precomputed per-artist daily summary. So an artist's earnings dashboard is a cheap
+point read. It never scans the ledger.
+
+[TWO BALANCES]
+There are two balances by design. The authoritative one lives in DynamoDB and
+gates money and playback in real time. DSQL holds the reconciliation balance for
+audit and history. The projector is the only writer of that ledger — which makes
+the whole pipeline exactly-once, and the rollup correct by construction.
+
+[DSQL GRAIN + SCALE]
+We built to Aurora DSQL's grain — no foreign keys, async indexes, an append-only
+ledger to dodge write contention — and it scales to zero between runs. The command
+side is sized for sixteen to twenty-three thousand writes a second. A million
+concurrent streams.
+
+[SIGNED-URL STREAM GATE]
+And the audio only unlocks once you've paid for the minute. The stream endpoint
+issues a short-lived signed CloudFront URL the instant DynamoDB confirms a recent
+paid minute. Pay-per-second, enforced at the edge.
+
+[THE RAIL]
+And that same metered rail isn't just our app. Any app — or any AI agent picking
+your next song — can license this catalog by the second, fairly.
