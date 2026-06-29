@@ -70,7 +70,7 @@ export default function Closer() {
         <Reveal delay={300} className={styles.ctaReveal}>
           <div className={styles.ctaRow}>
             <Cta href={ROUTES.browse}>Start Listening →</Cta>
-            <Cta href={ROUTES.signup} variant="green">Join as Artist →</Cta>
+            <Cta href={ROUTES.forArtists} variant="green">For Artists →</Cta>
           </div>
         </Reveal>
 
