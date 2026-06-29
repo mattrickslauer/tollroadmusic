@@ -22,6 +22,26 @@ src/
 openapi.yaml  the /v1 contract (x402 402 bodies documented here)
 ```
 
+## Route groups (`src/router.ts`)
+
+The single route table covers the whole product, not just metering:
+
+| Group | Routes |
+|---|---|
+| **Auth** | `POST /auth/otp/start` · `POST /auth/otp/verify` · `GET /auth/me` · `POST /auth/logout` |
+| **Metering / x402** | `POST /charge` · `GET /stream/{trackId}` · `GET /stream/{trackId}/raw` (dev proxy) |
+| **Discovery / Vibe DJ** | `POST /discover` (Bedrock-embed → cosine over DynamoDB vectors) · `POST /sessions` · `POST /sessions/{id}/next` |
+| **Catalog** | `GET /catalog` · `GET /tracks/{id}` · `GET /artists` · `GET /artists/{id}` · `POST /artists` |
+| **Wallet** | `GET /balance` · `POST /wallet/topup` · `POST /wallet/demo-credit` · `POST /wallet/onboarding-gift` · `POST /wallet/confirm` · `POST /stripe/webhook` |
+| **Library** | `GET/POST/DELETE /library/likes` (like charges 1¢) · `GET/POST /playlists` · `GET /playlists/{id}` (+ `/public`, `/visibility`) · `POST/DELETE /playlists/{id}/tracks` · `GET/POST /recents` |
+| **Artist dashboard** | `GET /artist/summary` · `POST /artist/profile` · `POST /artist/track/rate` · avatar/cover/audio `presign`+`commit` · `POST /artist/tracks` · `PUT/DELETE /artist/tracks/{id}` |
+| **Payouts (Stripe Connect)** | `POST /artist/payouts/onboard` · `GET /artist/payouts/status` · `POST /artist/payouts/withdraw` |
+| **Superfan** | `GET /superfan/bond/{artistId}` · `GET /superfan/leaderboard/{artistId}` · `GET /superfan/my-bonds` · `GET /superfan/profile/{handle}` |
+| **Mood (Vibe Pad)** | `POST /mood/trace` · `GET /mood/consensus/{songId}` |
+
+Some routes are config-gated and return `503` until their dependency is set:
+discovery/sessions need the vector + Bedrock config; mood needs DSQL configured.
+
 ## The x402 protocol (crypto-free)
 
 Streaming is gated by the x402 *shape* — `request → 402 → pay → retry` — but the
@@ -31,7 +51,7 @@ not a blockchain.
 ```
 GET  /v1/stream/{trackId}        → 402 { x402Version, accepts:[{ scheme:"prepaid",
                                           asset:"usd", maxAmountRequired, payTo }] }
-POST /v1/charge { trackId }      → 200 { balanceCents, charged }   (the payment)
+POST /v1/charge { trackId }      → 200 { balanceMillicents, charged }   (the payment)
 GET  /v1/stream/{trackId}        → 200 { url, expiresAt, mode }    (now authorized)
 ```
 
@@ -46,7 +66,7 @@ meter event, idempotent per `user#track#minute`; the append-only DSQL
 Writes and reads now live in **different databases** (full CQRS):
 
 - **Command side (hot path) → Amazon DynamoDB.** `/charge` does a conditional
-  `UpdateItem` debit (`balanceCents >= cost`, can never go negative) and writes a
+  `UpdateItem` debit (`balanceMillicents >= cost`, can never go negative) and writes a
   meter event with `attribute_not_exists` so each `user#track#minute` lands exactly
   once. Top-ups credit the same **authoritative** DynamoDB balance. This is the
   single-digit-ms money path; `/balance` real-time and the stream gate
@@ -55,8 +75,12 @@ Writes and reads now live in **different databases** (full CQRS):
   Streams fan `INSERT`s (`METER`, `TOPUP`) into a projector that builds DSQL: the
   append-only `royalty_ledger` (system of record), `artist_daily_summary`, the
   `wallet_topups` history, and the eventually-consistent **reconciliation** balance
-  (`listener_profiles.balance_cents`). DSQL serves cheap relational/BI reads and
+  (`listener_profiles.balance_millicents`). DSQL serves cheap relational/BI reads and
   scales to zero between projection runs.
+
+> **Currency: millicents.** All money is stored as integer **millicents** (cents × 1000)
+> so per-track rates can be sub-cent (free → $1.00/min at 0.1¢ steps). Stripe stays in
+> whole cents at the boundary. Field names end in `Millicents` / columns in `_millicents`.
 
 **Rollup-ordering fix.** Previously the synchronous charge wrote the DSQL ledger
 itself, front-running the rollup so the projector always hit `ON CONFLICT DO
