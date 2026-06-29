@@ -325,6 +325,11 @@ export class TollroadStack extends cdk.Stack {
       TOLLROAD_DSQL_REGION: region,
       TOLLROAD_CDN_DOMAIN: distribution.distributionDomainName,
       TOLLROAD_IMAGES_BUCKET: imagesBucket.bucketName,
+      // Audio uploads (artist song CRUD) presign PUTs to the `audio/` prefix of
+      // this bucket — the same bucket fronted by the streaming CloudFront
+      // distribution, so an uploaded track is immediately streamable. The Lambda
+      // already holds s3:PutObject on audio/* + the KMS data-key perms above.
+      TOLLROAD_AUDIO_BUCKET: audioBucket.bucketName,
       // The command path runs the balance debit + meter/top-up events on this
       // table; the Streams → projector pipeline then builds the DSQL read models
       // (backend/src/domain/wallet-store.ts).
@@ -353,6 +358,10 @@ export class TollroadStack extends cdk.Stack {
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
       "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+      // Public app origin for Stripe Connect onboarding return/refresh URLs
+      // (backend/src/handlers/payouts.ts). Defaults to http://localhost:3000 in
+      // code; set this in prod or artists get sent back to localhost after KYC.
+      "TOLLROAD_APP_BASE_URL",
       // Telegram sign-up notifications (backend/src/domain/notify.ts). No IAM
       // needed — the bot is reached over plain HTTPS. Like the other secrets,
       // supplied at deploy via -c and dropped on a plain redeploy, so keep them
