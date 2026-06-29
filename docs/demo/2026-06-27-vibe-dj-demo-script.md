@@ -1,164 +1,114 @@
-# TollRoad Vibe DJ — Demo Video Shooting Script
+# TollRoad — Founder Speech Demo (shooting script)
 
 **Date:** 2026-06-27
-**Runtime target:** ~2:45 (hard ceiling 3:00)
-**Format:** Balanced 3-act — Hook → Proof → Vision
-**Cameras:** Sony A7III (founder-to-camera, shallow-DOF interview), DJI / 360 (hands & device B-roll), screen capture (real product), AI visual / motion-gfx (concept + data plane)
+**Runtime target:** ~2:50–3:00 (hard ceiling 3:00)
+**Format:** One continuous founder speech to camera, cut up with app overlays + diagrams
+**Primary camera:** Sony A7III — founder to camera, locked-off or slow push, shallow DOF, soft key, simple backdrop. Shoot the whole speech in one take (multiple full takes for safety).
+**Overlay sources:** screen capture (real product), AI visual / motion-gfx (diagrams + scale).
 
 ---
 
-## Throughline (the one thing every frame serves)
+## How this video is built
 
-> *An AI agent describes a vibe, music plays, money moves per-second on AWS, and a real creator gets paid — Epidemic Sound, rebuilt for the agentic era.*
+1. **Record the speech end-to-end.** The founder delivers the full speech below to camera, start to finish, several times. This is the spine and the audio bed for the entire film.
+2. **Cut it up in the edit.** Hold on the founder's face for the personal/conviction moments; cut away to app overlays and diagrams where marked, then come back to the founder for the close.
+3. **The audio never breaks.** Overlays are picture-only; the founder's voice runs continuously underneath. No separate VO.
 
-Everything that doesn't push this sentence forward gets cut. If a shot is pretty but off-thread, it goes.
+**Tone:** honest, conversational, founder-not-spokesperson. Conviction over polish. Let pauses sit. This is a person explaining why they built something, not an ad.
 
-## Visual treatment legend
-
-| Tag | Meaning | Source |
-|---|---|---|
-| 🎤 | Founder to camera | Sony A7III, 50mm-ish, shallow DOF, soft key, dark backdrop |
-| 🤚 | Hands / device B-roll | DJI / 360 — controller, headphones, laptop, phone, studio gear |
-| 🖥️ | Real screen capture | Actual product: Claude/MCP, player, meter, vibe search |
-| ✨ | AI visual / motion-gfx | Generated B-roll + animated data-plane diagram |
-
-**Golden rule for honesty:** anything tagged 🖥️ must be a *real, unedited* recording (numbers may be pre-seeded for a clean run, but the flow is genuine). Anything conceptual or future-tense is ✨ and should read as illustration, never as a fake screenshot. See "What's real vs. illustrated" at the bottom — keep the team honest with judges.
-
-## Spoken-line budget
-
-Three founder lines, each deliverable in one breath (≤10s). Total VO across the film ≈ 300 words at an unhurried ~140 wpm. Let the music and the real numbers breathe; resist wall-to-wall narration.
+## Cue legend
+- **[ON CAM]** — hold on the founder's face
+- **[OVERLAY: …]** — cut to real app screen capture over the running audio
+- **[DIAGRAM: …]** — cut to an AI/motion-gfx diagram over the running audio
 
 ---
 
-# ACT 1 — HOOK · "The agent asks for music" (0:00–0:50)
+## The speech, with cue annotations
 
-### Beat 1.1 — Cold open (0:00–0:08)
-- **Visual:** ✨ Pure black. A single line of text types out, terminal-style, then a held beat of silence.
-- **On-screen text:** `tense final boss fight — 140 BPM synthwave`
-- **Audio:** Silence under the typing. On the last keystroke → **music hits** (a real catalog synthwave track). 🤚 Hard cut to hands sliding headphones on / thumb hitting a controller trigger on the downbeat.
-- **VO:** *(none — let the music land the cold open)*
-- **Note:** No logo, no title card yet. We earn attention before we spend it.
+> Deliver every word continuously. The brackets are edit cues, not pauses — don't read them.
 
-### Beat 1.2 — The agent shops for music (0:08–0:25)
-- **Visual:** 🖥️ Real Claude / MCP session. The **agent** (not a human) calls the tool:
-  - `search_music({ vibe: "tense final boss fight, 140 BPM synthwave" })`
-  - Ranked tracks stream back with similarity scores. Let one or two result rows be legible.
-- **On-screen text:** subtle lower-third: `MCP server: tollroad-vibe-dj` · `tool: search_music`
-- **VO (🎤 or narrator, over the screen):** *"This isn't a person searching a music library. It's an AI agent — and it's about to buy music by the minute."*
+**[ON CAM] (0:00–0:12)**
+> I want to tell you about something we've been building — and why.
+>
+> Think about how much you listen to your favorite artist. Hundreds of hours a year. You stream them every day, you know every word.
 
-### Beat 1.3 — "It has a wallet, not a login" (0:25–0:40)
-- **Visual:** 🖥️ The agent continues: `start_session({ context })` → `get_stream({ track_id })` → response is **`402 Payment Required`**. Hold on the 402 for a full beat — it's the whole thesis in one status code.
-- **On-screen text:** highlight `402 Payment Required` + the payment terms line.
-- **VO (🎤 founder, Line 1 — to camera, intercut):** *"The agent doesn't have a login. It has a wallet."*
+**[ON CAM — let it land] (0:12–0:30)**
+> And at the end of the year, what do you actually have to show for it? A screenshot you post once and forget. Meanwhile the artist you've supported all that time earns almost nothing from it — and has no idea you even exist.
 
-### Beat 1.4 — Payment clears, music is live (0:40–0:50)
-- **Visual:** 🖥️ `charge` clears (200) → 🤚 cut to the **real player UI**, track now playing, waveform moving. The loop closed itself: vibe → discovery → payment → stream, no human in the path.
-- **On-screen text:** `agent → vibe → paid stream · in one loop`
-- **Audio:** music swells slightly; first title card can appear here — **TollRoad** wordmark, small, lower corner.
-- **VO:** *(none)*
+**[ON CAM] (0:30–0:42)**
+> That always struck us as broken. The people who love music the most get nothing back. And the artists they love can't really reach them. So we set out to fix it.
 
----
+**[OVERLAY: app — track playing] (0:42–0:58)**
+> We're building a new kind of music platform — one where your listening actually counts. Every minute you spend with an artist is tracked, and it earns you something real.
 
-# ACT 2 — PROOF · "The money is real, and it's on AWS" (0:50–2:00)
+**[OVERLAY: streak counter ticking up] → [OVERLAY: rewards unlocking] → [OVERLAY: leaderboard, your handle climbing] (0:58–1:14)**
+> You build a streak. You earn rewards you actually keep. You climb a leaderboard of that artist's biggest fans — so your fandom is finally seen.
+> *(Time the three overlay cuts to the three sentences — streak / rewards / leaderboard.)*
 
-### Beat 2.1 — The money shot: live meter (0:50–1:15)
-- **Visual:** 🖥️ Real product, split or stacked: the **session meter ticking up per minute** and the **wallet balance decrementing** as the track plays. This is filmed live — the numbers move because real charges are landing.
-- **On-screen text:** `per-minute meter · live` / `balance: $— → $—`
-- **VO (narrator):** *"Every minute that plays, the meter charges the agent's wallet — idempotent, to the millicent. This is metering that already runs in production."*
+**[ON CAM] (1:14–1:24)**
+> And I want to be clear: this isn't a mockup. What you're looking at is the real product. The streaks, the leaderboards, the rewards — they're live today.
+> *(Optional: a quick [OVERLAY: live app, full screen] on "the real product," then back to face.)*
 
-### Beat 2.2 — The AWS data plane lights up (1:15–1:35)
-- **Visual:** ✨ Animated data-plane diagram, synced to the meter ticking from 2.1: a `MeterEvent` flows **DynamoDB (hot meter)** → **Streams** → **projector** → fans out to **Aurora DSQL (royalty ledger)** and **Aurora PostgreSQL + pgvector (the vibe search)**. Each node pulses as the event passes.
-- **On-screen text:** node labels: `DynamoDB · hot meter` / `Aurora DSQL · royalty ledger` / `Aurora PG + pgvector · discovery`
-- **VO (narrator):** *"One event, three AWS databases — each doing the one job it's best at. The hot meter, the system of record, and semantic vibe search."*
-- **AI-visual prompt seed:** *"Sleek dark-mode architecture diagram, three database nodes connected by an animated event stream, a glowing data packet traveling left to right and forking into two ledgers, minimal, high-contrast, subtle teal/amber accent, motion-graphics style, no text artifacts."*
+**[DIAGRAM: one second of listening → flows to the artist] (1:24–1:46)**
+> For artists, it's a new way to make a living, and a new way to connect. Because every second of listening is tracked, artists get paid for real engagement — not some opaque fraction of a cent — and for the first time, they can see exactly who their superfans are, and reward them directly.
 
-### Beat 2.3 — A real creator gets paid (1:35–1:55)
-- **Visual:** 🎤 Founder to camera (credibility anchor), intercut with 🤚 a creator/studio B-roll detail (a hand on a mixing desk, a royalty figure on a dashboard).
-- **VO (🎤 founder, Line 2 — to camera):** *"Every minute played, a real artist gets paid for the seconds people actually listened. That royalty ledger isn't a mock-up — it's live right now."*
+**[ON CAM] then [DIAGRAM: scale — many fans + artists] (1:46–2:08)**
+> That's the heart of it. A real bond between a fan and an artist, with value flowing both ways. And we think this scales — to millions of fans and artists. A new model for how music gets discovered, supported, and paid for. Honestly, a new kind of label.
 
-### Beat 2.4 — Discovery is real, on demand (1:55–2:00)
-- **Visual:** 🖥️ Quick-cut: type a *different* vibe (`"calm Sunday brunch, jazzy, low energy"`) → genuinely different ranked tracks return. Proves the brain, not a canned result.
-- **On-screen text:** `vibe → ranked, licensed, streamable`
-- **VO:** *(none — let the fast cut do the talking)*
+**[DIAGRAM: small "API & AI agents · metered to the second" card — brief] (2:08–2:18)**
+> We even built it so any app, or any AI agent, can license this music, metered down to the second. But that's a means to an end.
+> *(This is the only agent mention. One card, ~5s, then straight back to the founder.)*
+
+**[ON CAM — locked, final] (2:18–2:45)**
+> The end is this. We're redefining how fans and artists connect — listening that finally rewards you, and a fanbase that artists can actually build on.
+>
+> That's what we're here to do.
+
+**[END CARD] (2:45–2:50)**
+> **TollRoad** wordmark · one CTA line. Music (the track that's been under the speech) resolves and out.
 
 ---
 
-# ACT 3 — VISION · "The moat" (2:00–2:45)
+## Overlay / diagram capture checklist
 
-### Beat 3.1 — Any app, any agent (2:00–2:25)
-- **Visual:** ✨ Fast, confident montage — three surfaces pulling the **same** metered stream: a game engine scene reacting to combat, an AI agent in a chat, a cafe/venue ambience. Each clip ~3s, cut on the beat.
-- **On-screen text:** `MCP server` · `Client SDK` · `one backend`
-- **VO (narrator):** *"Any app. Any agent. Score the moment with licensed music — just by describing the vibe."*
-- **AI-visual prompt seed:** *"Three short cinematic vignettes intercut: a neon sci-fi game boss fight, a softly-lit cafe at golden hour, a focused person at a laptop with headphones — unified color grade, premium ad feel, shallow depth of field."*
+**Real app screen captures (record clean, 60fps, hide any keys):**
+- [ ] Track playing in the player (0:42)
+- [ ] Streak counter ticking up (0:58) — *hero overlay, multiple takes*
+- [ ] Rewards unlocking / accruing (1:02)
+- [ ] Leaderboard with a handle climbing ranks (1:06)
+- [ ] Full app "real product" beat (1:18, optional)
 
-### Beat 3.2 — The moat, the close (2:25–2:45)
-- **Visual:** 🎤 Founder to camera, locked-off, final line. Then cut to end card.
-- **VO (🎤 founder, Line 3 — to camera):** *"The model is simple: real creators, direct-licensed, paid per second of use — distributed to the agents that are becoming the customers. The rails are already running. That's the moat."*
-- **End card (✨):** **TollRoad** wordmark · tagline: *"Metered music for the agentic era."* · one CTA line (URL / "Try the demo console").
-- **Audio:** music resolves cleanly on the wordmark. Hard out — no fade-to-mush.
+**Diagrams / motion-gfx (AI visual):**
+- [ ] One second of listening → flows to an artist (1:24) — clean, friendly, not corporate
+- [ ] Scale: many fans + many artists, streaks/leaderboards everywhere (1:58)
+- [ ] "API & AI agents · metered to the second" footnote card (2:08) — deliberately small
+- [ ] End card / wordmark (2:45)
 
----
-
-## Founder lines — clean takes sheet (memorize these three)
-
-1. **(0:25–0:40)** "The agent doesn't have a login. It has a wallet."
-2. **(1:35–1:55)** "Every minute played, a real artist gets paid for the seconds people actually listened. That royalty ledger isn't a mock-up — it's live right now."
-3. **(2:25–2:45)** "The model is simple: real creators, direct-licensed, paid per second of use — distributed to the agents that are becoming the customers. The rails are already running. That's the moat."
-
-*Delivery: calm, certain, slightly under-energized rather than over-hyped. The product is the flex; you don't have to sell it twice.*
-
----
-
-## Shot list / capture checklist
-
-**Real screen captures (🖥️) — record clean, 60fps, hide secrets/keys:**
-- [ ] Claude/MCP `search_music` call + ranked results (Beat 1.2)
-- [ ] `start_session` → `get_stream` → **402** with payment terms (Beat 1.3)
-- [ ] `charge` 200 → player playing (Beat 1.4)
-- [ ] Live session meter ticking + balance decrementing (Beat 2.1) — *the hero shot, get multiple takes*
-- [ ] Second vibe query returning different tracks (Beat 2.4)
-
-**Founder to camera (🎤) — Sony A7III:**
-- [ ] 3 lines above, multiple takes each, with 2s of held silence before/after for editing handles
-
-**Hands / device B-roll (🤚) — DJI / 360:**
-- [ ] Headphones on / controller trigger on the downbeat (Beat 1.1)
-- [ ] Hand on player / phone as track starts (Beat 1.4)
-- [ ] Studio / mixing-desk detail for the creator beat (Beat 2.3)
-
-**AI visuals / motion-gfx (✨):**
-- [ ] Cold-open typing line on black (Beat 1.1)
-- [ ] Animated 3-database data-plane diagram, synced to meter (Beat 2.2)
-- [ ] Three-surface montage (Beat 3.1)
-- [ ] End card / wordmark (Beat 3.2)
+**Founder (Sony A7III):**
+- [ ] Full speech, several complete takes, 2s of silence before/after each take for handles
+- [ ] A few "safety" close-up takes of the open and the close specifically
 
 ---
 
 ## Audio plan
-- **Bed:** one real catalog synthwave track for Acts 1–2 (the same track the agent "bought" — continuity), softening under VO.
-- **Act 3:** lift to a more anthemic cut for the montage, resolve on the wordmark.
-- **VO:** record narrator + founder separately; keep founder lines as on-camera sync, narrator as clean booth VO.
-- **Ducking:** music ducks ~6dB under every spoken line; comes back up in the silent beats (1.1, 1.4, 2.4).
+- The **founder's voice is the bed** — recorded clean (lav + on-camera, or a boom). Everything else sits under it.
+- A single real catalog track plays softly under the whole speech (the song "you love"), ducked ~8dB so the voice is always clear; let it rise slightly in the gaps and resolve on the end card.
+- No separate narrator. Overlays are picture-only.
+
+## Timing ledger
+| Section | Window | Note |
+|---|---|---|
+| Open — the problem | 0:00–0:42 | On camera, no overlays — earn trust first |
+| The product (overlays) | 0:42–1:24 | Streak / rewards / leaderboard, then "it's real" |
+| The artist side + scale | 1:24–2:08 | Diagrams |
+| Agent side-mention | 2:08–2:18 | One card, ~10s, then move on |
+| Close | 2:18–2:50 | Back on camera, end card |
+
+~3:00 ceiling. If long, trim inside the problem setup (0:12–0:30) — never the close. Keep the agent card to one beat.
 
 ---
 
-## Timing ledger (verify in the edit)
-
-| Act | Beats | Window | Budget |
-|---|---|---|---|
-| 1 — Hook | 1.1–1.4 | 0:00–0:50 | 50s |
-| 2 — Proof | 2.1–2.4 | 0:50–2:00 | 70s |
-| 3 — Vision | 3.1–3.2 | 2:00–2:45 | 45s |
-| **Total** | | | **2:45** |
-
-15s of headroom against the 3:00 ceiling. If you run long, the first cut is narration in 2.1 (the visual already tells it); never cut the 402 hold (1.3) or the live meter (2.1).
-
----
-
-## What's real vs. illustrated (keep this honest with judges)
-
-**Real, filmed live (🖥️):** the MCP agent loop (`search_music → start_session → get_stream → 402 → charge → stream`), the player streaming audio, the live per-minute meter + balance, and vibe/discovery search. These are confirmed working today.
-
-**Illustrated (✨), clearly stylized so no one mistakes it for a screenshot:** the animated AWS data-plane diagram (a true depiction of the architecture, animated for clarity) and the three-surface montage (the vision: game engine / agent / venue all on one backend).
-
-If a judge asks "is that real?" the answer for every 🖥️ beat is **yes, that's the running system** — which is exactly why we lead with proof instead of pitch.
+## What's real vs. illustrated (keep honest with judges)
+- **Real, on screen (overlays):** streaks, leaderboard, tracked rewards, the player streaming real audio. Live today.
+- **Real backend, shown as a diagram:** per-second listening → artist payout. It runs; we depict it so we never imply a fake UI.
+- **Vision (diagram):** the scale montage and the agent/API footnote — genuinely built, but intentionally a one-line side-mention here.
