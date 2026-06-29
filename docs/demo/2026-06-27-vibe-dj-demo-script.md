@@ -1,7 +1,7 @@
 # TollRoad — "Metered by the Second" (architecture-forward demo, shooting script)
 
 **Date:** 2026-06-27
-**Runtime target:** ~2:25–2:40 (HARD ceiling 2:55 — hackathon requires < 3:00)
+**Runtime target:** ~2:30–2:45 (HARD ceiling 2:55 — hackathon requires < 3:00)
 **For:** H0 Hackathon — *Hack the Zero Stack with Vercel v0 and AWS Databases* (h01.devpost.com). Track 3 (million-scale). **The judges are the AWS Databases bench — this cut is built for them.**
 **Format:** Fast, technical demo. Amanda Kurt opens it with the human hook and the live product; the spine is a founder-narrated walk through the **polyglot CQRS architecture**.
 
@@ -34,10 +34,10 @@
 **[AMANDA — to camera, fast, her track under] → [OVERLAY: her track playing in the real app]**
 > **[AMANDA]:** I'm Amanda Kurt. Independent artist. Every second you listen to me is now metered and paid — by the second. Watch.
 
-**[OVERLAY: streak ticking up] → [OVERLAY: leaderboard, a fan handle climbing] → [OVERLAY: balance debiting live]**
-> **[AMANDA]:** There's my track. There's the meter running. There are my superfans — by name. The money moves in real time.
+**[OVERLAY: her track playing] → [OVERLAY: balance/meter debiting live, per minute] → [OVERLAY: artist earnings view — millicents accruing on her track]**
+> **[AMANDA]:** There's my track. There's the meter running. I can see exactly what every minute earns me. The money moves in real time.
 
-*(Required working-app footage. Real capture, 60fps, keys hidden. Fast cuts — three overlays to three clauses.)*
+*(Required working-app footage — all of it real and shipped. Real capture, 60fps, keys hidden. Fast cuts — three overlays to three clauses. NOTE: only show UI that exists today — the live player, the balance/meter debiting, and the per-track earnings/ledger view. Do NOT stage streaks/leaderboards/"superfans by name"; those are design-stage, not shipped, and would be an overclaim to judges.)*
 
 ### 2 — How it works (visual, digestible) (0:32–1:40)
 
@@ -58,18 +58,23 @@
 
 > *(Quiet on-screen footnote card, optional, ~2s — for the bench, not narrated: "AES-256-GCM at rest · SSE-KMS + signed CloudFront · built for ~16–23K writes/s · 1M concurrent streams · DSQL scales to zero." Let them read it; don't say it.)*
 
-### 3 — Two things we're quietly proud of (1:40–2:12)
+### 3 — What's actually cool (the shipped stuff) (1:40–2:20)
 
-> **Directorial device (the "senior, but for everyone" motif):** each of these two beats shows the engineer's flex AND its human translation on screen — 🔧 the clever bit, 🎧 what it means for you. Senior depth, zero gatekeeping.
+> **Directorial device (the "senior, but for everyone" motif):** each beat shows the engineer's flex AND its human translation on screen — 🔧 the clever bit, 🎧 what it means for you. Senior depth, zero gatekeeping. Every claim below is shipped code — see "What's real" at the bottom for file-level receipts.
 
-**[DIAGRAM: an AI agent requests a track → server answers "HTTP 402 · Payment Required" with a tiny machine-readable price tag → agent pays → track plays. Labels: "402 — the web's forgotten status code", "agent reads the price, pays, plays — no checkout"]**
-> **[FOUNDER · 🔧 the flex]:** Here's the part we love. When an AI agent asks for a song it hasn't paid for, our server answers with HTTP **402 — Payment Required**. It's a status code the web reserved thirty years ago and basically never used. We gave it a job: the agent reads the price, pays, and plays — no human, no checkout page.
-> **[CAPTION — 🎧 the plain version]:** *"For you it's a play button. For a machine it's a price tag it can actually read."*
+**[OVERLAY: real app — type a vibe like "late-night drive, synthwave" → ranked tracks come back] then [DIAGRAM: vibe text → Amazon Bedrock embedding → nearest tracks, scored]**
+> **[FOUNDER · 🔧 the flex]:** You don't search by title here — you describe a feeling. We embed what you typed with **Amazon Bedrock**, then match it against every track's fingerprint to build the set. And the vector search runs *inside DynamoDB* — no separate vector database to run.
+> **[CAPTION — 🎧 the plain version]:** *"Tell it the mood. It builds the playlist."*
 
-**[DIAGRAM: same metered rail → many apps / AI agents licensing by the second]**
-> **[FOUNDER]:** And that same metered rail isn't just our app. Any app — or any AI agent picking your next song — can license this whole catalog by the second, fairly.
+**[OVERLAY/DIAGRAM: an AI agent (or game engine) calling our MCP tools — search_music, start_session, next_track — music scoring a scene live]**
+> **[FOUNDER]:** And it's not just for people. We ship an **MCP server**, so an AI agent — or a game — can ask for music by vibe and license it on the fly, by the second. (When an agent hits a track it hasn't paid for, the server just answers HTTP **402 — Payment Required**, and the agent pays and plays. No checkout, no human.)
+> **[CAPTION — 🎧 the plain version]:** *"The same music your apps and AI assistants can legally use — paid fairly, automatically."*
 
-### 4 — Close (2:12–2:35)
+**[OVERLAY: artist sets a per-track price (free → $1.00/min) → a payout to their bank via Stripe] then [DIAGRAM: one listener-minute → ledger row → artist's balance → Stripe transfer]**
+> **[FOUNDER · 🔧 the flex]:** Artists set their own price — free, or up to a dollar a minute, in tenth-of-a-cent steps. Every minute someone listens writes one row to the ledger, and that's money they can withdraw straight to their bank through **Stripe** — no pool, no opaque weekly fraction.
+> **[CAPTION — 🎧 the plain version]:** *"Amanda prices her own music, and sees exactly which minute paid her."*
+
+### 4 — Close (2:20–2:42)
 **[OVERLAY: live app] → [AMANDA — last line] → [END CARD]**
 > **[AMANDA]:** I get paid the instant you press play. I've never had that.
 
@@ -81,11 +86,14 @@
 Faster and more technical than emotional. Ask her to say, in her own words: (1) who she is + that she's metered/paid by the second, (2) what she's pointing at in the live app, (3) that she's paid the instant you press play.
 
 ## Shot / capture checklist
-**Real app screen captures (60fps, hide keys) — the working-app proof:**
+**Real app screen captures (60fps, hide keys) — the working-app proof. ONLY capture shipped UI:**
 - [ ] Amanda's track playing in the player
-- [ ] Streak counter ticking up
-- [ ] Leaderboard with a fan handle climbing
-- [ ] Balance debiting live (the meter moving)
+- [ ] Balance/meter debiting live (the meter moving, per minute)
+- [ ] Per-track earnings / ledger view (millicents accruing on her track)
+- [ ] Describe-a-vibe search: type a mood → ranked tracks return
+- [ ] Artist sets a per-track price (free → $1.00/min) + a Stripe payout view
+- [ ] (Optional) an agent/MCP call returning music for a vibe
+- [ ] ⚠️ Do NOT capture streaks / leaderboards / "superfans by name" — not shipped, would be an overclaim
 
 **Architecture diagrams / motion-gfx (4 clean beats — the pictures carry the depth, labels carry the real terms):**
 - [ ] Beat 1 — two lanes: "WRITES → DynamoDB" (fast) | "READS → Aurora DSQL" (calm); labels: command/query side, polyglot CQRS
@@ -93,9 +101,10 @@ Faster and more technical than emotional. Ask her to say, in her own words: (1) 
 - [ ] Beat 3 — play flows into Aurora DSQL → fills an append-only earnings ledger + an already-totalled dashboard (instant read)
 - [ ] Beat 4 — track shown as padlock "AES-256 encrypted" → paid second drops in a ticking-down key → unlocks; labels: encrypted at rest · key expires ~150s · no pay, no key
 - [ ] Optional footnote card (2s, on-screen only): AES-256-GCM at rest · SSE-KMS + signed CloudFront · ~16–23K writes/s · 1M streams · DSQL scales to zero
-- [ ] Proud #1 — AI agent → "HTTP 402 Payment Required" + machine-readable price → pays → plays (with 🔧/🎧 dual captions)
-- [ ] Proud #2 — same rail → many apps / AI agents licensing by the second
-- [ ] End card · "Polyglot CQRS · DynamoDB + Aurora DSQL · Vercel"
+- [ ] Cool #1 — vibe text → Amazon Bedrock embedding → nearest tracks, scored (vector search inside DynamoDB, no separate vector DB)
+- [ ] Cool #2 — agent/game calling MCP tools (search_music · start_session · next_track); small "402 → pay → play" inset
+- [ ] Cool #3 — listener-minute → ledger row → artist balance → Stripe transfer
+- [ ] End card · "Polyglot CQRS · DynamoDB + Aurora DSQL · Bedrock · Vercel"
 
 **Talent (A7III):** Amanda fast soundbites + live-app reactions; founder clean architecture VO (a couple safety takes of the dense beats).
 
@@ -107,18 +116,26 @@ Faster and more technical than emotional. Ask her to say, in her own words: (1) 
 | How it works — beat 2: one atomic write | 0:48–1:04 | Founder + diagram |
 | How it works — beat 3: the permanent record (DSQL) | 1:04–1:24 | Founder + diagram |
 | How it works — beat 4: encrypted, key-on-payment | 1:24–1:40 | Founder + diagram |
-| Quietly proud #1 — HTTP 402 for agents | 1:40–1:58 | Founder + diagram |
-| Quietly proud #2 — the metered rail | 1:58–2:12 | Founder + diagram |
-| Close | 2:12–2:35 | Founder + Amanda |
+| Cool #1 — describe-a-vibe search (Bedrock) | 1:40–1:58 | App + founder |
+| Cool #2 — MCP for agents (+ one 402 line) | 1:58–2:08 | App + founder |
+| Cool #3 — artists price it, Stripe payouts | 2:08–2:20 | App + founder |
+| Close | 2:20–2:42 | Founder + Amanda |
 
 **< 3:00 is mandatory** — this cut still leaves margin. Keep the spoken words simple and let the diagrams + on-screen labels do the explaining (the 🔧/🎧 dual-caption motif is how we stay "senior but for everyone"). Never cut the working-app demo or drop the two database names (DynamoDB + Aurora DSQL); those are scored requirements.
 
 ---
 
-## What's real vs. illustrated (keep honest with judges)
-- **Real, on screen:** streaks, leaderboard, live balance debit, the player streaming Amanda's real audio.
-- **Real architecture (the diagrams depict the actual design):** polyglot CQRS — DynamoDB command path (atomic conditional debit + guarded meter event, idempotency key `user#track#minute`), DynamoDB Streams → projector Lambda → Aurora DSQL append-only `royalty_ledger` + `artist_daily_summary`, the two-balance consistency rule, signed-CloudFront stream gate. This is our data model, not a mockup.
-- **Real encryption (beat 4):** audio is **AES-256-GCM** encrypted at rest (`infra/scripts/encrypt-media.mjs` — `iv|tag|ciphertext`; plaintext removed so a billed stream is the only way to hear it). A paid play yields a short-lived grant — a **signed CloudFront URL** (~150s TTL, OAC + SSE-KMS) in prod, app-level decrypt with `TOLLROAD_MEDIA_KEY` locally. "Key on payment" is literal, not a metaphor.
-- **Real HTTP 402 (proud #1):** `backend/src/lib/x402.ts` returns a genuine **402 Payment Required** with a machine-readable body (`scheme: prepaid`, `asset: usd`, `maxAmountRequired` in millicents, `payTo: /v1/charge`, `Accept-Payment` header) — covered by `backend/src/x402.test.ts`. The "30-year-dormant status code" line is true.
-- **Honest framing of scale:** sized/architected for ~16–23K writes/sec and a million concurrent streams (justified by access pattern). Say "built for," not "currently serving."
-- **Vision (diagram):** AI agents licensing the catalog at scale — the metered rail and the 402 handshake are built; the agents-everywhere world is where it's going.
+## What's real vs. illustrated — file-level receipts (every claim verified in code)
+Every line in this script is backed by shipped code. Receipts:
+
+- **Live demo (§1) — real, shipped:** the player, the per-minute balance/meter debit, and the per-track earnings/ledger view. Metering + atomic debit: `backend/src/domain/wallet-store.ts:110–159`; earnings: `backend/src/domain/payouts.ts` (`getEarnedMillicents`).
+  - ⚠️ **NOT shipped — do not show or claim:** streaks, leaderboards, "superfans by name." Design-doc only (no handler). Showing them would be an overclaim.
+- **Polyglot CQRS (§2):** DynamoDB command path writes zero to DSQL (`wallet-store.ts:1–6`); single atomic `TransactWriteItems` = conditional debit (`balanceMillicents >= :amt`) + guarded METER `Put` (`attribute_not_exists(PK)`), idempotency key `<user>#<track>#<minute>`, replay returns `charged:false` (`wallet-store.ts:110–159`). Streams → projector Lambda (sole DSQL writer) → append-only `royalty_ledger` + precomputed `artist_daily_summary`, OCC `40001` retries (`infra/lib/tollroad-stack.ts:224–274`, `payouts.ts:23–36`).
+- **Money in millicents (§2):** `balanceMillicents` / `amountMillicents` / `pricePerMinuteMillicents` (`wallet-store.ts:38,120–124`, `meter.ts:25`).
+- **Encryption + key-on-payment (§2 beat 4):** AES-256-GCM at rest, `iv|tag|ciphertext`, plaintext removed (`infra/scripts/encrypt-media.mjs:49–51`); paid play → ~150s grant, signed CloudFront URL prod (OAC + SSE-KMS) / local decrypt with `TOLLROAD_MEDIA_KEY` (`backend/src/domain/streaming.ts:47,61–71`). Literal, not metaphor.
+- **Describe-a-vibe search (§3 cool #1):** `POST /v1/discover { vibe }` embeds via **Amazon Bedrock Titan v2 (1024-dim)**, cosine-similarity over track vectors stored in the DynamoDB `TVEC` partition — **no separate vector DB** (`backend/src/handlers/discover.ts`).
+- **MCP for agents + HTTP 402 (§3 cool #2):** real MCP server exposing `search_music` / `start_session` / `next_track` / `get_stream` (`mcp/src/server.ts`); DJ session state (no-repeat + signals) in DynamoDB (`backend/src/handlers/sessions.ts`, `domain/dj.ts`); genuine `402 Payment Required` with machine-readable body (`backend/src/lib/x402.ts:45–78`, test `backend/src/x402.test.ts`).
+- **Creator rates + Stripe payouts (§3 cool #3):** per-track price 0 → 100,000 millicents ($1.00/min) in 100-millicent steps, free tier skips the balance guard (`backend/src/domain/artist-content.ts:67–75`, `wallet-store.ts:91–107`); ledger → `getAvailableMillicents` → `reserveWithdrawal` atomic reserve + idempotent Stripe transfer (`backend/src/domain/payouts.ts`, `handlers/payouts.ts`).
+- **Vercel + Lambda (end card):** frontend reverse-proxies to the API (`frontend/app/api/v1/[...path]/route.ts`); backend is API Gateway REST + proxy Lambda (`infra/lib/tollroad-stack.ts:312–320`).
+- **Honest framing of scale:** "built for ~16–23K writes/sec at a million concurrent streams" is a stated design target (`README.md:71`, CQRS design §2), justified by access pattern. Say "built for," not "currently serving."
+- **Vision only (clearly framed):** AI agents licensing the catalog *at scale* — the rail, MCP, and 402 handshake are built; the agents-everywhere world is where it's going.

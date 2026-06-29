@@ -1,8 +1,9 @@
 TOLLROAD — "Metered by the Second" (spoken lines)
-Architecture-forward demo, ~2:25-2:40 (must be under 3:00 for the H0 hackathon).
+Architecture-forward demo, ~2:30-2:45 (must be under 3:00 for the H0 hackathon).
 Amanda = 3 fast, technical soundbites (her real words; text = target sense).
-Founder = the architecture narration; deliver it crisp and confident, like you
-shipped it. Named databases MUST land clearly: DynamoDB and Aurora DSQL.
+Founder = how-it-works + what's-actually-cool; crisp and confident, like you
+shipped it (because you did). Named services MUST land clearly: DynamoDB,
+Aurora DSQL, Amazon Bedrock. Every claim is backed by real code.
 
 ================================================================
 AMANDA — 3 soundbites (fast, technical, not sentimental)
@@ -13,8 +14,8 @@ I'm Amanda Kurt. Independent artist. Every second you listen to me is now metere
 and paid — by the second. Watch.
 
 [OVER THE LIVE DEMO]
-There's my track. There's the meter running. There are my superfans — by name.
-The money moves in real time.
+There's my track. There's the meter running. I can see exactly what every minute
+earns me. The money moves in real time.
 
 [CLOSE]
 I get paid the instant you press play. I've never had that.
@@ -47,18 +48,29 @@ your browser to rip.
    the moment you're hearing it.")
 
 ================================================================
-FOUNDER — two things we're quietly proud of (senior, but for everyone)
-Each line has a 🔧 engineer's flex AND a 🎧 plain caption on screen.
+FOUNDER — what's actually cool (the shipped stuff; senior, but for everyone)
+Each beat has a 🔧 engineer's flex AND a 🎧 plain caption on screen.
+Every claim here is real code — see the script's "What's real" receipts.
 ================================================================
 
-[PROUD #1 — HTTP 402 for agents]
-Here's the part we love. When an AI agent asks for a song it hasn't paid for, our
-server answers with HTTP 402 — Payment Required. It's a status code the web
-reserved thirty years ago and basically never used. We gave it a job: the agent
-reads the price, pays, and plays — no human, no checkout page.
-  (🎧 on-screen caption, not spoken: "For you it's a play button. For a machine
-   it's a price tag it can actually read.")
+[COOL #1 — describe-a-vibe search]
+You don't search by title here — you describe a feeling. We embed what you typed
+with Amazon Bedrock, then match it against every track's fingerprint to build the
+set. And that vector search runs inside DynamoDB — no separate vector database.
+  (🎧 on-screen caption, not spoken: "Tell it the mood. It builds the playlist.")
 
-[PROUD #2 — the rail]
-And that same metered rail isn't just our app. Any app — or any AI agent picking
-your next song — can license this whole catalog by the second, fairly.
+[COOL #2 — MCP for agents]
+And it's not just for people. We ship an MCP server, so an AI agent — or a game —
+can ask for music by vibe and license it on the fly, by the second. When an agent
+hits a track it hasn't paid for, the server just answers HTTP 402 — Payment
+Required — and the agent pays and plays. No checkout, no human.
+  (🎧 on-screen caption, not spoken: "The same music your apps and AI assistants
+   can legally use — paid fairly, automatically.")
+
+[COOL #3 — artists price it, get paid directly]
+And artists set their own price — free, or up to a dollar a minute, in
+tenth-of-a-cent steps. Every minute someone listens writes one row to the ledger,
+and that's money they can withdraw straight to their bank through Stripe. No pool,
+no opaque weekly fraction.
+  (🎧 on-screen caption, not spoken: "Amanda prices her own music, and sees
+   exactly which minute paid her.")
