@@ -44,6 +44,7 @@ const TRACKS_SQL = `
          t.duration_seconds, t.price_per_minute_millicents, t.cover_image_key
   FROM tracks t
   JOIN artists a ON a.id = t.artist_id
+  WHERE COALESCE(t.is_active, true) AND t.audio_key <> ''
   ORDER BY a.name, t.title`;
 
 const EARNINGS_SQL = `
@@ -115,6 +116,7 @@ export type ArtistTrack = {
   durationSeconds: number;
   pricePerMinuteMillicents: number;
   coverImageKey: string | null;
+  isActive: boolean;
 };
 
 export async function getArtistSummary(artistId: string): Promise<{
@@ -137,8 +139,10 @@ export async function getArtistSummary(artistId: string): Promise<{
       duration_seconds: number;
       price_per_minute_millicents: number;
       cover_image_key: string | null;
+      is_active: boolean | null;
     }>(
-      `SELECT id, title, duration_seconds, price_per_minute_millicents, cover_image_key
+      `SELECT id, title, duration_seconds, price_per_minute_millicents, cover_image_key,
+              COALESCE(is_active, true) AS is_active
          FROM tracks WHERE artist_id = $1 ORDER BY title`,
       [artistId],
     );
@@ -153,6 +157,7 @@ export async function getArtistSummary(artistId: string): Promise<{
       durationSeconds: r.duration_seconds,
       pricePerMinuteMillicents: r.price_per_minute_millicents,
       coverImageKey: r.cover_image_key,
+      isActive: Boolean(r.is_active),
     }));
     return {
       artistId,

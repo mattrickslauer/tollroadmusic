@@ -59,6 +59,21 @@ const STATEMENTS = [
   // Artist avatar — same storage convention as track covers.
   `ALTER TABLE artists ADD COLUMN IF NOT EXISTS avatar_key TEXT`,
   `CREATE INDEX ASYNC IF NOT EXISTS tracks_by_artist ON tracks (artist_id)`,
+  // Soft-delete flag for artist-managed tracks. DSQL rejects ADD COLUMN with a
+  // default, so this is nullable; the app treats NULL as active (COALESCE).
+  `ALTER TABLE tracks ADD COLUMN IF NOT EXISTS is_active BOOLEAN`,
+  // Withdrawal ledger — one row per payout attempt. status: 'pending' (reserved,
+  // transfer in flight) | 'paid' (Stripe transfer succeeded) | 'failed' (released).
+  // available = SUM(royalty_ledger) - SUM(payout_transfers WHERE status <> 'failed').
+  `CREATE TABLE IF NOT EXISTS payout_transfers (
+     id                 UUID PRIMARY KEY,
+     artist_id          UUID NOT NULL,
+     amount_millicents  BIGINT NOT NULL,
+     stripe_transfer_id TEXT,
+     status             TEXT NOT NULL DEFAULT 'pending',
+     created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+   )`,
+  `CREATE INDEX ASYNC IF NOT EXISTS payout_transfers_by_artist ON payout_transfers (artist_id)`,
   // accounts = the unified AUTH identity (the canonical user id used across the
   // app and as royalty_ledger.user_id). An anonymous device is a row with
   // claimed_at = null; email-OTP sign-in upgrades it in place so the id never
