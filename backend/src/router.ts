@@ -12,6 +12,7 @@ import { webhook } from "./handlers/stripe-webhook.ts";
 import * as library from "./handlers/library.ts";
 import { summary as artistSummary, create as artistCreate } from "./handlers/artist.ts";
 import * as artistContent from "./handlers/artist-content.ts";
+import * as payouts from "./handlers/payouts.ts";
 import * as superfan from "./handlers/superfan.ts";
 import { discover } from "./handlers/discover.ts";
 import { startSession, nextTrack } from "./handlers/sessions.ts";
@@ -86,6 +87,16 @@ const ROUTES: Route[] = [
   compile("POST", "/artist/cover/commit", artistContent.coverCommit),
   compile("POST", "/artist/track/rate", artistContent.rateUpdate),
   compile("POST", "/artist/profile", artistContent.profileUpdate),
+
+  compile("POST", "/artist/payouts/onboard", payouts.onboard),
+  compile("GET", "/artist/payouts/status", payouts.status),
+  compile("POST", "/artist/payouts/withdraw", payouts.withdraw),
+
+  compile("POST", "/artist/tracks", artistContent.trackCreate),
+  compile("POST", "/artist/audio/presign", artistContent.audioPresign),
+  compile("POST", "/artist/audio/commit", artistContent.audioCommit),
+  compile("PUT", "/artist/tracks/{id}", artistContent.trackUpdate),
+  compile("DELETE", "/artist/tracks/{id}", artistContent.trackDelete),
 
   compile("GET", "/superfan/bond/{artistId}", superfan.bond),
   compile("GET", "/superfan/leaderboard/{artistId}", superfan.leaderboard),
