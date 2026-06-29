@@ -15,6 +15,7 @@ import type {
   Leaderboard,
   MyBonds,
   ProfileBonds,
+  PayoutStatus,
 } from "./types";
 
 const BASE = "/api/v1";
@@ -138,6 +139,29 @@ export const getLeaderboard = (artistId: string, limit = 50) =>
   req<Leaderboard>(`/superfan/leaderboard/${artistId}?limit=${limit}`);
 export const getMyBonds = () => req<MyBonds>(`/superfan/my-bonds`);
 export const getProfileBonds = (handle: string) => req<ProfileBonds>(`/superfan/profile/${handle}`);
+
+// --- Payouts ---------------------------------------------------------------
+export const getPayoutStatus = () => req<PayoutStatus>("/artist/payouts/status");
+export const startPayoutOnboarding = () => req<{ url: string }>("/artist/payouts/onboard", body({}));
+export const withdrawPayout = () =>
+  req<{ transferId: string; paidMillicents: number; availableMillicents: number }>(
+    "/artist/payouts/withdraw",
+    body({}),
+  );
+
+// --- Song CRUD -------------------------------------------------------------
+export const createTrack = (input: { title: string; durationSeconds: number; pricePerMinuteMillicents?: number }) =>
+  req<{ id: string }>("/artist/tracks", body(input));
+export const presignAudio = (trackId: string, contentType: string) =>
+  req<{ uploadUrl: string; key: string }>("/artist/audio/presign", body({ trackId, contentType }));
+export const commitAudio = (trackId: string, key: string) =>
+  req<{ ok: boolean; audioKey: string }>("/artist/audio/commit", body({ trackId, key }));
+export const updateTrack = (
+  trackId: string,
+  fields: { title?: string; durationSeconds?: number; pricePerMinuteMillicents?: number },
+) => req<{ ok: boolean }>(`/artist/tracks/${encodeURIComponent(trackId)}`, { method: "PUT", body: JSON.stringify(fields) });
+export const deleteTrack = (trackId: string) =>
+  req<{ ok: boolean; deleted: boolean }>(`/artist/tracks/${encodeURIComponent(trackId)}`, { method: "DELETE" });
 
 // Presign -> PUT the bytes straight to S3 -> commit. Returns the stored key.
 export async function uploadImage(
