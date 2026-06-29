@@ -48,9 +48,7 @@ export default async function ArtistDashboardPage() {
 
       {summary && (
         <>
-          {/* Only an explicit false disables uploads — tolerates a backend that predates the flag. */}
-          <ProfileEditor artist={summary.artist} tracks={summary.tracks} uploadsConfigured={summary.uploadsConfigured !== false} />
-
+          {/* Lead with the headline numbers — the reason an artist opens this page. */}
           <div className="az-stats">
             <Stat k="Total earned" v={usdM(summary.earningsMillicents)} green />
             <Stat k="Minutes played" v={summary.minutes.toLocaleString("en-US")} />
@@ -58,15 +56,13 @@ export default async function ArtistDashboardPage() {
             <Stat k="Genre" v={summary.artist.genre || "—"} />
           </div>
 
-          <PayoutsCard />
-
-          <SongManager initialTracks={summary.tracks} />
-
           <section className="az-recent">
             <h2 className="az-recent-h">Recent activity</h2>
             {summary.byDay.length === 0 ? (
               <p className="az-empty">No plays yet — once listeners start streaming your tracks, metered minutes show up here.</p>
             ) : (
+              // thead is hidden on mobile (artist.css); data-label drives the
+              // per-cell labels when each row reflows into a card.
               <table className="az-table">
                 <thead>
                   <tr><th>Day</th><th>Minutes</th><th>Earned</th></tr>
@@ -74,15 +70,23 @@ export default async function ArtistDashboardPage() {
                 <tbody>
                   {summary.byDay.map((d) => (
                     <tr key={d.day}>
-                      <td>{d.day}</td>
-                      <td>{d.minutes.toLocaleString("en-US")}</td>
-                      <td className="az-amt">{usdM(d.amountMillicents)}</td>
+                      <td data-label="Day">{d.day}</td>
+                      <td data-label="Minutes">{d.minutes.toLocaleString("en-US")}</td>
+                      <td data-label="Earned" className="az-amt">{usdM(d.amountMillicents)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
           </section>
+
+          <PayoutsCard />
+
+          <SongManager initialTracks={summary.tracks} />
+
+          {/* Profile + per-track covers/pricing — lower-frequency, so it lives last. */}
+          {/* Only an explicit false disables uploads — tolerates a backend that predates the flag. */}
+          <ProfileEditor artist={summary.artist} tracks={summary.tracks} uploadsConfigured={summary.uploadsConfigured !== false} />
         </>
       )}
     </main>
