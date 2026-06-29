@@ -1636,3 +1636,167 @@ h1.hero-title .serif {
   justify-content: center;
   margin-top: clamp(44px, 6vw, 68px);
 }
+
+/* ============================================================
+   CONNECT PAGE (/connect) — Claude MCP setup guide
+   ============================================================ */
+.connect-status {
+  max-width: 760px;
+  margin: 0 auto clamp(36px, 5vw, 52px);
+  padding: 18px 22px;
+  border: 1px solid var(--amber-deep);
+  border-radius: var(--r);
+  background:
+    radial-gradient(120% 160% at 0% 0%, var(--amber-glow), transparent 60%),
+    var(--asphalt-850);
+}
+.connect-status .mono-label {
+  display: block;
+  margin-bottom: 6px;
+}
+.connect-status p {
+  margin: 0;
+  color: var(--bone-dim);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.connect-steps {
+  list-style: none;
+  counter-reset: none;
+  max-width: 760px;
+  margin: 0 auto clamp(40px, 6vw, 64px);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 4vw, 40px);
+}
+.connect-step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+.connect-num {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--amber);
+  border: 1px solid var(--amber-deep);
+  background: radial-gradient(100% 100% at 50% 0%, var(--amber-glow), transparent), var(--asphalt-700);
+}
+.connect-body h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.connect-body > p {
+  color: var(--bone-dim);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.connect-body .connect-sub {
+  color: var(--bone-faint);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 16px 0 8px;
+}
+.connect-body .connect-note {
+  color: var(--bone-faint);
+  font-size: 0.85rem;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.connect-body .dev-code { margin: 0 0 4px; max-width: none; }
+.connect-vars {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.connect-vars li {
+  color: var(--bone-dim);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  padding-left: 14px;
+  border-left: 2px solid var(--line);
+}
+.connect-body code,
+.connect-status code,
+.connect-soon code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--amber);
+  background: var(--asphalt-800);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+.connect-tools {
+  max-width: 900px;
+  margin: 0 auto clamp(36px, 5vw, 52px);
+}
+.connect-tools h2 {
+  text-align: center;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin-bottom: 24px;
+}
+.connect-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .connect-tool-grid { grid-template-columns: 1fr; }
+  .connect-step { grid-template-columns: 36px 1fr; gap: 14px; }
+  .connect-num { width: 36px; height: 36px; font-size: 0.95rem; }
+}
+.connect-tool {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--asphalt-850);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.connect-tool code {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--amber);
+  font-size: 0.9rem;
+}
+.connect-tool span {
+  color: var(--bone-faint);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.connect-soon {
+  max-width: 760px;
+  margin: 0 auto clamp(40px, 6vw, 64px);
+  padding: 20px 24px;
+  border: 1px dashed var(--line-soft);
+  border-radius: var(--r);
+}
+.connect-soon .mono-label { display: block; margin-bottom: 10px; }
+.connect-soon ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.connect-soon li {
+  color: var(--bone-dim);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}

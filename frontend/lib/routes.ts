@@ -6,11 +6,13 @@ export const ROUTES = {
   library: "/library",
   liked: "/liked",
   wallet: "/wallet",
-  /** Artist path — sign up to bring a catalog, then the royalty dashboard. */
+  /** Artist path — marketing pitch, sign up to bring a catalog, then the royalty dashboard. */
+  forArtists: "/for-artists",
   signup: "/artist/join",
   artist: "/artist",
-  /** Developer / platform path — MCP server + embeddable player overview. */
+  /** Developer / platform path — MCP server overview + Claude connect guide. */
   developers: "/developers",
+  connect: "/connect",
   /** Public artist profile page. */
   artistProfile: (id: string) => `/artists/${encodeURIComponent(id)}`,
 } as const;
