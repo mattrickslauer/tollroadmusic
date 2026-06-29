@@ -20,43 +20,28 @@ The money moves in real time.
 I get paid the instant you press play. I've never had that.
 
 ================================================================
-FOUNDER — architecture narration (teleprompter; this is the spine, ~90s)
+FOUNDER — "how it works" narration (teleprompter; ~60s)
+Keep it PLAIN. The diagrams carry the depth; the real technical terms live in the
+on-screen labels, not in these lines. Just name the two databases clearly.
 ================================================================
 
-[CQRS SPLIT]
-Metering music by the second is a write-heavy money path, so we split the system
-in two — polyglot CQRS. Every charge writes to DynamoDB. Everything you read is
-served from Aurora DSQL. Each database picked for one access pattern, not as a
-default.
+[BEAT 1 — two databases]
+Paying artists by the second is a money problem — so we use two databases, each
+doing the one thing it's best at. The fast stuff you do — listening, paying — goes
+to DynamoDB. The things you read back come from Aurora DSQL.
 
-[ATOMIC HOT PATH]
-The hot path is a single atomic DynamoDB transaction: a conditional debit that
-stops dead at a zero balance, committed together with one metered-minute event —
-keyed user-track-minute, one event per unique minute. It can't double-charge, and
-a balance can't go negative. Single-digit-millisecond writes.
+[BEAT 2 — one atomic write]
+Every minute you listen, one quick, all-or-nothing write moves the money: it
+charges your balance and logs the play together — or not at all.
 
-[STREAMS -> PROJECTOR -> DSQL]
-That event fans out through DynamoDB Streams into a projector Lambda, which builds
-the system-of-record in Aurora DSQL — an append-only royalty ledger, and a
-precomputed per-artist daily summary. So an artist's earnings dashboard is a cheap
-point read. It never scans the ledger.
+[BEAT 3 — the permanent record]
+Each play flows into Aurora DSQL, which keeps the permanent record — every
+artist's earnings, already added up. So their dashboard loads instantly; it never
+has to crunch the numbers.
 
-[TWO BALANCES]
-There are two balances by design. The authoritative one lives in DynamoDB and
-gates money and playback in real time. DSQL holds the reconciliation balance for
-audit and history. The projector is the only writer of that ledger — which makes
-the whole pipeline exactly-once, and the rollup correct by construction.
-
-[DSQL GRAIN + SCALE]
-We built to Aurora DSQL's grain — no foreign keys, async indexes, an append-only
-ledger to dodge write contention — and it scales to zero between runs. The command
-side is sized for sixteen to twenty-three thousand writes a second. A million
-concurrent streams.
-
-[SIGNED-URL STREAM GATE]
-And the audio only unlocks once you've paid for the minute. The stream endpoint
-issues a short-lived signed CloudFront URL the instant DynamoDB confirms a recent
-paid minute. Pay-per-second, enforced at the edge.
+[BEAT 4 — pay-to-play]
+And the music only plays once the second is paid. The moment your payment clears,
+the track unlocks.
 
 [THE RAIL]
 And that same metered rail isn't just our app. Any app — or any AI agent picking

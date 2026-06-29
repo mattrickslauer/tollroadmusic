@@ -1,7 +1,7 @@
 # TollRoad — "Metered by the Second" (architecture-forward demo, shooting script)
 
 **Date:** 2026-06-27
-**Runtime target:** ~2:25–2:40 (HARD ceiling 2:55 — hackathon requires < 3:00)
+**Runtime target:** ~2:00–2:15 (HARD ceiling 2:55 — hackathon requires < 3:00)
 **For:** H0 Hackathon — *Hack the Zero Stack with Vercel v0 and AWS Databases* (h01.devpost.com). Track 3 (million-scale). **The judges are the AWS Databases bench — this cut is built for them.**
 **Format:** Fast, technical demo. Amanda Kurt opens it with the human hook and the live product; the spine is a founder-narrated walk through the **polyglot CQRS architecture**.
 
@@ -39,27 +39,25 @@
 
 *(Required working-app footage. Real capture, 60fps, keys hidden. Fast cuts — three overlays to three clauses.)*
 
-### 2 — The architecture (the spine) (0:32–2:05)
+### 2 — How it works (visual, digestible) (0:32–1:40)
 
-**[FOUNDER VO] + [DIAGRAM: system splits into two — "COMMAND: DynamoDB" | "QUERY: Aurora DSQL"]**
-> **[FOUNDER]:** Metering music by the second is a write-heavy money path, so we split the system in two — polyglot CQRS. Every charge writes to **DynamoDB**. Everything you read is served from **Aurora DSQL**. Each database picked for one access pattern, not as a default.
+> **Principle for this section: the words stay simple, the *diagrams* carry the depth.** Each beat is one animated picture with a couple of on-screen labels the AWS bench can read (the real terms live in the labels, not the voiceover). The founder narrates plainly — four short beats, ~60s total.
 
-**[DIAGRAM: the atomic TransactWriteItems — conditional debit ⨝ guarded meter event, "all-or-nothing"]**
-> **[FOUNDER]:** The hot path is a single atomic DynamoDB transaction: a conditional debit that stops dead at a zero balance, committed together with one metered-minute event — keyed user-track-minute, one event per unique minute. It can't double-charge, and a balance can't go negative. Single-digit-millisecond writes.
+**[DIAGRAM: one screen splits into two boxes — a fast "WRITES → DynamoDB" lane and a calm "READS → Aurora DSQL" lane. Labels animate in: "command side", "query side", "polyglot CQRS"]**
+> **[FOUNDER]:** Paying artists by the second is a money problem — so we use two databases, each doing the one thing it's best at. The fast stuff you do — listening, paying — goes to **DynamoDB**. The things you read back come from **Aurora DSQL**.
 
-**[DIAGRAM: DynamoDB Streams → projector Lambda → DSQL (append-only ledger + precomputed daily summary)]**
-> **[FOUNDER]:** That event fans out through DynamoDB Streams into a projector Lambda, which builds the system-of-record in Aurora DSQL — an append-only royalty ledger, and a precomputed per-artist daily summary. So an artist's earnings dashboard is a cheap point read. It never scans the ledger.
+**[DIAGRAM: a single coin animates — "charge your balance" + "log the play" snap together into one locked block. Stamp: "one atomic write · can't double-charge · can't overspend"]**
+> **[FOUNDER]:** Every minute you listen, one quick, all-or-nothing write moves the money: it charges your balance and logs the play together — or not at all.
 
-**[DIAGRAM: two balances — DynamoDB "authoritative / real-time" vs DSQL "reconciliation / audit"]**
-> **[FOUNDER]:** There are two balances by design. The authoritative one lives in DynamoDB and gates money and playback in real time. DSQL holds the reconciliation balance for audit and history. The projector is the *only* writer of that ledger — which makes the whole pipeline exactly-once, and the rollup correct by construction.
+**[DIAGRAM: the logged play flows along a line into Aurora DSQL, which fills a clean "earnings" ledger + an artist dashboard that's already totalled. Labels: "permanent record", "append-only ledger", "dashboard = instant read, never recounts"]**
+> **[FOUNDER]:** Each play flows into **Aurora DSQL**, which keeps the permanent record — every artist's earnings, already added up. So their dashboard loads instantly; it never has to crunch the numbers.
 
-**[DIAGRAM: DSQL grain — "no FKs · async indexes · append-only · scale-to-zero" + "16–23K writes/s · 1M streams"]**
-> **[FOUNDER]:** We built to Aurora DSQL's grain — no foreign keys, async indexes, an append-only ledger to dodge write contention — and it scales to zero between runs. The command side is sized for sixteen to twenty-three thousand writes a second. A million concurrent streams.
+**[DIAGRAM: a lock on the track → a paid second turns it green → music plays. Label: "audio unlocks only once the second is paid · signed at the edge"]**
+> **[FOUNDER]:** And the music only plays once the second is paid. The moment your payment clears, the track unlocks.
 
-**[DIAGRAM: stream gate — paid minute in DynamoDB → short-TTL signed CloudFront URL]**
-> **[FOUNDER]:** And the audio only unlocks once you've paid for the minute. The stream endpoint issues a short-lived signed CloudFront URL the instant DynamoDB confirms a recent paid minute. Pay-per-second, enforced at the edge.
+> *(Quiet on-screen footnote card, optional, ~2s — for the bench, not narrated: "built for ~16–23K writes/s · 1M concurrent streams · DSQL scales to zero." Let them read it; don't say it.)*
 
-### 3 — The rail + close (2:05–2:35)
+### 3 — The rail + close (1:40–2:10)
 **[DIAGRAM: same metered rail → app / AI agent licensing by the second]**
 > **[FOUNDER]:** And that same metered rail isn't just our app. Any app — or any AI agent picking your next song — can license this catalog by the second, fairly.
 
@@ -80,13 +78,12 @@ Faster and more technical than emotional. Ask her to say, in her own words: (1) 
 - [ ] Leaderboard with a fan handle climbing
 - [ ] Balance debiting live (the meter moving)
 
-**Architecture diagrams / motion-gfx (the spine — make these crisp and real):**
-- [ ] CQRS split: COMMAND=DynamoDB | QUERY=Aurora DSQL
-- [ ] Atomic `TransactWriteItems`: conditional stop-at-zero debit ⨝ guarded meter event (idempotency key `user#track#minute`)
-- [ ] DynamoDB Streams → projector Lambda → DSQL append-only ledger + precomputed daily summary
-- [ ] Two-balance consistency rule (authoritative DynamoDB vs reconciliation DSQL)
-- [ ] DSQL grain (no FKs / async indexes / append-only / scale-to-zero) + 16–23K writes/s · 1M streams
-- [ ] Stream gate: paid minute → short-TTL signed CloudFront URL
+**Architecture diagrams / motion-gfx (4 clean beats — the pictures carry the depth, labels carry the real terms):**
+- [ ] Beat 1 — two lanes: "WRITES → DynamoDB" (fast) | "READS → Aurora DSQL" (calm); labels: command/query side, polyglot CQRS
+- [ ] Beat 2 — "charge balance" + "log play" snap into one locked block; stamp: one atomic write · can't double-charge · can't overspend
+- [ ] Beat 3 — play flows into Aurora DSQL → fills an append-only earnings ledger + an already-totalled dashboard (instant read)
+- [ ] Beat 4 — track lock → paid second turns green → music plays; label: unlocks only once paid · signed at the edge
+- [ ] Optional footnote card (2s, on-screen only): built for ~16–23K writes/s · 1M streams · DSQL scales to zero
 - [ ] Same rail → app / AI agent licensing by the second
 - [ ] End card · "Polyglot CQRS · DynamoDB + Aurora DSQL · Vercel"
 
@@ -96,15 +93,13 @@ Faster and more technical than emotional. Ask her to say, in her own words: (1) 
 | Section | Window | Carried by |
 |---|---|---|
 | Cold open + live demo | 0:00–0:32 | Amanda + working app |
-| Architecture: CQRS split | 0:32–0:50 | Founder + diagram |
-| Architecture: atomic hot-path txn | 0:50–1:12 | Founder + diagram |
-| Architecture: Streams → projector → DSQL | 1:12–1:32 | Founder + diagram |
-| Architecture: two-balance rule | 1:32–1:48 | Founder + diagram |
-| Architecture: DSQL grain + scale | 1:48–2:00 | Founder + diagram |
-| Architecture: signed-URL stream gate | 2:00–2:05 | Founder + diagram |
-| The rail + close | 2:05–2:35 | Founder + Amanda |
+| How it works — beat 1: two databases | 0:32–0:48 | Founder + diagram |
+| How it works — beat 2: one atomic write | 0:48–1:04 | Founder + diagram |
+| How it works — beat 3: the permanent record (DSQL) | 1:04–1:24 | Founder + diagram |
+| How it works — beat 4: pay-to-play unlock | 1:24–1:40 | Founder + diagram |
+| The rail + close | 1:40–2:10 | Founder + Amanda |
 
-**< 3:00 is mandatory.** If long, trim the rail line (§3) or tighten the cold open — never cut the working-app demo or any named-database architecture beat; those are the scored requirements.
+**< 3:00 is mandatory** — and this cut leaves comfortable margin. Keep the words simple and let the diagrams do the explaining. Never cut the working-app demo or drop the two database names (DynamoDB + Aurora DSQL); those are scored requirements.
 
 ---
 
