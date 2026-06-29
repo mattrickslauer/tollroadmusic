@@ -61,7 +61,8 @@ export default function DevelopersPage() {
         </div>
 
         <Reveal className="hero-cta dev-cta">
-          <Cta href="mailto:anthonybtedesco@gmail.com">Get in touch →</Cta>
+          <Cta href={ROUTES.connect}>Connect Claude →</Cta>
+          <Cta href="mailto:anthonybtedesco@gmail.com" variant="ghost">Get in touch →</Cta>
           <Cta href={ROUTES.browse} variant="ghost">
             Hear it live →
           </Cta>
