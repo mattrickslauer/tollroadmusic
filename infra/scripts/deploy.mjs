@@ -43,6 +43,12 @@ const REQUIRED = [
   "TOLLROAD_SMTP_PASS",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
+  // Public app origin for Stripe Connect payout onboarding return/refresh URLs
+  // (backend/src/handlers/payouts.ts). The code default is http://localhost:3000,
+  // so an unset value SILENTLY ships a broken prod: live Stripe rejects the
+  // localhost account-link URLs and the artist "Set up payouts" call 500s.
+  // REQUIRED so a deploy refuses rather than quietly shipping the localhost stub.
+  "TOLLROAD_APP_BASE_URL",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
 ];
@@ -51,11 +57,9 @@ const REQUIRED = [
 const OPTIONAL = [
   "TOLLROAD_ALLOWED_ORIGINS",
   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-  // Public app origin for Stripe Connect onboarding return/refresh URLs. Defaults
-  // to http://localhost:3000 in code, so it's optional — but unset in prod means
-  // artists land back on localhost after Stripe KYC. (TOLLROAD_AUDIO_BUCKET is NOT
-  // here: it's wired as a CDK resource ref in tollroad-stack.ts, not an .env value.)
-  "TOLLROAD_APP_BASE_URL",
+  // (TOLLROAD_APP_BASE_URL is REQUIRED above, not optional — unset silently breaks
+  // payout onboarding. TOLLROAD_AUDIO_BUCKET is NOT here: it's wired as a CDK
+  // resource ref in tollroad-stack.ts, not an .env value.)
   "TOLLROAD_SMTP_SENDER",
   "TOLLROAD_SMTP_HOST",
   "TOLLROAD_SMTP_PORT",
