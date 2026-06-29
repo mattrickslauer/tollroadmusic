@@ -1,6 +1,6 @@
 # TollRoad Demo — Overlay PNGs
 
-33 transparent **1920×1080 PNG** overlays for the 3-minute demo, ready to drop on a Resolve timeline.
+49 transparent **1920×1080 PNG** overlays for the 3-minute demo, ready to drop on a Resolve timeline.
 Companion to the written `../2026-06-29-overlay-library.md` and the shooting script `../2026-06-27-vibe-dj-demo-script.md`.
 
 - **Cards:** `png/*.png` — alpha PNGs, named by `ID-category-slug`.
@@ -56,16 +56,42 @@ Companion to the written `../2026-06-29-overlay-library.md` and the shooting scr
 ### K — Pull-quotes (punch-in)
 - `K1-quote-billing` · `K2-quote-stripe` · `K3-quote-amanda` · `K4-quote-idle`
 
-## Not included (need motion / your own capture)
-These are in the written library but aren't static cards:
-- **E — architecture motion beats** (the 4 animated diagrams) → build in After Effects / Resolve Fusion.
-- **F — live-app insets** → your own screen captures of the shipped UI.
-- **G — taximeter** → animated; capture or build in Fusion.
+### E — Architecture diagrams (full-frame, punch-in)
+Stylized static diagrams of the real system. Cut to them full-screen, or float at ~80% over footage.
+- `E1-arch-twolanes` — polyglot CQRS: WRITES→DynamoDB | READS→Aurora DSQL
+- `E2-arch-atomic` — charge + log play snap into one atomic write
+- `E3-arch-ledger` — play → append-only `royalty_ledger` → pre-totalled dashboard
+- `E4-arch-encryption` — track padlock (AES-256) + key-on-payment (~150s) → playing
+- `E5-arch-cqrs-pipeline` — DynamoDB → Streams → Projector λ → Aurora DSQL (the seam)
+- `E6-arch-x402` — the 402 → pay → 200+signed-URL agent handshake
+- `E7-arch-vibe` — "describe a feeling" → Bedrock embedding → vector match inside DynamoDB
 
-Ask and these can be produced as animated Lottie/Fusion comps next.
+### M — App-styled meter overlays (on-footage UI)
+Faithful recreations of the real TollRoad UI — same tokens (amber `#ffb02e`, metering-green
+`#66e6a6`, asphalt `#08080a`) and fonts (JetBrains Mono numbers, Fraunces gold balance, Manrope body).
+Transparent around the card; drop straight over footage like a PIP.
+- `M1-meter-tick-low` / `M2-meter-tick-mid` / `M3-meter-tick-high` — the taximeter at rising values
+  (sequence them — low→mid→high — for a fake "ticking up" without real animation)
+- `M4-meter-paused` — same card, PAUSED state (for "stop listening → stop paying")
+- `M5-wallet-balance` — the gold Fraunces wallet balance card
+- `M6-player-chip` — the in-player balance + session meter chip
+- `M7-artist-earnings` — artist earnings card, green total + per-track ledger rows
+- `M8-rate-chip` — the `0.5¢/min` rate chip (green)
+- `M9-player-bar` — the full docked now-playing bar (anchor to frame bottom — it's already full-width)
+
+> Tip: `M1→M2→M3` cross-dissolved over ~6s reads as a live meter climbing. `M9` sits at the very bottom
+> of frame exactly like the app's player. `M5`/`M7` are corner cards.
+
+## Not included (need motion / your own capture)
+- **F — live-app insets** → your own screen captures of the shipped UI (don't capture streaks/leaderboards — not shipped).
+- True frame-by-frame **animation** of the meter ticking → the M1–M3 sequence fakes it; for real motion, build in Resolve Fusion / After Effects.
+
+Ask and the E diagrams or M meters can be produced as animated Lottie/Fusion comps next.
 
 ## Regenerate
 ```bash
 cd docs/demo/overlays && ./render.sh
 ```
-Requires `python3` + `chromium-browser`. To change wording, accent color, your name, etc., edit `build.py`.
+Requires `python3` + `chromium-browser`. The meter cards (M*) use the app's real fonts in `fonts/`
+(JetBrains Mono + Manrope, committed; Fraunces is system-installed). To change wording, accent color,
+names, meter values, etc., edit `build.py` and re-run.
