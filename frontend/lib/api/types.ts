@@ -81,6 +81,7 @@ export type ArtistTrack = {
   durationSeconds: number;
   pricePerMinuteMillicents: number;
   coverImageKey: string | null;
+  isActive: boolean;
 };
 
 export type ArtistSummary = {
@@ -152,3 +153,17 @@ export interface ProfileBonds {
   bonds: BondSummary[];
   totalBondPoints: number;
 }
+
+// --- Payouts ----------------------------------------------------------------
+export type PayoutHistoryRow = {
+  id: string;
+  amountMillicents: number;
+  status: string;
+  createdAt: string;
+};
+export type PayoutStatus = {
+  connected: boolean;
+  payoutsEnabled: boolean;
+  availableMillicents: number;
+  history: PayoutHistoryRow[];
+};
