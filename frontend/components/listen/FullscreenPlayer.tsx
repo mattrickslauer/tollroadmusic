@@ -7,6 +7,7 @@ import { usePlayer } from "@/context/PlayerProvider";
 import { clock, usdM } from "./format";
 import LikeButton from "./LikeButton";
 import CoverImage from "./CoverImage";
+import RepeatButton from "./RepeatButton";
 import VolumeControl from "./VolumeControl";
 import { Sk } from "./Skeleton";
 
@@ -15,7 +16,7 @@ import { Sk } from "./Skeleton";
  *  the same global player as PlayerBar, so play/pause/seek/volume stay in
  *  lock-step between the two. Available at every width; PlayerBar opens it. */
 export default function FullscreenPlayer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, openTopUp } = usePlayer();
+  const { current, playing, cur, dur, sessionCost, balanceMillicents, balanceReady, toggle, seek, next, prev, hasNext, hasPrev, repeatMode, cycleRepeat, openTopUp } = usePlayer();
 
   const progress = dur ? Math.min(100, (cur / dur) * 100) : 0;
 
@@ -98,6 +99,7 @@ export default function FullscreenPlayer({ open, onClose }: { open: boolean; onC
           <button className="lx-pctrl" onClick={next} disabled={!hasNext} aria-label="Next">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17 6v12h2V6zM5 6v12l9-6z" /></svg>
           </button>
+          <RepeatButton mode={repeatMode} onClick={cycleRepeat} disabled={!current} />
         </div>
 
         <VolumeControl className="lx-full-volume" />

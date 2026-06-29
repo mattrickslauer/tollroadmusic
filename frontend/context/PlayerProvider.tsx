@@ -40,6 +40,10 @@ const VOL_KEY = "tollroad:volume";
 const MUTE_KEY = "tollroad:muted";
 const DEFAULT_VOL = 0.85;
 
+/** Repeat behaviour for autoplay-on-end (and queue wrap):
+ *  off — stop at the end of the queue; all — loop the queue; one — replay track. */
+export type RepeatMode = "off" | "all" | "one";
+
 export interface PlayerState {
   current: CatalogTrack | null;
   playing: boolean;
@@ -69,6 +73,10 @@ export interface PlayerState {
   prev: () => void;
   hasNext: boolean;
   hasPrev: boolean;
+  /** Current repeat mode (off → all → one). */
+  repeatMode: RepeatMode;
+  /** Advance the repeat mode (off → all → one → off). */
+  cycleRepeat: () => void;
   /** Output volume (0–1), independent of metering — billing is wall-clock based. */
   volume: number;
   /** Whether output is muted (volume is preserved underneath). */
@@ -134,6 +142,15 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   // Playback queue for next/prev + autoplay-on-end.
   const queueRef = useRef<CatalogTrack[]>([]);
   const [queuePos, setQueuePos] = useState(-1);
+
+  // Repeat mode. Mirrored to a ref so the stable next()/onEnded callbacks read
+  // the latest value without re-binding (and re-creating) on every change.
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>("off");
+  const repeatModeRef = useRef<RepeatMode>("off");
+  useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
+  const cycleRepeat = useCallback(() => {
+    setRepeatMode((m) => (m === "off" ? "all" : m === "all" ? "one" : "off"));
+  }, []);
 
   const loadMe = useCallback(() => {
     fetchMe()
@@ -375,8 +392,14 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
 
   const next = useCallback(() => {
     const q = queueRef.current;
-    const i = queuePos + 1;
-    if (i >= 0 && i < q.length) { setQueuePos(i); play(q[i], q); }
+    if (q.length === 0) return;
+    let i = queuePos + 1;
+    // At the end of the queue, repeat-all wraps back to the top; otherwise stop.
+    if (i >= q.length) {
+      if (repeatModeRef.current === "all") i = 0;
+      else return;
+    }
+    if (i >= 0) { setQueuePos(i); play(q[i], q); }
   }, [queuePos, play]);
 
   const prev = useCallback(() => {
@@ -385,11 +408,20 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     if (i >= 0 && i < q.length) { setQueuePos(i); play(q[i], q); }
   }, [queuePos, play]);
 
-  // Autoplay the next queued track when one ends.
+  // Autoplay when a track ends: repeat-one replays it from the top (re-metered,
+  // since you're listening to more minutes); otherwise advance the queue, which
+  // wraps under repeat-all and stops under repeat-off.
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    const onEnded = () => next();
+    const onEnded = () => {
+      if (repeatModeRef.current === "one") {
+        a.currentTime = 0; // seek gating keeps this jump free
+        a.play().catch(() => {});
+        return;
+      }
+      next();
+    };
     a.addEventListener("ended", onEnded);
     return () => a.removeEventListener("ended", onEnded);
   }, [next]);
@@ -415,8 +447,10 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       seek,
       next,
       prev,
-      hasNext: queuePos >= 0 && queuePos + 1 < queueRef.current.length,
+      hasNext: queuePos >= 0 && (queuePos + 1 < queueRef.current.length || (repeatMode === "all" && queueRef.current.length > 0)),
       hasPrev: queuePos > 0,
+      repeatMode,
+      cycleRepeat,
       volume,
       muted,
       setVolume,
@@ -424,7 +458,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       openTopUp: () => setTopup(true),
       refresh: loadMe,
     }),
-    [current, playing, billedSec, sessionCost, cur, dur, balanceMillicents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, volume, muted, setVolume, toggleMute, loadMe],
+    [current, playing, billedSec, sessionCost, cur, dur, balanceMillicents, balanceReady, needsAuth, play, toggle, seek, next, prev, queuePos, repeatMode, cycleRepeat, volume, muted, setVolume, toggleMute, loadMe],
   );
 
   return (
