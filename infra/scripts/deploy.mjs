@@ -51,6 +51,11 @@ const REQUIRED = [
 const OPTIONAL = [
   "TOLLROAD_ALLOWED_ORIGINS",
   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+  // Public app origin for Stripe Connect onboarding return/refresh URLs. Defaults
+  // to http://localhost:3000 in code, so it's optional — but unset in prod means
+  // artists land back on localhost after Stripe KYC. (TOLLROAD_AUDIO_BUCKET is NOT
+  // here: it's wired as a CDK resource ref in tollroad-stack.ts, not an .env value.)
+  "TOLLROAD_APP_BASE_URL",
   "TOLLROAD_SMTP_SENDER",
   "TOLLROAD_SMTP_HOST",
   "TOLLROAD_SMTP_PORT",

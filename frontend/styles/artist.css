@@ -140,3 +140,160 @@
 .az-upload-btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 .az-save-ok { font-size: 0.85rem; color: var(--meter-green); }
 .az-field-error { font-size: 0.82rem; color: #e05c5c; margin: 0; }
+
+/* ── Cards (SongManager + PayoutsCard) ────────────────────────────────────
+   These two components shipped referencing .az-* classes that were never
+   defined, so they rendered as unstyled HTML. Match the .az-editor-section
+   card treatment so the whole dashboard reads as one surface. */
+.az-card {
+  margin-bottom: 36px;
+  padding: 28px;
+  background: var(--asphalt-800);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-lg);
+}
+.az-card-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+.az-muted { color: var(--bone-dim); }
+.az-note { margin-top: 14px; font-size: 0.85rem; color: var(--bone-faint); }
+
+/* SongManager: add-song form + track list */
+.az-add-song {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.az-add-song input[type="text"] {
+  flex: 1 1 200px;
+  padding: 10px 14px;
+  background: var(--asphalt-900, #0f0f0f);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm, 6px);
+  color: var(--bone);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.az-add-song input[type="text"]:focus { border-color: var(--amber); }
+.az-add-song input[type="file"] { flex: 1 1 180px; font-size: 0.82rem; color: var(--bone-dim); min-width: 0; }
+
+.az-song-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.az-song-list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.az-song-list li:last-child { border-bottom: none; }
+.az-song-list li > span:first-child { flex: 1 1 auto; min-width: 0; color: var(--bone); }
+.az-song-list li > .az-muted { flex: none; font-family: var(--font-mono); font-size: 0.8rem; }
+.az-inactive { opacity: 0.5; }
+.az-inactive > span:first-child { text-decoration: line-through; }
+
+/* PayoutsCard: balance + history */
+.az-balance { margin-bottom: 16px; color: var(--bone-dim); }
+.az-balance strong {
+  color: var(--meter-green);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+.az-payout-history {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.az-payout-history li { font-family: var(--font-mono); font-size: 0.8rem; color: var(--bone-dim); }
+
+/* ProfileEditor: per-track rate editor (also previously unstyled) */
+.az-rate-editor { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.az-rate-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.az-rate-input { max-width: 120px; }
+
+/* ── Responsive ───────────────────────────────────────────────────────────
+   Mobile-first cleanups: tighter gutters, the activity table reflows into
+   labeled cards, forms/rows wrap instead of overflowing, comfy tap targets. */
+@media (max-width: 640px) {
+  .az-page { padding: 36px 16px 80px; }
+  .az-head { margin-bottom: 28px; }
+  .az-editor-section, .az-card { padding: 20px; }
+
+  /* Activity <table> → stacked, labeled cards (thead hidden; data-label drives
+     each cell's label via ::before — see the <td data-label> in page.tsx). */
+  .az-table { border: none; background: transparent; border-radius: 0; overflow: visible; }
+  .az-table thead { display: none; }
+  .az-table tr {
+    display: block;
+    margin-bottom: 12px;
+    padding: 6px 16px;
+    background: var(--asphalt-800);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--r);
+  }
+  .az-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .az-table tr td:last-child { border-bottom: none; }
+  .az-table td::before {
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-faint);
+  }
+
+  /* Song rows: title on its own line, duration + actions wrap below it */
+  .az-song-list li { flex-wrap: wrap; }
+  .az-song-list li > span:first-child { flex-basis: 100%; }
+
+  /* Inputs span the full width on phones */
+  .az-input { max-width: none; }
+
+  /* Comfortable tap targets */
+  .btn, .az-upload-btn { min-height: 42px; }
+}
+
+@media (max-width: 520px) {
+  /* Keep the headline stats a clean 2×2 rather than a tall single column */
+  .az-stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .az-stat { padding: 18px; }
+  .az-stat-v { font-size: 1.7rem; }
+}
+
+/* ── Artist nav: keep links visible on mobile (no hamburger) ───────────────
+   The global nav hides its links at ≤760px; the artist nav has only two
+   short links + auth, so we override that and let them wrap instead. Scoped
+   to .az-nav so the marketing nav (4 links) keeps its own behavior. */
+@media (max-width: 760px) {
+  .az-nav .nav-inner {
+    height: auto;
+    min-height: 70px;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .az-nav .nav-links { flex-wrap: wrap; justify-content: flex-end; gap: 18px; }
+  .az-nav .nav-links > a:not(.btn) { display: inline-flex; }
+}
+@media (max-width: 420px) {
+  .az-nav .nav-links { gap: 14px; }
+  .az-nav .nav-links > a:not(.btn) { font-size: 0.72rem; letter-spacing: 0.06em; }
+}

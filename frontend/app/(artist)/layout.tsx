@@ -9,7 +9,7 @@ import "@/styles/artist.css";
 export default function ArtistLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <nav className="nav">
+      <nav className="nav az-nav">
         <div className="wrap nav-inner">
           <Link href="/" className="brand">
             <BrandMark />
