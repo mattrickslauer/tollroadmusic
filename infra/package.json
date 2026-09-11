@@ -10,13 +10,16 @@
     "synth": "cdk synth",
     "deploy": "node scripts/deploy.mjs",
     "deploy:check": "node scripts/deploy.mjs --check",
+    "layer:install": "npm ci --omit=dev --prefix lambda/layers/dsql/nodejs",
     "deploy:raw": "cdk deploy",
     "destroy": "cdk destroy",
     "migrate": "node scripts/migrate-dsql.mjs",
     "seed:assets": "node scripts/gen-demo-assets.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
     "seed:reset": "node scripts/seed-demo.mjs --reset",
-    "seed:catalog-covers": "node scripts/gen-catalog-covers.mjs"
+    "seed:catalog-covers": "node scripts/gen-catalog-covers.mjs",
+    "provision:projector": "node --env-file=../backend/.env scripts/provision-projector.mjs",
+    "provision:projector:check": "node --env-file=../backend/.env scripts/provision-projector.mjs --check"
   },
   "devDependencies": {
     "@types/node": "^20",
