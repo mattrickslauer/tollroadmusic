@@ -19,7 +19,8 @@
     "seed:reset": "node scripts/seed-demo.mjs --reset",
     "seed:catalog-covers": "node scripts/gen-catalog-covers.mjs",
     "provision:projector": "node --env-file=../backend/.env scripts/provision-projector.mjs",
-    "provision:projector:check": "node --env-file=../backend/.env scripts/provision-projector.mjs --check"
+    "provision:projector:check": "node --env-file=../backend/.env scripts/provision-projector.mjs --check",
+    "test:projector": "node test/projector-reconnect.test.cjs"
   },
   "devDependencies": {
     "@types/node": "^20",
