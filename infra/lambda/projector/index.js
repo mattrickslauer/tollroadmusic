@@ -36,8 +36,9 @@ const { DsqlSigner } = require("@aws-sdk/dsql-signer");
 const ENDPOINT = process.env.TOLLROAD_DSQL_ENDPOINT;
 const REGION = process.env.TOLLROAD_DSQL_REGION || "us-east-1";
 // Least-privilege: the projector connects as a DML-only role, NOT admin. The CDK
-// grants dsql:DbConnect (not DbConnectAdmin); the role is provisioned by the
-// additive migration (scripts/migrate-dsql.mjs, gated on TOLLROAD_PROJECTOR_ROLE_ARN).
+// grants dsql:DbConnect (not DbConnectAdmin); the role is provisioned by
+// `npm run provision:projector` (scripts/provision-projector.mjs). Without it every
+// connect fails with SQLSTATE 28000 "access denied".
 const DB_USER = process.env.TOLLROAD_DSQL_USER || "projector";
 
 let client; // reused across warm invocations
@@ -49,7 +50,7 @@ async function getClient() {
     DB_USER === "admin"
       ? await signer.getDbConnectAdminAuthToken()
       : await signer.getDbConnectAuthToken();
-  client = new Client({
+  const c = new Client({
     host: ENDPOINT,
     port: 5432,
     user: DB_USER,
@@ -57,8 +58,30 @@ async function getClient() {
     password: token,
     ssl: { rejectUnauthorized: true },
   });
-  await client.connect();
+  // DSQL closes connections after at most 60 minutes, and a warm container outlives
+  // that. Drop the cache the moment this connection dies so the next invocation
+  // reconnects; the listener also stops pg's 'error' event from crashing the process.
+  const drop = () => {
+    if (client === c) client = undefined;
+  };
+  c.on("error", (err) => {
+    console.error("[projector] db connection error, will reconnect:", err.message);
+    drop();
+  });
+  c.on("end", drop);
+  // Cache only a connected client. Assigning before connect() cached a client whose
+  // connect had failed, so every warm retry reused it and the batch was dropped.
+  await c.connect();
+  client = c;
   return client;
+}
+
+// A failed batch may have failed because the connection is gone. Discard it so
+// the stream's retry starts on a fresh one instead of the same dead client.
+function discardClient() {
+  const c = client;
+  client = undefined;
+  if (c) c.end().catch(() => {});
 }
 
 const LEDGER_SQL = `
@@ -209,23 +232,28 @@ exports.handler = async (event) => {
   const records = (event.Records || []).filter((r) => r.eventName === "INSERT");
 
   let projected = 0;
-  for (const r of records) {
-    const img = r.dynamodb && r.dynamodb.NewImage;
-    if (!img) continue;
-    const type = img.type && img.type.S;
-    if (type === "METER") {
-      const e = parseMeter(img);
-      if (e) {
-        await projectMeter(db, e);
-        projected++;
-      }
-    } else if (type === "TOPUP") {
-      const e = parseTopup(img);
-      if (e) {
-        await projectTopup(db, e);
-        projected++;
+  try {
+    for (const r of records) {
+      const img = r.dynamodb && r.dynamodb.NewImage;
+      if (!img) continue;
+      const type = img.type && img.type.S;
+      if (type === "METER") {
+        const e = parseMeter(img);
+        if (e) {
+          await projectMeter(db, e);
+          projected++;
+        }
+      } else if (type === "TOPUP") {
+        const e = parseTopup(img);
+        if (e) {
+          await projectTopup(db, e);
+          projected++;
+        }
       }
     }
+  } catch (err) {
+    discardClient();
+    throw err;
   }
 
   // Observability only — a failed checkpoint must not re-drive the batch.
