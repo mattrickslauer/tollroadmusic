@@ -10,8 +10,10 @@
 // /auth/me returns {account:null, authConfigured:false} and OTP sign-in 503s.
 //
 // This script refuses to deploy unless every required secret is present in
-// backend/.env (the canonical restore source), then passes them all through as
-// context. So `npm run deploy` can never accidentally strip them again.
+// backend/.env (the canonical restore source) — except RESEND_API_KEY, which is
+// read from SSM /resend/api-key first (backend/.env, then the shell, are the
+// fallback) — then passes them all through as context. So `npm run deploy` can
+// never accidentally strip them again.
 //
 // Usage:
 //   node scripts/deploy.mjs [--check] [-- <extra cdk args>]
@@ -20,6 +22,7 @@
 //                     (e.g. --profile prod, --require-approval never, StackName)
 //
 // Override the env file location with TOLLROAD_ENV_FILE=/path/to/.env
+// Override the Resend key's SSM name with TOLLROAD_RESEND_PARAM (default /resend/api-key)
 
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -38,9 +41,9 @@ const REQUIRED = [
   "TOLLROAD_SESSION_SECRET",
   "TOLLROAD_CF_KEY_PAIR_ID",
   "TOLLROAD_CF_PRIVATE_KEY",
-  // ZeptoMail SMTP token for OTP email (replaced SES). Without it the Lambda
+  // Resend API key for OTP email (from SSM, see below). Without it the Lambda
   // falls back to console-logging codes and no sign-in email is ever sent.
-  "TOLLROAD_SMTP_PASS",
+  "RESEND_API_KEY",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   // Public app origin for Stripe Connect payout onboarding return/refresh URLs
@@ -52,19 +55,17 @@ const REQUIRED = [
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
 ];
-// SMTP host/port/user/sender all default in code (backend/src/domain/email.ts),
-// so they're only forwarded when explicitly overridden in the env file.
+// The email sender defaults in code (backend/src/domain/email.ts), so
+// TOLLROAD_MAIL_FROM is only forwarded when explicitly overridden.
 const OPTIONAL = [
   "TOLLROAD_ALLOWED_ORIGINS",
   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
   // (TOLLROAD_APP_BASE_URL is REQUIRED above, not optional — unset silently breaks
   // payout onboarding. TOLLROAD_AUDIO_BUCKET is NOT here: it's wired as a CDK
   // resource ref in tollroad-stack.ts, not an .env value.)
-  "TOLLROAD_SMTP_SENDER",
-  "TOLLROAD_SMTP_HOST",
-  "TOLLROAD_SMTP_PORT",
-  "TOLLROAD_SMTP_USER",
+  "TOLLROAD_MAIL_FROM",
 ];
+const RESEND_PARAM = process.env.TOLLROAD_RESEND_PARAM ?? "/resend/api-key";
 
 function die(msg) {
   console.error(`\n✖ ${msg}\n`);
@@ -93,8 +94,33 @@ if (!existsSync(envFile)) {
 // any pre-exported copies of these keys: loadEnvFile() will NOT override an
 // existing process.env value, and backend/.env must be the source of truth (a
 // stale secret left in the shell would otherwise be deployed instead).
+const shellResendKey = process.env.RESEND_API_KEY;
 for (const key of [...REQUIRED, ...OPTIONAL]) delete process.env[key];
 process.loadEnvFile(envFile);
+
+// RESEND_API_KEY: SSM SecureString first (never printed), then backend/.env,
+// then the shell. Returns null when the parameter is missing or aws fails.
+function ssmSecret(name) {
+  try {
+    const v = execFileSync(
+      "aws",
+      ["ssm", "get-parameter", "--with-decryption", "--name", name, "--region", "us-east-1",
+        "--query", "Parameter.Value", "--output", "text"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    ).trim();
+    return v && v !== "None" ? v : null;
+  } catch {
+    return null;
+  }
+}
+let resendSource = `SSM ${RESEND_PARAM}`;
+const fromSsm = ssmSecret(RESEND_PARAM);
+if (fromSsm) process.env.RESEND_API_KEY = fromSsm;
+else if (process.env.RESEND_API_KEY?.trim()) resendSource = envFile;
+else if (shellResendKey?.trim()) {
+  process.env.RESEND_API_KEY = shellResendKey;
+  resendSource = "shell env";
+} else resendSource = null;
 
 const missing = [];
 for (const key of REQUIRED) {
@@ -104,7 +130,7 @@ for (const key of REQUIRED) {
 if (missing.length) {
   die(
     `${missing.length} required secret(s) missing/empty in ${envFile}:\n` +
-      missing.map((k) => `    - ${k}`).join("\n") +
+      missing.map((k) => `    - ${k}${k === "RESEND_API_KEY" ? ` (looked in SSM ${RESEND_PARAM}, the env file, the shell)` : ""}`).join("\n") +
       `\n  Refusing to deploy: a bare deploy would WIPE these from the live Lambda.`,
   );
 }
@@ -135,6 +161,7 @@ console.log(`✓ env file:        ${envFile}`);
 console.log(`✓ secrets passed:  ${present.join(", ")}`);
 if (skipped.length) console.log(`· optional skipped: ${skipped.join(", ")}`);
 console.log(`✓ session secret:  ${secretLen} chars`);
+console.log(`✓ resend key from: ${resendSource}`);
 
 if (checkOnly) {
   console.log(`\n--check: validation passed. Would run:`);

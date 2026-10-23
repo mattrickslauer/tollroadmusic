@@ -345,15 +345,12 @@ export class TollroadStack extends cdk.Stack {
     for (const k of [
       "TOLLROAD_SESSION_SECRET",
       "TOLLROAD_CF_PRIVATE_KEY",
-      // OTP email goes out via ZeptoMail SMTP (backend/src/domain/email.ts). Only
-      // the API token is secret; host/port/user/sender default in code. Supplied
-      // at deploy via -c and dropped on a plain redeploy, so keep them in
-      // backend/.env as the restore source.
-      "TOLLROAD_SMTP_PASS",
-      "TOLLROAD_SMTP_HOST",
-      "TOLLROAD_SMTP_PORT",
-      "TOLLROAD_SMTP_USER",
-      "TOLLROAD_SMTP_SENDER",
+      // OTP email goes out via Resend's HTTP API (backend/src/domain/email.ts).
+      // Only the API key is secret; the sender defaults in code. Supplied at
+      // deploy via -c (infra/scripts/deploy.mjs reads the key from SSM
+      // /resend/api-key) and dropped on a plain redeploy.
+      "RESEND_API_KEY",
+      "TOLLROAD_MAIL_FROM",
       "TOLLROAD_ALLOWED_ORIGINS",
       "STRIPE_SECRET_KEY",
       "STRIPE_WEBHOOK_SECRET",
@@ -399,8 +396,8 @@ export class TollroadStack extends cdk.Stack {
     // The API reads catalog/ledger/library on DSQL and runs the DynamoDB command
     // path (balance debit + meter/top-up events); it generates the IAM auth token
     // itself (DbConnectAdmin). Under CQRS it no longer writes the DSQL ledger — the
-    // projector does. Email sign-in codes go out via ZeptoMail SMTP (plain
-    // HTTPS/SMTP, no IAM needed), so SES permissions are no longer granted.
+    // projector does. Email sign-in codes go out via Resend (plain
+    // HTTPS, no IAM needed), so SES permissions are not granted.
     apiFn.addToRolePolicy(dsqlConnectAdmin);
     // Bedrock: embed text for vibe discovery (Task 4).
     apiFn.addToRolePolicy(new iam.PolicyStatement({
