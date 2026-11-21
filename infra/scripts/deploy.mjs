@@ -22,7 +22,7 @@
 // Override the env file location with TOLLROAD_ENV_FILE=/path/to/.env
 
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -114,6 +114,35 @@ const secretLen = (process.env.TOLLROAD_SESSION_SECRET ?? "").length;
 if (secretLen < 32) {
   die(`TOLLROAD_SESSION_SECRET is only ${secretLen} chars; must be >= 32 or auth stays broken.`);
 }
+
+// --- preflight: the DSQL Lambda layer must actually be built -----------------
+// WHY THIS EXISTS: the stack ships the layer with `lambda.Code.fromAsset(...)`
+// over infra/lambda/layers/dsql — it zips whatever is on disk. That directory's
+// node_modules/ is gitignored and NOTHING installs it, so a deploy from a fresh
+// checkout silently publishes an EMPTY layer. The projector then dies on every
+// record with "Cannot find module 'pg'", the DSQL read models stop advancing,
+// and nothing else fails loudly: charges still debit on the DynamoDB command
+// path, so only the leaderboard and artist earnings quietly freeze. That is
+// exactly the 2026-06-26 outage. Refuse to deploy instead of shipping it again.
+const layerDir = path.join(infraDir, "lambda", "layers", "dsql", "nodejs");
+const layerModules = path.join(layerDir, "node_modules");
+const layerDeps = Object.keys(
+  JSON.parse(readFileSync(path.join(layerDir, "package.json"), "utf8")).dependencies ?? {},
+);
+const missingDeps = layerDeps.filter((d) => !existsSync(path.join(layerModules, ...d.split("/"))));
+if (!existsSync(layerModules) || readdirSync(layerModules).length === 0 || missingDeps.length) {
+  die(
+    `DSQL Lambda layer is not built: ${layerDir}\n` +
+      (missingDeps.length
+        ? `  missing dependenc(ies): ${missingDeps.join(", ")}\n`
+        : `  node_modules/ is absent or empty\n`) +
+      `  The stack zips this directory as-is, so deploying now would publish an EMPTY\n` +
+      `  layer and the projector would fail with "Cannot find module 'pg'".\n` +
+      `  Fix:  npm ci --omit=dev --prefix ${path.relative(repoRoot, layerDir)}\n` +
+      `        (or npm install --omit=dev --prefix ...)`,
+  );
+}
+console.log(`\u2713 dsql layer:      ${layerDeps.length} dep(s) present in ${path.relative(repoRoot, layerModules)}`);
 
 // --- build the cdk command --------------------------------------------------
 const contextArgs = [];

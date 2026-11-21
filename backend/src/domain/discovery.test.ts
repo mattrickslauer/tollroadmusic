@@ -43,11 +43,15 @@ test("rankBySimilarity orders by similarity desc", () => {
     { trackId: "c", embedding: [1, 0, 0] }, // 1
   ];
   const results = rankBySimilarity(queryVec, candidates, 3);
-  assert.equal(results[0].trackId, "c");
-  assert.equal(results[1].trackId, "b");
-  assert.equal(results[2].trackId, "a");
-  assert.ok(results[0].score > results[1].score);
-  assert.ok(results[1].score > results[2].score);
+  // Destructure so noUncheckedIndexedAccess narrows once, instead of asserting
+  // non-null at each of the five reads below.
+  const [first, second, third] = results;
+  assert.ok(first && second && third, "expected three ranked results");
+  assert.equal(first.trackId, "c");
+  assert.equal(second.trackId, "b");
+  assert.equal(third.trackId, "a");
+  assert.ok(first.score > second.score);
+  assert.ok(second.score > third.score);
 });
 
 test("rankBySimilarity respects limit", () => {
