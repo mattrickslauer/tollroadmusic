@@ -229,12 +229,12 @@ export class TollroadStack extends cdk.Stack {
     // not pg / the DSQL signer; the shared layer carries them.
     const dsqlLayer = new lambda.LayerVersion(this, "DsqlDepsLayer", {
       code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda", "layers", "dsql")),
-      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+      compatibleRuntimes: [lambda.Runtime.NODEJS_22_X],
       description: "pg + @aws-sdk/dsql-signer for the projector consumer",
     });
 
     const projector = new lambda.Function(this, "ProjectorConsumerFn", {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: "index.handler",
       code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda", "projector")),
       timeout: cdk.Duration.seconds(30),
@@ -375,7 +375,7 @@ export class TollroadStack extends cdk.Stack {
 
     const apiFn = new NodejsFunction(this, "ApiFn", {
       functionName: "tollroad-api",
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       entry: path.join(__dirname, "..", "..", "backend", "src", "lambda.ts"),
       // The backend is a sibling package of infra/; bundle it from its own root
       // (where esbuild + its deps live).
