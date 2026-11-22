@@ -44,7 +44,9 @@ function fmt(detail: Record<string, unknown>): string {
     .join("\n");
 }
 
-// One Notify call. Resolves true on a 2xx, false on anything else (logged).
+// One Notify call. Resolves true only when Notify delivered (or queued) the message to at
+// least one recipient. A 2xx that reached nobody (no recipient wants the event yet, or every
+// delivery failed) counts as not delivered, so the old Telegram path still gets it.
 async function viaNotify(key: string, event: string, text: string, fetchImpl: Fetch): Promise<boolean> {
   try {
     const r = await fetchImpl(NOTIFY_URL, {
@@ -53,7 +55,12 @@ async function viaNotify(key: string, event: string, text: string, fetchImpl: Fe
       body: JSON.stringify({ event, text: text.slice(0, 2000) }),
       signal: AbortSignal.timeout(NOTIFY_TIMEOUT_MS),
     });
-    if (r.ok) return true;
+    if (r.ok) {
+      const out = (await r.json().catch(() => null)) as { deliveries?: { status?: string }[] } | null;
+      if (out?.deliveries?.some((d) => d.status === "sent" || d.status === "queued")) return true;
+      console.error(`[notify] notify ${event} reached no recipient: ${JSON.stringify(out?.deliveries ?? null)}`);
+      return false;
+    }
     console.error(`[notify] notify ${event} failed: ${r.status} ${await r.text().catch(() => "")}`);
   } catch (e) {
     console.error(`[notify] notify ${event} error:`, e);

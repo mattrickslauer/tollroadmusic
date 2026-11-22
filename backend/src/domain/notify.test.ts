@@ -6,13 +6,15 @@ import { NOTIFY_URL, notifyConfigured, send } from "./notify.ts";
 
 type Call = { url: string; init: RequestInit };
 
-function fakeFetch(notify: number | Error, telegram = 200) {
+const DELIVERED = JSON.stringify({ id: "m1", deliveries: [{ channel: "telegram", status: "sent" }] });
+
+function fakeFetch(notify: number | Error, telegram = 200, notifyBody = DELIVERED) {
   const calls: Call[] = [];
   const impl = (async (url: string, init: RequestInit) => {
     calls.push({ url, init });
     const status = url === NOTIFY_URL ? notify : telegram;
     if (status instanceof Error) throw status;
-    return new Response("{}", { status });
+    return new Response(url === NOTIFY_URL ? notifyBody : "{}", { status });
   }) as unknown as typeof fetch;
   return { calls, impl };
 }
@@ -58,4 +60,22 @@ test("nothing configured: nothing sent, nothing thrown", async () => {
   assert.equal(f.calls.length, 0);
   assert.equal(notifyConfigured({}), false);
   assert.equal(notifyConfigured({ NOTIFY_KEY: "k" }), true);
+});
+
+for (const [why, body] of [
+  ["no recipient wants the event", JSON.stringify({ id: "m2", deliveries: [] })],
+  ["every delivery failed", JSON.stringify({ id: "m3", deliveries: [{ status: "failed" }, { status: "limited" }] })],
+  ["the answer is not JSON", "ok"],
+] as const) {
+  test(`a 2xx where ${why} still falls back to Telegram`, async () => {
+    const f = fakeFetch(200, 200, body);
+    await send("tollroad.signup.artist", "hi", env, f.impl);
+    assert.equal(f.calls.filter((c) => c.url !== NOTIFY_URL).length, 2);
+  });
+}
+
+test("a queued delivery (iMessage) counts as delivered", async () => {
+  const f = fakeFetch(200, 200, JSON.stringify({ deliveries: [{ status: "queued" }] }));
+  await send("tollroad.sale.topup", "hi", env, f.impl);
+  assert.equal(f.calls.length, 1);
 });
