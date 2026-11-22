@@ -362,10 +362,12 @@ export class TollroadStack extends cdk.Stack {
       // (backend/src/handlers/payouts.ts). Defaults to http://localhost:3000 in
       // code; set this in prod or artists get sent back to localhost after KYC.
       "TOLLROAD_APP_BASE_URL",
-      // Telegram sign-up notifications (backend/src/domain/notify.ts). No IAM
-      // needed — the bot is reached over plain HTTPS. Like the other secrets,
-      // supplied at deploy via -c and dropped on a plain redeploy, so keep them
-      // in backend/.env as the restore source.
+      // Owner notifications (backend/src/domain/notify.ts): NOTIFY_KEY for
+      // Notify (value from SSM /notify/keys/tollroad), and the Telegram bot as
+      // the fallback when Notify fails. No IAM needed — both are plain HTTPS.
+      // Like the other secrets, supplied at deploy via -c and dropped on a plain
+      // redeploy, so keep them in backend/.env as the restore source.
+      "NOTIFY_KEY",
       "TELEGRAM_BOT_TOKEN",
       "TELEGRAM_CHAT_ID",
     ]) {
