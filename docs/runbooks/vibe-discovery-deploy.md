@@ -16,8 +16,9 @@ ends with a live demo of the MCP server. Execute the steps in order.
   Lambda secret drift incident in memory). At minimum:
   `TOLLROAD_SESSION_SECRET`, `TOLLROAD_CF_PRIVATE_KEY`,
   `TOLLROAD_CF_KEY_PAIR_ID`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
-  `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`. `RESEND_API_KEY` is read from SSM
-  `/resend/api-key` (falls back to `backend/.env`).
+  `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (plus optional `NOTIFY_KEY` from SSM
+  `/notify/keys/tollroad`; without it owner pings go straight to Telegram).
+  `RESEND_API_KEY` is read from SSM `/resend/api-key` (falls back to `backend/.env`).
 - Node.js 20+ in PATH (the scripts use `--experimental-strip-types`).
 - Bedrock model access enabled in `us-east-1` for `amazon.titan-embed-text-v2:0`
   (one-time: AWS Console → Bedrock → Model access → enable Titan Embed Text V2).

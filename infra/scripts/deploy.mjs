@@ -64,6 +64,9 @@ const OPTIONAL = [
   // payout onboarding. TOLLROAD_AUDIO_BUCKET is NOT here: it's wired as a CDK
   // resource ref in tollroad-stack.ts, not an .env value.)
   "TOLLROAD_MAIL_FROM",
+  // Owner notifications go through Notify when set (value: SSM
+  // /notify/keys/tollroad); without it they go straight to Telegram as before.
+  "NOTIFY_KEY",
 ];
 const RESEND_PARAM = process.env.TOLLROAD_RESEND_PARAM ?? "/resend/api-key";
 
