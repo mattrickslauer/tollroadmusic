@@ -60,6 +60,9 @@ const OPTIONAL = [
   // (TOLLROAD_APP_BASE_URL is REQUIRED above, not optional — unset silently breaks
   // payout onboarding. TOLLROAD_AUDIO_BUCKET is NOT here: it's wired as a CDK
   // resource ref in tollroad-stack.ts, not an .env value.)
+  // Owner notifications go through Notify when set (value: SSM
+  // /notify/keys/tollroad); without it they go straight to Telegram as before.
+  "NOTIFY_KEY",
   "TOLLROAD_SMTP_SENDER",
   "TOLLROAD_SMTP_HOST",
   "TOLLROAD_SMTP_PORT",
